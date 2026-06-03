@@ -9,10 +9,29 @@ export async function GET(
 ) {
   try {
     const { path } = await params
-    const token = await getClientCredentialsToken()
     const pathStr = path.join("/")
     const searchParams = request.nextUrl.searchParams.toString()
     const url = `${SPOTIFY_API}/${pathStr}${searchParams ? `?${searchParams}` : ""}`
+
+    // Try user token from Authorization header first
+    const authHeader = request.headers.get("authorization")
+    let token: string | null = null
+
+    if (authHeader?.startsWith("Bearer ")) {
+      token = authHeader.slice(7)
+    }
+
+    // Fall back to server-side client credentials token
+    if (!token) {
+      try {
+        token = await getClientCredentialsToken()
+      } catch {
+        return NextResponse.json(
+          { error: "Authentication required", detail: "Please log in to view this data. No server credentials available." },
+          { status: 401 }
+        )
+      }
+    }
 
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },

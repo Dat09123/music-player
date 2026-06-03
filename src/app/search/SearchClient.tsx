@@ -104,7 +104,7 @@ export default function SearchClient() {
   }
 
   return (
-    <div className="p-6 pb-28">
+    <div className="p-6 pb-20">
       {/* Search bar */}
       <div className="relative max-w-2xl mb-6">
         <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">

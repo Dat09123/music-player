@@ -120,7 +120,7 @@ export default function TopClient() {
   // Loading
   if (authLoading || loading) {
     return (
-      <div className="p-6 space-y-8 pb-28">
+      <div className="p-6 space-y-8 pb-20">
         <div className="h-10 w-48 bg-zinc-800 rounded-lg skeleton" />
         <div className="flex gap-2">
           {[...Array(3)].map((_, i) => (
@@ -169,7 +169,7 @@ export default function TopClient() {
   }
 
   return (
-    <div className="p-6 space-y-10 pb-28">
+    <div className="p-6 space-y-10 pb-20">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

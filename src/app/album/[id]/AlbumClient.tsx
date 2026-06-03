@@ -38,14 +38,14 @@ export default function AlbumClient({ album }: Props) {
   }
 
   return (
-    <div className="bg-zinc-900/50 px-3 py-4">
+    <div className="bg-white/50 px-3 py-4">
       {/* Play controls */}
       <div className="flex items-center gap-4 px-4 py-2 mb-4">
         <button
           onClick={handlePlayAll}
-          className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl hover:bg-green-400"
+          className="w-14 h-14 bg-[var(--accent)] rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl hover:opacity-90"
         >
-          <svg className="w-6 h-6 text-black ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M8 5v14l11-7z" />
           </svg>
         </button>
@@ -62,11 +62,11 @@ export default function AlbumClient({ album }: Props) {
 
       {/* Album info footer */}
       <div className="px-4 py-6 space-y-2">
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-[var(--text-muted)]">
           {album.total_tracks} songs
         </p>
         {album.label && (
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-[var(--text-muted)]">
             &copy; {new Date(album.release_date).getFullYear()} {album.label}
           </p>
         )}

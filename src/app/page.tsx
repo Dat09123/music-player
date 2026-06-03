@@ -1,24 +1,102 @@
-import { getFeaturedPlaylists, getNewReleases } from "@/lib/spotify"
+"use client"
+
+import { useState, useEffect } from "react"
+import { useAuth } from "@/lib/AuthContext"
+import { spotifyFetch } from "@/lib/api-client"
 import { getImage, formatNumber } from "@/lib/utils"
 import Card from "@/components/Card"
+import SpotifyLoginButton from "@/components/SpotifyLoginButton"
 import Link from "next/link"
 
-export default async function HomePage() {
-  let featuredPlaylists: any[] = []
-  let newReleases: any[] = []
-  let error: string | null = null
+export default function HomePage() {
+  const { isAuthenticated, isLoading: authLoading, getToken } = useAuth()
+  const [featuredPlaylists, setFeaturedPlaylists] = useState<any[]>([])
+  const [newReleases, setNewReleases] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  try {
-    const [featuredData, newReleasesData] = await Promise.all([
-      getFeaturedPlaylists().catch(() => ({ playlists: { items: [] } })),
-      getNewReleases().catch(() => ({ albums: { items: [] } })),
-    ])
-    featuredPlaylists = featuredData.playlists?.items || []
-    newReleases = newReleasesData.albums?.items || []
-  } catch (e: any) {
-    error = e?.message || "Could not load data from Spotify"
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadData() {
+      try {
+        const token = await getToken()
+        if (!token || cancelled) return
+
+        const [featuredData, newReleasesData] = await Promise.all([
+          spotifyFetch("browse/featured-playlists", token).catch(() => ({ playlists: { items: [] } })),
+          spotifyFetch("browse/new-releases", token).catch(() => ({ albums: { items: [] } })),
+        ])
+
+        if (!cancelled) {
+          setFeaturedPlaylists(featuredData.playlists?.items || [])
+          setNewReleases(newReleasesData.albums?.items || [])
+          setError(null)
+        }
+      } catch (err: any) {
+        if (!cancelled) {
+          const msg = err?.message || "Could not load data"
+          if (msg === "AUTH_REQUIRED") {
+            setError("Please log in to view music data")
+          } else {
+            setError(msg)
+          }
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    if (!authLoading) {
+      loadData()
+    }
+
+    return () => { cancelled = true }
+  }, [authLoading, getToken])
+
+  // Show loading skeleton while checking auth
+  if (authLoading || loading) {
+    return (
+      <div className="p-5 space-y-8 max-w-7xl mx-auto pb-20">
+        <div className="rounded-xl bg-gray-50 border border-[var(--border)] p-6 md:p-8 animate-pulse">
+          <div className="h-8 w-48 bg-gray-200 rounded mb-2" />
+          <div className="h-4 w-72 bg-gray-200 rounded" />
+        </div>
+        <div>
+          <div className="h-5 w-40 bg-gray-200 rounded mb-4" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="aspect-square bg-gray-100 rounded-lg mb-2" />
+                <div className="h-4 w-24 bg-gray-100 rounded mb-1" />
+                <div className="h-3 w-16 bg-gray-100 rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
   }
 
+  // Show login prompt if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
+        <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mb-5">
+          <svg className="w-8 h-8 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Log in to discover music</h2>
+        <p className="text-sm text-[var(--text-muted)] max-w-sm mb-6">
+          Sign in with your Spotify account to explore featured playlists, new releases, and more.
+        </p>
+        <SpotifyLoginButton />
+      </div>
+    )
+  }
+
+  // Show error state
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
@@ -27,17 +105,9 @@ export default async function HomePage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
           </svg>
         </div>
-        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Configuration Required</h2>
+        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Could not load data</h2>
         <p className="text-sm text-[var(--text-muted)] max-w-sm mb-6">{error}</p>
-        <div className="bg-white rounded-xl border border-[var(--border)] p-5 max-w-sm w-full text-left text-sm">
-          <p className="font-medium text-[var(--text-primary)] mb-2">Quick setup:</p>
-          <ol className="text-[var(--text-secondary)] space-y-1.5 list-decimal list-inside text-xs">
-            <li>Go to <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">Spotify Developer Dashboard</a></li>
-            <li>Copy your Client ID and Client Secret</li>
-            <li>On Vercel: Settings → Environment Variables → Add them</li>
-            <li>Or locally: copy <code className="bg-gray-100 px-1 rounded text-xs">.env.example</code> → <code className="bg-gray-100 px-1 rounded text-xs">.env.local</code></li>
-          </ol>
-        </div>
+        <SpotifyLoginButton />
       </div>
     )
   }
@@ -90,8 +160,8 @@ export default async function HomePage() {
       {featuredPlaylists.length === 0 && newReleases.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-[var(--text-muted)]">
           <svg className="w-12 h-12 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>
-          <p className="text-sm font-medium">No data yet</p>
-          <p className="text-xs mt-1">Try again after configuring Spotify credentials</p>
+          <p className="text-sm font-medium">No data available</p>
+          <p className="text-xs mt-1">Try logging in and refreshing the page</p>
         </div>
       )}
     </div>
