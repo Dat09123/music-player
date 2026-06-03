@@ -154,10 +154,14 @@ export default function Sidebar() {
                 <span className="text-sm">Create Playlist</span>
               </Link>
               <Link
-                href="/search"
-                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-white/5 transition-all"
+                href="/me/liked"
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+                  pathname === "/me/liked"
+                    ? "bg-white/10 text-white font-medium"
+                    : "text-zinc-400 hover:text-white hover:bg-white/5"
+                }`}
               >
-                <div className="w-6 h-6 bg-gradient-to-br from-blue-400 to-blue-600 rounded flex items-center justify-center flex-shrink-0">
+                <div className="w-6 h-6 bg-gradient-to-br from-purple-400 to-blue-600 rounded flex items-center justify-center flex-shrink-0">
                   <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
