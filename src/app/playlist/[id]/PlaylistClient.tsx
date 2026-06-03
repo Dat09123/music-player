@@ -64,7 +64,6 @@ export default function PlaylistClient({ tracks, playlistUri }: Props) {
         showImage={true}
         showIndex={true}
         startIndex={0}
-        playlistUri={playlistUri}
       />
 
       {/* Track count */}

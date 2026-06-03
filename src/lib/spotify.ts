@@ -12,7 +12,12 @@ async function getClientCredentialsToken(): Promise<string> {
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET
 
   if (!clientId || !clientSecret) {
-    throw new Error("Missing Spotify credentials. Set SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET in .env.local")
+    // On Vercel, check if env vars are set via process.env
+    const isVercel = !!process.env.VERCEL
+    const msg = isVercel
+      ? "Missing Spotify credentials on Vercel. Go to Vercel Dashboard > Settings > Environment Variables and add SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET."
+      : "Missing Spotify credentials. Set SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET in .env.local"
+    throw new Error(msg)
   }
 
   const res = await fetch(`${SPOTIFY_ACCOUNTS}/token`, {
