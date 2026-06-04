@@ -12,6 +12,7 @@ import { ToastProvider } from "@/components/Toast"
 import KeyboardShortcuts from "@/components/KeyboardShortcuts"
 import { SidebarProvider } from "@/components/SidebarContext"
 import MobileNav from "@/components/MobileNav"
+import PageTransition from "@/components/PageTransition"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -51,7 +52,9 @@ export default function RootLayout({
                 </ErrorBoundary>
                 <ErrorBoundary label="Page Content" fallback={<ErrorFallback />}>
                   <main className="flex-1 overflow-y-auto pb-32 md:pb-20">
-                    {children}
+                    <PageTransition>
+                      {children}
+                    </PageTransition>
                   </main>
                 </ErrorBoundary>
               </div>
