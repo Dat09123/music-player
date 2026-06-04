@@ -319,3 +319,8 @@ input[type="range"]:hover::-webkit-slider-thumb {
 }
 
 /* Scrollbar */
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
