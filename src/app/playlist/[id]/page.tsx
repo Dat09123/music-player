@@ -1,9 +1,10 @@
 "use client"
 
+"use client"
+
 import { useState, useEffect, use } from "react"
-import { useAuth } from "@/lib/AuthContext"
-import { spotifyFetch } from "@/lib/api-client"
 import { getImage, formatNumber } from "@/lib/utils"
+import { getPlaylist } from "@/lib/deezer"
 import PlaylistClient from "./PlaylistClient"
 
 interface Props {
@@ -12,7 +13,6 @@ interface Props {
 
 export default function PlaylistPage({ params }: Props) {
   const { id } = use(params)
-  const { isAuthenticated, isLoading: authLoading, getToken } = useAuth()
   const [playlist, setPlaylist] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -22,27 +22,23 @@ export default function PlaylistPage({ params }: Props) {
 
     async function loadData() {
       try {
-        if (cancelled) return
-
-        const data = await spotifyFetch(`playlists/${id}`, getToken)
+        const data = await getPlaylist(id)
         if (!cancelled) {
           setPlaylist(data)
           setError(null)
         }
       } catch (err: any) {
-        if (!cancelled) {
-          setError(err?.message || "Could not load playlist")
-        }
+        if (!cancelled) setError(err?.message || "Could not load playlist")
       } finally {
         if (!cancelled) setLoading(false)
       }
     }
 
-    if (!authLoading) loadData()
+    loadData()
     return () => { cancelled = true }
-  }, [id, authLoading, getToken])
+  }, [id])
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="animate-pulse px-6 pt-12 pb-8 md:pt-20 md:pb-10">
         <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
@@ -53,15 +49,6 @@ export default function PlaylistPage({ params }: Props) {
             <div className="h-4 w-48 bg-gray-200 rounded" />
           </div>
         </div>
-      </div>
-    )
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Log in to view playlist</h2>
-        <p className="text-sm text-[var(--text-muted)] mb-4">Sign in with Spotify to see playlist tracks and more.</p>
       </div>
     )
   }
@@ -88,14 +75,9 @@ export default function PlaylistPage({ params }: Props) {
         }}
       >
         <div className="flex flex-col md:flex-row items-center md:items-end gap-6 relative z-10">
-          {/* Playlist cover */}
           <div className="w-48 h-48 md:w-56 md:h-56 rounded-xl overflow-hidden shadow-2xl flex-shrink-0">
             {playlist.images?.[0]?.url ? (
-              <img
-                src={playlist.images[0].url}
-                alt={playlist.name}
-                className="w-full h-full object-cover"
-              />
+              <img src={playlist.images[0].url} alt={playlist.name} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-gray-100 flex items-center justify-center">
                 <svg className="w-20 h-20 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
@@ -116,42 +98,24 @@ export default function PlaylistPage({ params }: Props) {
             <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-zinc-300">
               <span className="font-semibold text-white">{playlist.owner?.display_name}</span>
               {playlist.followers?.total > 0 && (
-                <>
-                  <span className="text-zinc-600">•</span>
-                  <span>{formatNumber(playlist.followers.total)} likes</span>
-                </>
+                <><span className="text-zinc-600">•</span><span>{formatNumber(playlist.followers.total)} likes</span></>
               )}
               {playlist.tracks?.total > 0 && (
-                <>
-                  <span className="text-zinc-600">•</span>
-                  <span>{formatNumber(playlist.tracks.total)} songs</span>
-                </>
+                <><span className="text-zinc-600">•</span><span>{formatNumber(playlist.tracks.total)} songs</span></>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Track list */}
-      <PlaylistClient
-        tracks={playlist.tracks?.items || []}
-        playlistUri={playlist.uri}
-      />
+      <PlaylistClient tracks={playlist.tracks?.items || []} playlistUri={playlist.uri} />
     </div>
   )
 }
 
 function generateGradient(id: string): string {
-  const colors = [
-    "#1db954", "#191414", "#e13300", "#b02897",
-    "#ff4632", "#b49bc8", "#dc148c", "#27856a",
-    "#8400e7", "#a0a0a0", "#5179a1", "#0d73ec",
-    "#bc5900", "#e1118b", "#1e3264", "#608108",
-  ]
+  const colors = ["#1db954","#191414","#e13300","#b02897","#ff4632","#b49bc8","#dc148c","#27856a","#8400e7","#a0a0a0","#5179a1","#0d73ec","#bc5900","#e1118b","#1e3264","#608108"]
   let hash = 0
-  for (let i = 0; i < id.length; i++) {
-    hash = id.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  const index = Math.abs(hash) % colors.length
-  return colors[index]
+  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash)
+  return colors[Math.abs(hash) % colors.length]
 }

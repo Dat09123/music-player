@@ -1,9 +1,8 @@
 "use client"
 
 import { useState, useEffect, use } from "react"
-import { useAuth } from "@/lib/AuthContext"
-import { spotifyFetch } from "@/lib/api-client"
 import { getImage, formatNumber } from "@/lib/utils"
+import { getArtist, getRelatedArtists } from "@/lib/deezer"
 import ArtistClient from "./ArtistClient"
 
 interface Props {
@@ -12,7 +11,6 @@ interface Props {
 
 export default function ArtistPage({ params }: Props) {
   const { id } = use(params)
-  const { isAuthenticated, isLoading: authLoading, getToken } = useAuth()
   const [artist, setArtist] = useState<any | null>(null)
   const [topTracks, setTopTracks] = useState<any[]>([])
   const [albums, setAlbums] = useState<any[]>([])
@@ -27,18 +25,16 @@ export default function ArtistPage({ params }: Props) {
       try {
         if (cancelled) return
 
-        const [artistData, topTracksData, albumsData, relatedData] = await Promise.all([
-          spotifyFetch(`artists/${id}`, getToken),
-          spotifyFetch(`artists/${id}/top-tracks`, getToken),
-          spotifyFetch(`artists/${id}/albums?include_groups=album,single&limit=10`, getToken),
-          spotifyFetch(`artists/${id}/related-artists`, getToken),
+        const [data, related] = await Promise.all([
+          getArtist(id),
+          getRelatedArtists(id),
         ])
 
         if (!cancelled) {
-          setArtist(artistData)
-          setTopTracks(topTracksData.tracks || [])
-          setAlbums(albumsData.items || [])
-          setRelatedArtists(relatedData.artists || [])
+          setArtist(data.artist)
+          setTopTracks(data.topTracks)
+          setAlbums(data.albums)
+          setRelatedArtists(related.artists || [])
           setError(null)
         }
       } catch (err: any) {
@@ -50,11 +46,11 @@ export default function ArtistPage({ params }: Props) {
       }
     }
 
-    if (!authLoading) loadData()
+    loadData()
     return () => { cancelled = true }
-  }, [id, authLoading, getToken])
+  }, [id])
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="animate-pulse px-6 pt-20 pb-8 md:pt-28 md:pb-12">
         <div className="flex flex-col md:flex-row items-center md:items-end gap-8">
@@ -65,15 +61,6 @@ export default function ArtistPage({ params }: Props) {
             <div className="h-4 w-32 bg-gray-200 rounded" />
           </div>
         </div>
-      </div>
-    )
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Log in to view artist details</h2>
-        <p className="text-sm text-[var(--text-muted)] mb-4">Sign in with Spotify to see top tracks, albums, and more.</p>
       </div>
     )
   }

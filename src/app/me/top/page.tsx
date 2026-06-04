@@ -1,8 +1,8 @@
 import TopClient from "./TopClient"
 
 export const metadata = {
-  title: "Top Charts - Spotify Music",
-  description: "Your most played tracks and artists on Spotify",
+  title: "Top Charts - Muse",
+  description: "Trending tracks and artists on Deezer",
 }
 
 export default function TopPage() {

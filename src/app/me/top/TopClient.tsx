@@ -1,39 +1,20 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useAuth } from "@/lib/AuthContext"
 import { usePlayer } from "@/components/Player"
 import { formatArtists, getImage, formatDuration } from "@/lib/utils"
-import { spotifyFetchDirect } from "@/lib/api-client"
+import { getChart } from "@/lib/deezer"
 import type { PlayerTrack } from "@/lib/types"
-import type { SpotifyTrack, SpotifyArtist } from "@/lib/types"
 import Link from "next/link"
 
-type TimeRange = "short_term" | "medium_term" | "long_term"
-
-const timeRangeLabels: Record<TimeRange, string> = {
-  short_term: "Last 4 Weeks",
-  medium_term: "Last 6 Months",
-  long_term: "All Time",
-}
-
 export default function TopClient() {
-  const { isAuthenticated, isLoading: authLoading, getToken, login } = useAuth()
-  const [timeRange, setTimeRange] = useState<TimeRange>("medium_term")
-  const [tracks, setTracks] = useState<SpotifyTrack[]>([])
-  const [artists, setArtists] = useState<SpotifyArtist[]>([])
+  const [tracks, setTracks] = useState<any[]>([])
+  const [artists, setArtists] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [retryCount, setRetryCount] = useState(0)
   const { playAll } = usePlayer()
 
-  // Fetch top items
   useEffect(() => {
-    if (!isAuthenticated) {
-      setLoading(false)
-      return
-    }
-
     let cancelled = false
     setLoading(true)
     setError(null)
@@ -41,23 +22,10 @@ export default function TopClient() {
     async function fetchTopItems() {
       try {
         if (cancelled) return
-
-        const [tracksData, artistsData] = await Promise.all([
-          spotifyFetchDirect<{ items: SpotifyTrack[] }>(
-            `https://api.spotify.com/v1/me/top/tracks?limit=20&time_range=${timeRange}`,
-            {},
-            getToken
-          ),
-          spotifyFetchDirect<{ items: SpotifyArtist[] }>(
-            `https://api.spotify.com/v1/me/top/artists?limit=12&time_range=${timeRange}`,
-            {},
-            getToken
-          ),
-        ])
-
+        const chart = await getChart()
         if (!cancelled) {
-          setTracks(tracksData.items || [])
-          setArtists(artistsData.items || [])
+          setTracks(chart.tracks?.slice(0, 20) || [])
+          setArtists(chart.artists?.slice(0, 12) || [])
         }
       } catch (err) {
         if (!cancelled) {
@@ -70,7 +38,7 @@ export default function TopClient() {
 
     fetchTopItems()
     return () => { cancelled = true }
-  }, [isAuthenticated, timeRange, getToken, retryCount])
+  }, [])
 
   // Build player tracks
   const playerTracks: PlayerTrack[] = tracks
@@ -79,7 +47,7 @@ export default function TopClient() {
       id: track.id,
       name: track.name,
       artists: formatArtists(track.artists || []),
-      artistIds: (track.artists || []).map((a) => a.id),
+      artistIds: (track.artists || []).map((a: any) => a.id),
       album: track.album?.name || "",
       albumId: track.album?.id || "",
       albumImage: getImage(track.album?.images, "sm"),
@@ -92,37 +60,11 @@ export default function TopClient() {
     if (playerTracks.length > 0) playAll(playerTracks, 0)
   }
 
-  // Not logged in
-  if (!authLoading && !isAuthenticated) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
-        <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mb-5">
-          <svg className="w-8 h-8 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-        </div>
-        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Your Top Charts</h2>
-        <p className="text-sm text-[var(--text-muted)] max-w-sm mb-6">Log in with your Spotify account to see your most played tracks and artists.</p>
-        <button
-          onClick={login}
-          className="bg-[var(--accent)] hover:opacity-90 text-white font-medium px-4 py-2 rounded-lg text-sm transition-all hover:shadow-sm"
-        >
-          Log in to Spotify
-        </button>
-      </div>
-    )
-  }
-
   // Loading
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="p-6 space-y-8 pb-20">
         <div className="h-10 w-48 bg-gray-200 rounded-lg skeleton" />
-        <div className="flex gap-2">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-8 w-28 bg-gray-200 rounded-full skeleton" />
-          ))}
-        </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="space-y-3">
@@ -153,13 +95,8 @@ export default function TopClient() {
         <svg className="w-16 h-16 text-red-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
         </svg>
-        <p className="text-lg font-medium text-[var(--text-primary)] mb-2">Failed to load your top charts</p>
+        <p className="text-lg font-medium text-[var(--text-primary)] mb-2">Failed to load top charts</p>
         <p className="text-sm text-[var(--text-muted)] mb-4">{error}</p>
-        <button onClick={() => setRetryCount((c) => c + 1)}
-          className="text-sm font-medium text-[var(--accent)] hover:underline"
-        >
-          Try again
-        </button>
       </div>
     )
   }
@@ -170,25 +107,8 @@ export default function TopClient() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-[var(--text-primary)]">Top Charts</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">Your most played tracks and artists</p>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">Trending tracks and artists on Deezer</p>
         </div>
-      </div>
-
-      {/* Time range selector */}
-      <div className="flex gap-2 flex-wrap">
-        {(Object.keys(timeRangeLabels) as TimeRange[]).map((range) => (
-          <button
-            key={range}
-            onClick={() => setTimeRange(range)}
-            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-              timeRange === range
-                ? "bg-[var(--accent)] text-white shadow-sm"
-                : "bg-white text-[var(--text-secondary)] border border-[var(--border)] hover:bg-gray-50"
-            }`}
-          >
-            {timeRangeLabels[range]}
-          </button>
-        ))}
       </div>
 
       {/* Top Artists */}
@@ -226,17 +146,9 @@ export default function TopClient() {
                   <div className="absolute -top-1 -left-1 w-7 h-7 bg-[var(--accent)] rounded-full flex items-center justify-center shadow-lg">
                     <span className="text-xs font-bold text-white">{index + 1}</span>
                   </div>
-                  {/* Play button */}
-                  <button className="absolute bottom-2 right-2 w-10 h-10 bg-[var(--accent)] rounded-full flex items-center justify-center shadow-xl translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 hover:opacity-90 hover:scale-105">
-                    <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </button>
                 </div>
                 <p className="font-semibold text-sm text-[var(--text-primary)] truncate">{artist.name}</p>
-                <p className="text-xs text-[var(--text-muted)] mt-1">
-                  {artist.genres?.slice(0, 2).join(", ") || "Artist"}
-                </p>
+                <p className="text-xs text-[var(--text-muted)] mt-1">Artist</p>
               </Link>
             ))}
           </div>
@@ -292,9 +204,6 @@ export default function TopClient() {
                   </div>
                 </div>
                 <div className="flex items-center justify-end gap-2">
-                  {track.explicit && (
-                    <span className="text-[10px] bg-gray-200 text-[var(--text-muted)] font-bold px-1.5 py-0.5 rounded uppercase">E</span>
-                  )}
                   <span className="text-sm tabular-nums">{formatDuration(track.duration_ms || 0)}</span>
                 </div>
               </div>
@@ -304,13 +213,13 @@ export default function TopClient() {
       )}
 
       {/* Empty state */}
-      {tracks.length === 0 && artists.length === 0 && (
+      {tracks.length === 0 && artists.length === 0 && !loading && (
         <div className="flex flex-col items-center justify-center py-20 text-[var(--text-muted)]">
           <svg className="w-20 h-20 mb-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
           </svg>
-          <p className="text-lg font-medium text-[var(--text-primary)] mb-1">No top tracks yet</p>
-          <p className="text-sm">Start listening to music to see your personalized top charts</p>
+          <p className="text-lg font-medium text-[var(--text-primary)] mb-1">No charts available</p>
+          <p className="text-sm">Check back later for updated charts</p>
         </div>
       )}
     </div>

@@ -2,104 +2,49 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
-import { useAuth } from "@/lib/AuthContext"
 import { getImage, formatArtists, formatDuration } from "@/lib/utils"
 import { usePlayer } from "@/components/Player"
-import SpotifyLoginButton from "@/components/SpotifyLoginButton"
+import { searchAll } from "@/lib/deezer"
 import type { PlayerTrack } from "@/components/Player"
-import type { SpotifySearchResult, SpotifyTrack, SpotifyAlbum, SpotifyArtist, SpotifyPlaylist } from "@/lib/types"
-
-type SearchCategory = "all" | "track" | "album" | "artist" | "playlist"
+import type { SpotifySearchResult, SpotifyTrack } from "@/lib/types"
 
 export default function SearchClient() {
-  const { isAuthenticated, isLoading: authLoading, getToken } = useAuth()
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<SpotifySearchResult | null>(null)
   const [loading, setLoading] = useState(false)
-  const [category, setCategory] = useState<SearchCategory>("all")
   const [error, setError] = useState<string | null>(null)
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const { playTrack, playAll } = usePlayer()
 
-  const search = useCallback(async (q: string, cat: SearchCategory) => {
+  const doSearch = useCallback(async (q: string) => {
     if (!q.trim()) {
       setResults(null)
       return
     }
-
     setLoading(true)
     setError(null)
 
-    let token: string | null = null
-    let types = ""
-
     try {
-      token = await getToken()
-      if (!token) throw new Error("AUTH_REQUIRED")
-
-      types = cat === "all"
-        ? "track,album,artist,playlist"
-        : cat === "track" ? "track"
-        : cat === "album" ? "album"
-        : cat === "artist" ? "artist"
-        : "playlist"
-
-      const url = `/api/spotify/search?q=${encodeURIComponent(q)}&type=${types}&limit=8`
-
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) {
-        if (res.status === 401) throw new Error("AUTH_REQUIRED")
-        throw new Error("Search failed")
-      }
-      const data = await res.json()
+      const data = await searchAll(q)
       setResults(data)
     } catch (e: any) {
-      if (e?.message === "AUTH_REQUIRED") {
-        // Auto-retry with fresh token
-        const freshToken = await getToken()
-        if (freshToken && freshToken !== token) {
-          // Retry with new token
-          try {
-            const retryRes = await fetch(`/api/spotify/search?q=${encodeURIComponent(q)}&type=${types}&limit=8`, {
-              headers: { Authorization: `Bearer ${freshToken}` },
-            })
-            if (retryRes.ok) {
-              const data = await retryRes.json()
-              setResults(data)
-              return
-            }
-          } catch {}
-        }
-        setError("Session expired. Please refresh the page and log in again.")
-      } else {
-        setError("Search failed. Please try again.")
-      }
+      setError(e?.message || "Search failed. Please try again.")
       setResults(null)
     } finally {
       setLoading(false)
     }
-  }, [getToken])
+  }, [])
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => search(query, category), 400)
+    debounceRef.current = setTimeout(() => doSearch(query), 400)
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
-  }, [query, category, search])
+  }, [query, doSearch])
 
   useEffect(() => {
     inputRef.current?.focus()
   }, [])
-
-  const categories: { key: SearchCategory; label: string }[] = [
-    { key: "all", label: "All" },
-    { key: "track", label: "Songs" },
-    { key: "album", label: "Albums" },
-    { key: "artist", label: "Artists" },
-    { key: "playlist", label: "Playlists" },
-  ]
 
   const tracks = results?.tracks?.items || []
   const albums = results?.albums?.items || []
@@ -138,35 +83,6 @@ export default function SearchClient() {
     if (playerTracks.length > 0) playAll(playerTracks, 0)
   }
 
-  // Loading state
-  if (authLoading) {
-    return (
-      <div className="p-6 pb-20">
-        <div className="max-w-2xl mb-6">
-          <div className="h-14 bg-gray-100 rounded-xl animate-pulse" />
-        </div>
-      </div>
-    )
-  }
-
-  // Not authenticated
-  if (!isAuthenticated) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
-        <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mb-5">
-          <svg className="w-8 h-8 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
-        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Log in to search music</h2>
-        <p className="text-sm text-[var(--text-muted)] max-w-sm mb-6">
-          Sign in with your Spotify account to search millions of songs, albums, artists, and playlists.
-        </p>
-        <SpotifyLoginButton />
-      </div>
-    )
-  }
-
   return (
     <div className="p-6 pb-20 max-w-5xl mx-auto">
       {/* Search bar */}
@@ -194,23 +110,6 @@ export default function SearchClient() {
             </svg>
           </button>
         )}
-      </div>
-
-      {/* Category filters */}
-      <div className="flex gap-2 mb-6 flex-wrap">
-        {categories.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setCategory(key)}
-            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-              category === key
-                ? "bg-[var(--accent)] text-white shadow-sm"
-                : "bg-white text-[var(--text-secondary)] border border-[var(--border)] hover:bg-gray-50"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
       </div>
 
       {/* Loading state */}
@@ -254,19 +153,9 @@ export default function SearchClient() {
       {!loading && results && (
         <div className="space-y-8">
           {/* Tracks */}
-          {(category === "all" || category === "track") && tracks.length > 0 && (
+          {tracks.length > 0 && (
             <section>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-[var(--text-primary)]">Songs</h2>
-                {tracks.length > 0 && (
-                  <button
-                    onClick={playAllTracks}
-                    className="text-sm font-medium text-[var(--accent)] hover:underline transition-colors"
-                  >
-                    Play all
-                  </button>
-                )}
-              </div>
+              <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4">Songs</h2>
               <div className="space-y-1">
                 {tracks.map((track) => (
                   <div
@@ -298,7 +187,7 @@ export default function SearchClient() {
           )}
 
           {/* Albums */}
-          {(category === "all" || category === "album") && albums.length > 0 && (
+          {albums.length > 0 && (
             <section>
               <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4">Albums</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -316,7 +205,7 @@ export default function SearchClient() {
           )}
 
           {/* Artists */}
-          {(category === "all" || category === "artist") && artists.length > 0 && (
+          {artists.length > 0 && (
             <section>
               <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4">Artists</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -334,7 +223,7 @@ export default function SearchClient() {
           )}
 
           {/* Playlists */}
-          {(category === "all" || category === "playlist") && playlists.length > 0 && (
+          {playlists.length > 0 && (
             <section>
               <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4">Playlists</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">

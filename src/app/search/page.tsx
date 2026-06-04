@@ -1,8 +1,8 @@
 import SearchClient from "./SearchClient"
 
 export const metadata = {
-  title: "Search - Spotify Music",
-  description: "Search for songs, albums, artists, and playlists",
+  title: "Search - Muse",
+  description: "Search for songs, albums, artists, and playlists on Deezer",
 }
 
 export default function SearchPage() {
