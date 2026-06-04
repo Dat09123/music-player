@@ -8,6 +8,7 @@ import { AuthProvider } from "@/lib/AuthContext"
 import { ThemeProvider } from "@/lib/ThemeContext"
 import ErrorBoundary from "@/components/ErrorBoundary"
 import ErrorFallback from "@/components/ErrorFallback"
+import { ToastProvider } from "@/components/Toast"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -33,6 +34,7 @@ export default function RootLayout({
       <body className="h-full bg-[var(--bg-primary)] text-[var(--text-primary)]">
         <ThemeProvider>
         <AuthProvider>
+        <ToastProvider>
           <PlayerProvider>
             <div className="flex h-full">
               <ErrorBoundary label="Sidebar">
@@ -50,6 +52,7 @@ export default function RootLayout({
               </div>
             </div>
           </PlayerProvider>
+        </ToastProvider>
         </AuthProvider>
         </ThemeProvider>
       </body>

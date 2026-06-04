@@ -4,6 +4,7 @@ import { usePlayer } from "@/components/Player"
 import TrackList from "@/components/TrackList"
 import { formatArtists, getImage } from "@/lib/utils"
 import { importTracksAsPlaylist } from "@/lib/playlists"
+import { useToast } from "@/components/Toast"
 import type { PlayerTrack } from "@/components/Player"
 import type { SpotifyPlaylistTrack } from "@/lib/types"
 import { useState } from "react"
@@ -16,6 +17,7 @@ interface Props {
 
 export default function PlaylistClient({ tracks, playlistName, playlistUri }: Props) {
   const { playAll, isPlaying } = usePlayer()
+  const { showToast } = useToast()
   const [imported, setImported] = useState(false)
 
   const playerTracks: PlayerTrack[] = tracks
@@ -40,6 +42,7 @@ export default function PlaylistClient({ tracks, playlistName, playlistUri }: Pr
   function handleImport() {
     importTracksAsPlaylist(playlistName, playerTracks)
     setImported(true)
+    showToast(`Imported "${playlistName}" (${playerTracks.length} tracks) to your library`)
   }
 
   return (

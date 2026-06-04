@@ -7,6 +7,7 @@ import type { SpotifyTrack, SpotifyPlaylistTrack } from "@/lib/types"
 import { getPlaylists, addTrackToPlaylist, createPlaylist } from "@/lib/playlists"
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
+import { useToast } from "./Toast"
 
 interface TrackListProps {
   tracks: SpotifyTrack[] | SpotifyPlaylistTrack[]
@@ -18,6 +19,7 @@ interface TrackListProps {
 
 export default function TrackList({ tracks, showAlbum = true, showImage = true, showIndex = false, startIndex = 0 }: TrackListProps) {
   const { playAll, currentTrack, isPlaying } = usePlayer()
+  const { showToast } = useToast()
   const [menuTrack, setMenuTrack] = useState<PlayerTrack | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 })
@@ -73,13 +75,13 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
     setNewPlaylistName("")
   }
 
-  function handleAddToPlaylist(playlistId: string) {
+  function handleAddToPlaylist(playlistId: string, playlistName?: string) {
     if (!menuTrack) return
     addTrackToPlaylist(playlistId, menuTrack)
     setPlaylists(getPlaylists())
-    // Show brief feedback by keeping menu open briefly then close
     setMenuOpen(false)
     setShowNewPlaylistInput(false)
+    showToast(`Added "${menuTrack.name}" to ${playlistName || "playlist"}`)
   }
 
   function handleCreateAndAdd() {
@@ -90,6 +92,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
     setMenuOpen(false)
     setShowNewPlaylistInput(false)
     setNewPlaylistName("")
+    showToast(`Created "${pl.name}" and added "${menuTrack.name}"`)
   }
 
   if (tracks.length === 0) {
@@ -175,7 +178,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
               {playlists.map((pl) => (
                 <button
                   key={pl.id}
-                  onClick={() => handleAddToPlaylist(pl.id)}
+                  onClick={() => handleAddToPlaylist(pl.id, pl.name)}
                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all"
                 >
                   <svg className="w-3.5 h-3.5 flex-shrink-0 opacity-60" fill="currentColor" viewBox="0 0 24 24">
