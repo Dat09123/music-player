@@ -93,3 +93,42 @@ export function getRecentlyPlayedArtists(): RecentArtist[] {
   // Sort by most recently played
   return Array.from(artistMap.values()).sort((a, b) => b.playedAt - a.playedAt)
 }
+
+/** Recently played album entry */
+export interface RecentAlbum {
+  id: string
+  name: string
+  imageUrl: string
+  artistName: string
+  artistIds: string[]
+  playedAt: number
+  trackCount: number
+}
+
+/** Get unique recently played albums from track history */
+export function getRecentlyPlayedAlbums(): RecentAlbum[] {
+  const tracks = loadAll()
+  const albumMap = new Map<string, RecentAlbum>()
+
+  for (const track of tracks) {
+    const id = track.albumId
+    if (!id || id === "unknown") continue
+
+    if (albumMap.has(id)) {
+      const existing = albumMap.get(id)!
+      existing.trackCount++
+    } else {
+      albumMap.set(id, {
+        id,
+        name: track.album || "Unknown Album",
+        imageUrl: track.albumImage || "",
+        artistName: track.artists,
+        artistIds: track.artistIds,
+        playedAt: track.playedAt,
+        trackCount: 1,
+      })
+    }
+  }
+
+  return Array.from(albumMap.values()).sort((a, b) => b.playedAt - a.playedAt)
+}
