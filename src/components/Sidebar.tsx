@@ -12,6 +12,7 @@ const navItems = [
   { href: "/", label: "Home", icon: HomeIcon },
   { href: "/search", label: "Search", icon: SearchIcon },
   { href: "/me/recently", label: "Recently Played", icon: HistoryIcon },
+  { href: "/me/artist-history", label: "Artist History", icon: ArtistIcon },
   { href: "/me/top", label: "Top Charts", icon: TopChartIcon },
   { href: "/me/liked", label: "Trending Now", icon: TrendingIcon },
 ]
@@ -236,6 +237,10 @@ function TrendingIcon({ className }: { className?: string }) {
 
 function HistoryIcon({ className }: { className?: string }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+}
+
+function ArtistIcon({ className }: { className?: string }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
 }
 
 function ThemeToggle({ collapsed, onClose }: { collapsed?: boolean; onClose?: () => void }) {

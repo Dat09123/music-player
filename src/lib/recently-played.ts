@@ -46,3 +46,50 @@ export function addToRecentlyPlayed(track: PlayerTrack): void {
 export function clearRecentlyPlayed(): void {
   saveAll([])
 }
+
+/** Recently played artist entry */
+export interface RecentArtist {
+  id: string
+  name: string
+  imageUrl: string
+  playedAt: number
+  trackCount: number
+  lastTrackName: string
+  lastTrackId: string
+}
+
+/** Get unique recently played artists from track history */
+export function getRecentlyPlayedArtists(): RecentArtist[] {
+  const tracks = loadAll()
+  const artistMap = new Map<string, RecentArtist>()
+
+  for (const track of tracks) {
+    const ids = track.artistIds || []
+    const names = track.artists.split(", ").map(s => s.trim())
+
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i]
+      const name = names[i] || names[0] || "Unknown"
+      if (!id || id === "unknown") continue
+
+      if (artistMap.has(id)) {
+        const existing = artistMap.get(id)!
+        existing.trackCount++
+        // Don't update playedAt/lastTrack — first encounter (most recent) is already correct
+      } else {
+        artistMap.set(id, {
+          id,
+          name,
+          imageUrl: track.albumImage || "",
+          playedAt: track.playedAt,
+          trackCount: 1,
+          lastTrackName: track.name,
+          lastTrackId: track.id,
+        })
+      }
+    }
+  }
+
+  // Sort by most recently played
+  return Array.from(artistMap.values()).sort((a, b) => b.playedAt - a.playedAt)
+}
