@@ -243,13 +243,25 @@ export async function getArtist(id: string) {
   const [artistData, topTracksData, albumsData]: [any, any, any] = await Promise.all([
     fetchDeezer(`/artist/${id}`),
     fetchDeezer(`/artist/${id}/top?limit=10`),
-    fetchDeezer(`/artist/${id}/albums?limit=10`),
+    fetchDeezer(`/artist/${id}/albums?limit=50`),
   ])
+
+  const rawAlbums: any[] = albumsData.data || []
+
+  // Sort albums by release_date descending (newest first)
+  const sortedAlbums = rawAlbums
+    .map(transformAlbum)
+    .sort((a: any, b: any) => {
+      const dateA = a.release_date ? new Date(a.release_date).getTime() : 0
+      const dateB = b.release_date ? new Date(b.release_date).getTime() : 0
+      return dateB - dateA
+    })
 
   return {
     artist: transformArtist(artistData),
     topTracks: (topTracksData.data || []).map(transformTrack),
-    albums: (albumsData.data || []).map(transformAlbum),
+    albums: sortedAlbums,
+    nbAlbum: artistData.nb_album || rawAlbums.length,
   }
 }
 

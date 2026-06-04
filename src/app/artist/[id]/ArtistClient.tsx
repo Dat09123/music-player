@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { usePlayer } from "@/components/Player"
 import TrackList from "@/components/TrackList"
 import Link from "next/link"
@@ -12,10 +13,15 @@ interface Props {
   albums: SpotifyAlbum[]
   relatedArtists: SpotifyArtist[]
   artistName: string
+  bio?: string | null
+  nbAlbum?: number
 }
 
-export default function ArtistClient({ topTracks, albums, relatedArtists, artistName }: Props) {
+const INITIAL_ALBUMS = 12
+
+export default function ArtistClient({ topTracks, albums, relatedArtists, artistName, bio, nbAlbum }: Props) {
   const { playAll } = usePlayer()
+  const [showAllAlbums, setShowAllAlbums] = useState(false)
 
   const playerTracks: PlayerTrack[] = topTracks
     .filter((t) => t?.id)
@@ -36,6 +42,9 @@ export default function ArtistClient({ topTracks, albums, relatedArtists, artist
     if (playerTracks.length > 0) playAll(playerTracks, 0)
   }
 
+  const displayedAlbums = showAllAlbums ? albums : albums.slice(0, INITIAL_ALBUMS)
+  const hasMoreAlbums = albums.length > INITIAL_ALBUMS
+
   return (
     <div className="bg-[var(--bg-secondary)]/50 px-3 py-4 space-y-10 pb-20">
       {/* Play all button */}
@@ -49,6 +58,16 @@ export default function ArtistClient({ topTracks, albums, relatedArtists, artist
           </svg>
         </button>
       </div>
+
+      {/* Artist bio */}
+      {bio && (
+        <section className="px-4 max-w-3xl">
+          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-3">About</h2>
+          <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+            {bio}
+          </p>
+        </section>
+      )}
 
       {/* Top tracks */}
       {topTracks.length > 0 && (
@@ -64,34 +83,60 @@ export default function ArtistClient({ topTracks, albums, relatedArtists, artist
         </section>
       )}
 
-      {/* Albums */}
+      {/* Albums / Discography */}
       {albums.length > 0 && (
         <section>
           <div className="flex items-center justify-between px-4 mb-4">
-            <h2 className="text-xl font-bold text-[var(--text-primary)]">Albums</h2>
+            <h2 className="text-xl font-bold text-[var(--text-primary)]">
+              Discography
+              {nbAlbum && <span className="text-sm font-normal text-[var(--text-muted)] ml-2">{nbAlbum} album{nbAlbum !== 1 ? "s" : ""}</span>}
+            </h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 px-2">
-            {albums.slice(0, 6).map((album: any) => (
-              <Link
-                key={album.id}
-                href={`/album/${album.id}`}
-                className="group bg-[var(--bg-secondary)] hover:bg-[var(--bg-hover)] rounded-xl p-4 transition-all border border-[var(--border)]"
-              >
-                <div className="w-full aspect-square rounded-lg overflow-hidden bg-[var(--bg-hover)] mb-3 shadow-sm">
-                  <img
-                    src={getImage(album.images)}
-                    alt={album.name}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                </div>
-                <p className="font-semibold text-sm text-[var(--text-primary)] truncate">{album.name}</p>
-                <p className="text-xs text-[var(--text-secondary)] mt-1">
-                  {new Date(album.release_date).getFullYear()} • {album.album_type === "single" ? "Single" : album.album_type === "compilation" ? "Compilation" : "Album"}
-                </p>
-              </Link>
-            ))}
+            {displayedAlbums.map((album: any) => {
+              const year = album.release_date ? new Date(album.release_date).getFullYear() : null
+              const typeLabel = album.album_type === "single" ? "Single" : album.album_type === "compilation" ? "Compilation" : "Album"
+              return (
+                <Link
+                  key={album.id}
+                  href={`/album/${album.id}`}
+                  className="group bg-[var(--bg-secondary)] hover:bg-[var(--bg-hover)] rounded-xl p-4 transition-all border border-[var(--border)] animate-fade-in"
+                >
+                  <div className="w-full aspect-square rounded-lg overflow-hidden bg-[var(--bg-hover)] mb-3 shadow-sm">
+                    <img
+                      src={getImage(album.images)}
+                      alt={album.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  </div>
+                  <p className="font-semibold text-sm text-[var(--text-primary)] truncate">{album.name}</p>
+                  <p className="text-xs text-[var(--text-secondary)] mt-1">
+                    {year ? `${year} • ` : ""}{typeLabel}
+                    {album.total_tracks ? ` • ${album.total_tracks} tracks` : ""}
+                  </p>
+                </Link>
+              )
+            })}
           </div>
+
+          {/* Show more / Show less toggle */}
+          {hasMoreAlbums && (
+            <div className="flex justify-center mt-6">
+              <button
+                onClick={() => setShowAllAlbums(!showAllAlbums)}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-[var(--accent)] hover:bg-[var(--accent-light)] rounded-lg transition-all"
+              >
+                <span>{showAllAlbums ? "Show less" : `Show all ${albums.length} albums`}</span>
+                <svg
+                  className={`w-4 h-4 transition-transform ${showAllAlbums ? "rotate-180" : ""}`}
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+          )}
         </section>
       )}
 

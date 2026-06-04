@@ -15,6 +15,8 @@ export default function ArtistPage({ params }: Props) {
   const [topTracks, setTopTracks] = useState<any[]>([])
   const [albums, setAlbums] = useState<any[]>([])
   const [relatedArtists, setRelatedArtists] = useState<any[]>([])
+  const [bio, setBio] = useState<string | null>(null)
+  const [nbAlbum, setNbAlbum] = useState<number>(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -35,6 +37,7 @@ export default function ArtistPage({ params }: Props) {
           setTopTracks(data.topTracks)
           setAlbums(data.albums)
           setRelatedArtists(related.artists || [])
+          setNbAlbum(data.nbAlbum ?? data.albums.length)
           setError(null)
         }
       } catch (err: any) {
@@ -49,6 +52,26 @@ export default function ArtistPage({ params }: Props) {
     loadData()
     return () => { cancelled = true }
   }, [id])
+
+  // Fetch artist bio asynchronously (non-blocking)
+  useEffect(() => {
+    if (!artist || bio !== null) return
+    let cancelled = false
+
+    async function fetchBio() {
+      try {
+        const wikiRes = await fetch(`/api/wiki?name=${encodeURIComponent(artist.name)}`)
+        if (!wikiRes.ok) return
+        const wikiData = await wikiRes.json()
+        if (!cancelled && wikiData.bio) setBio(wikiData.bio)
+      } catch {
+        // Bio is optional
+      }
+    }
+
+    fetchBio()
+    return () => { cancelled = true }
+  }, [artist, bio])
 
   if (loading) {
     return (
@@ -183,6 +206,8 @@ export default function ArtistPage({ params }: Props) {
         albums={albums}
         relatedArtists={relatedArtists}
         artistName={artist.name}
+        bio={bio}
+        nbAlbum={nbAlbum}
       />
     </div>
   )
