@@ -55,6 +55,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [repeatMode, setRepeatMode] = useState<RepeatMode>("off")
   const [shuffle, setShuffle] = useState(false)
   const [queuePanelOpen, setQueuePanelOpen] = useState(false)
+  const [shuffleOrder, setShuffleOrder] = useState<number[]>([])
+  const [shuffleIndex, setShuffleIndex] = useState(0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // Use refs to avoid stale closures in audio event handlers
@@ -108,7 +110,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }
 
   function playAll(tracks: PlayerTrack[], startIndex = 0) {
-    setQueue(tracks); setQueueIndex(startIndex)
+    setQueue(tracks)
+    setQueueIndex(startIndex)
+    if (shuffle) {
+      const order = generateShuffleOrderFor(tracks, startIndex)
+      setShuffleOrder(order)
+      setShuffleIndex(0)
+    }
     if (tracks[startIndex]) playTrack(tracks[startIndex])
   }
 
@@ -119,26 +127,94 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     else if (currentTrack.previewUrl) audio.play().catch(() => setIsPlaying(false))
   }
 
+  function generateShuffleOrderFor(tracks: PlayerTrack[], currentIndex: number) {
+    const upcoming = []
+    for (let i = 0; i < tracks.length; i++) {
+      if (i !== currentIndex) upcoming.push(i)
+    }
+    // Fisher-Yates shuffle
+    for (let i = upcoming.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[upcoming[i], upcoming[j]] = [upcoming[j], upcoming[i]]
+    }
+    return upcoming
+  }
+
+  function generateShuffleOrder() {
+    return generateShuffleOrderFor(queue, queueIndex)
+  }
+
   function nextTrack() {
     if (queue.length === 0) return
-    let nextIndex = shuffle ? Math.floor(Math.random() * queue.length) : queueIndex + 1
-    if (nextIndex >= queue.length) { if (repeatMode === "all") nextIndex = 0; else return }
-    setQueueIndex(nextIndex); playTrack(queue[nextIndex])
+    if (shuffle) {
+      // Get next index from shuffle order
+      let nextShuffleIdx = shuffleIndex + 1
+      // If we've gone through all shuffled tracks, regenerate
+      if (nextShuffleIdx >= shuffleOrder.length) {
+        if (repeatMode === "all") {
+          const newOrder = generateShuffleOrder()
+          setShuffleOrder(newOrder)
+          nextShuffleIdx = 0
+        } else {
+          return
+        }
+      }
+      const nextIndex = shuffleOrder[nextShuffleIdx]
+      if (nextIndex === undefined) return
+      setShuffleIndex(nextShuffleIdx)
+      setQueueIndex(nextIndex)
+      playTrack(queue[nextIndex])
+    } else {
+      let nextIndex = queueIndex + 1
+      if (nextIndex >= queue.length) {
+        if (repeatMode === "all") nextIndex = 0
+        else return
+      }
+      setQueueIndex(nextIndex)
+      playTrack(queue[nextIndex])
+    }
   }
 
   function prevTrack() {
     const audio = audioRef.current
     if (!audio || queue.length === 0) return
     if (audio.currentTime > 3) { audio.currentTime = 0; return }
-    let prevIndex = queueIndex - 1
-    if (prevIndex < 0) { if (repeatMode === "all") prevIndex = queue.length - 1; else return }
-    setQueueIndex(prevIndex); playTrack(queue[prevIndex])
+    if (shuffle) {
+      let prevShuffleIdx = shuffleIndex - 1
+      if (prevShuffleIdx < 0) {
+        if (repeatMode === "all") prevShuffleIdx = shuffleOrder.length - 1
+        else return
+      }
+      const prevIndex = shuffleOrder[prevShuffleIdx]
+      if (prevIndex === undefined) return
+      setShuffleIndex(prevShuffleIdx)
+      setQueueIndex(prevIndex)
+      playTrack(queue[prevIndex])
+    } else {
+      let prevIndex = queueIndex - 1
+      if (prevIndex < 0) {
+        if (repeatMode === "all") prevIndex = queue.length - 1
+        else return
+      }
+      setQueueIndex(prevIndex)
+      playTrack(queue[prevIndex])
+    }
   }
 
   function seekTo(time: number) { if (audioRef.current) audioRef.current.currentTime = time }
   function setVolume(vol: number) { setVolumeState(vol) }
   function toggleRepeat() { setRepeatMode((r) => r === "off" ? "all" : r === "all" ? "one" : "off") }
-  function toggleShuffle() { setShuffle((s) => !s) }
+  function toggleShuffle() {
+    setShuffle((prev) => {
+      if (!prev) {
+        // Turning shuffle ON: generate initial order
+        const order = generateShuffleOrder()
+        setShuffleOrder(order)
+        setShuffleIndex(0)
+      }
+      return !prev
+    })
+  }
 
   function addToQueue(track: PlayerTrack) {
     setQueue((prev) => [...prev, track])
