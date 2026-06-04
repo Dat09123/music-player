@@ -52,7 +52,7 @@ function SidebarContent({
             const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
             return (
               <li key={item.href}>
-                <Link href={item.href} onClick={onClose} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm font-medium ${isActive ? "bg-[var(--accent-light)] text-[var(--accent)]" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"}`}>
+                <Link href={item.href} onClick={onClose} className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-sm font-medium ${isActive ? "bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]/50"}`}>
                   <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-[var(--accent)]" : ""}`} />
                   {!collapsed && <span>{item.label}</span>}
                 </Link>
@@ -68,7 +68,7 @@ function SidebarContent({
           {localPlaylists.length > 0 && (
             <>
               <div className="px-5 py-2 border-t border-[var(--border)]">
-                <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Your Playlists</span>
+                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.12em]">Your Playlists</span>
               </div>
               <nav className="px-2 overflow-y-auto max-h-40">
                 <ul className="space-y-0.5">
@@ -85,8 +85,7 @@ function SidebarContent({
             </>
           )}
 
-          <div className="px-5 py-2 border-t border-[var(--border)]">
-            <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Deezer Charts</span>
+          <div className="px-5 py-2 border-t border-[var(--border)]">              <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.12em]">Deezer Charts</span>
           </div>
           <nav className="flex-1 px-2 overflow-y-auto">
             <ul className="space-y-0.5">
@@ -150,7 +149,7 @@ export default function Sidebar() {
       )}
 
       {/* Desktop sidebar */}
-      <aside className={`hidden md:flex ${collapsed ? "w-16" : "w-64"} bg-[var(--bg-secondary)] text-[var(--text-primary)] flex-col transition-all duration-300 flex-shrink-0 h-full border-r border-[var(--border)]`}>
+      <aside className={`hidden md:flex ${collapsed ? "w-16" : "w-64"} glass-subtle text-[var(--text-primary)] flex-col transition-all duration-300 flex-shrink-0 h-full border-r border-[var(--border)]`}>
         <div className="p-5 pb-3 flex items-center gap-3">
           <Link href="/" className="w-8 h-8 bg-[var(--accent)] rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm hover:opacity-90 transition-all">
             <svg className="w-4 h-4 text-white" viewBox="0 0 20 20" fill="currentColor">
@@ -173,7 +172,7 @@ export default function Sidebar() {
       </aside>
 
       {/* Mobile sidebar (overlay drawer) */}
-      <aside className={`fixed inset-y-0 left-0 z-50 flex md:hidden w-72 max-w-[85vw] bg-[var(--bg-secondary)] text-[var(--text-primary)] flex-col transition-all duration-300 h-full border-r border-[var(--border)] shadow-2xl overflow-y-auto ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 flex md:hidden w-72 max-w-[85vw] glass text-[var(--text-primary)] flex-col transition-all duration-300 h-full border-r border-[var(--border)] shadow-xl overflow-y-auto ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex items-center justify-between p-5 pb-3">
           <Link href="/" className="w-8 h-8 bg-[var(--accent)] rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
             <svg className="w-4 h-4 text-white" viewBox="0 0 20 20" fill="currentColor">

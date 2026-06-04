@@ -22,7 +22,7 @@ export default function Header() {
   const currentPage = pageNames[pathname] || (pathname.startsWith("/playlist") ? "Playlist" : pathname.startsWith("/album") ? "Album" : pathname.startsWith("/artist") ? "Artist" : "")
 
   return (
-    <header className="sticky top-0 z-40 bg-[var(--bg-secondary)]/80 backdrop-blur-md border-b border-[var(--border)]">
+    <header className="sticky top-0 z-40 glass-subtle border-b border-[var(--border)]">
       {/* Auth error banner */}
       {authError && (
         <div className="px-5 py-2.5 bg-red-50 dark:bg-red-950/30 border-b border-red-100 dark:border-red-900/50">
@@ -45,7 +45,7 @@ export default function Header() {
             </svg>
           </Link>
           <span className="text-[var(--text-muted)] text-sm">/</span>
-          <span className="text-sm font-medium text-[var(--text-primary)]">{currentPage}</span>
+          <span className="text-sm font-semibold text-[var(--text-primary)]">{currentPage}</span>
         </div>
 
         <div className="flex items-center gap-2">

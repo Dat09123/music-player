@@ -14,7 +14,7 @@ interface CardProps {
 
 export default function Card({ name, description, imageUrl, type, href, subtext }: CardProps) {
   return (
-    <Link href={href} className="group bg-[var(--bg-secondary)] rounded-xl border border-[var(--border)] p-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+    <Link href={href} className="group bg-[var(--bg-secondary)]/50 backdrop-blur-sm rounded-xl border border-[var(--border)] p-3 transition-all duration-200 hover:shadow-lg hover:shadow-[var(--accent)]/5 hover:-translate-y-1 hover:border-[var(--accent)]/20">
       <div className="relative mb-3">
         <div className={`w-full aspect-square overflow-hidden bg-[var(--bg-hover)] shadow-sm ${type === "artist" ? "rounded-full" : "rounded-lg"}`}>
           {imageUrl && !imageUrl.endsWith('/placeholder.svg') ? (
@@ -31,7 +31,7 @@ export default function Card({ name, description, imageUrl, type, href, subtext 
             </div>
           )}
         </div>
-        <div className="absolute bottom-1 right-1 w-9 h-9 bg-[var(--accent)] rounded-full flex items-center justify-center shadow-md translate-y-1 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-200">
+        <div className="absolute bottom-2 right-2 w-10 h-10 bg-[var(--accent)] rounded-full flex items-center justify-center shadow-lg translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-200">
           <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
         </div>
       </div>

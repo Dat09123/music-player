@@ -162,7 +162,7 @@ export default function SearchClient() {
           onFocus={() => { if (suggestions || recentSearches.length > 0) setShowSuggestions(true) }}
           onKeyDown={(e) => { if (e.key === 'Enter') { setShowSuggestions(false); doSearch(query) } if (e.key === 'Escape') setShowSuggestions(false) }}
           placeholder="What do you want to listen to?"
-          className="w-full pl-12 pr-8 py-3.5 bg-[var(--bg-secondary)] text-[var(--text-primary)] rounded-xl border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/10 text-lg placeholder-[var(--text-muted)] transition-all shadow-sm"
+          className="w-full pl-12 pr-8 py-3.5 glass-subtle text-[var(--text-primary)] rounded-xl border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 text-lg placeholder-[var(--text-muted)] transition-all shadow-sm"
         />
         {query && (
           <button
@@ -179,7 +179,7 @@ export default function SearchClient() {
         {showSuggestions && (query.trim() ? suggestions : recentSearches.length > 0) && (
           <div
             ref={suggestPanelRef}
-            className="absolute top-full left-0 right-0 mt-2 bg-[var(--bg-secondary)] rounded-xl shadow-xl border border-[var(--border)] z-50 overflow-hidden animate-scale-in"
+            className="absolute top-full left-0 right-0 mt-2 glass rounded-xl shadow-xl border border-[var(--border)] z-50 overflow-hidden animate-scale-in"
           >
             {query.trim() && suggestions ? (
               <div className="py-1 max-h-80 overflow-y-auto">
@@ -383,7 +383,7 @@ export default function SearchClient() {
               <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4">Albums</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {albums.slice(0, 5).map((album) => (
-                  <Link key={album.id} href={`/album/${album.id}`} className="group bg-[var(--bg-secondary)] hover:bg-[var(--bg-hover)] rounded-xl p-4 transition-all border border-[var(--border)]">
+                  <Link key={album.id} href={`/album/${album.id}`} className="group bg-[var(--bg-secondary)]/50 backdrop-blur-sm hover:bg-[var(--bg-hover)]/70 rounded-xl p-4 transition-all border border-[var(--border)] hover:shadow-lg hover:-translate-y-0.5 hover:border-[var(--accent)]/20">
                     <div className="w-full aspect-square rounded-lg overflow-hidden bg-[var(--bg-hover)] mb-3 shadow-sm">
                       <img src={getImage(album.images)} alt={album.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                     </div>
@@ -401,7 +401,7 @@ export default function SearchClient() {
               <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4">Artists</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {artists.slice(0, 5).map((artist) => (
-                  <Link key={artist.id} href={`/artist/${artist.id}`} className="group bg-[var(--bg-secondary)] hover:bg-[var(--bg-hover)] rounded-xl p-4 transition-all text-center border border-[var(--border)]">
+                  <Link key={artist.id} href={`/artist/${artist.id}`} className="group bg-[var(--bg-secondary)]/50 backdrop-blur-sm hover:bg-[var(--bg-hover)]/70 rounded-xl p-4 transition-all text-center border border-[var(--border)] hover:shadow-lg hover:-translate-y-0.5 hover:border-[var(--accent)]/20">
                     <div className="w-full aspect-square rounded-full overflow-hidden bg-[var(--bg-hover)] mb-3 mx-auto shadow-sm">
                       <img src={getImage(artist.images)} alt={artist.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                     </div>
@@ -419,7 +419,7 @@ export default function SearchClient() {
               <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4">Playlists</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {playlists.slice(0, 5).map((playlist) => (
-                  <Link key={playlist.id} href={`/playlist/${playlist.id}`} className="group bg-[var(--bg-secondary)] hover:bg-[var(--bg-hover)] rounded-xl p-4 transition-all border border-[var(--border)]">
+                  <Link key={playlist.id} href={`/playlist/${playlist.id}`} className="group bg-[var(--bg-secondary)]/50 backdrop-blur-sm hover:bg-[var(--bg-hover)]/70 rounded-xl p-4 transition-all border border-[var(--border)] hover:shadow-lg hover:-translate-y-0.5 hover:border-[var(--accent)]/20">
                     <div className="w-full aspect-square rounded-lg overflow-hidden bg-[var(--bg-hover)] mb-3 shadow-sm">
                       <img src={getImage(playlist.images)} alt={playlist.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                     </div>
@@ -453,7 +453,7 @@ export default function SearchClient() {
                   <button
                     key={genre.id}
                     onClick={() => handleGenreClick(genre.id, genre.name)}
-                    className="group relative overflow-hidden rounded-xl aspect-[3/2] bg-gradient-to-br from-[var(--bg-hover)] to-[var(--border)] hover:from-[var(--accent-light)] hover:to-[var(--accent)]/20 transition-all duration-300 p-4 flex items-end border border-[var(--border)] hover:border-[var(--accent)]/30"
+                    className="group relative overflow-hidden rounded-xl aspect-[3/2] glass-subtle hover:from-[var(--accent-light)] hover:to-[var(--accent)]/20 transition-all duration-300 p-4 flex items-end border border-[var(--border)] hover:border-[var(--accent)]/30 hover:shadow-lg"
                   >
                     {genre.picture && (
                       <img

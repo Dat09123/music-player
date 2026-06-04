@@ -9,31 +9,45 @@
   --text-muted: #9ca3af;
   --accent: #4f46e5;
   --accent-light: #eef2ff;
+  --accent-glow: rgba(79, 70, 229, 0.3);
   --border: #e5e7eb;
+  --border-light: rgba(229, 231, 235, 0.5);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
-  --radius: 8px;
-  --radius-lg: 16px;
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.15);
+  --radius: 10px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
   --skeleton-from: #e5e7eb;
   --skeleton-to: #f3f4f6;
 }
 
 .dark {
-  --bg-primary: #0f0f14;
-  --bg-secondary: #1a1a25;
-  --bg-hover: #252535;
-  --text-primary: #e8e8f0;
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #14141f;
+  --bg-hover: #1e1e30;
+  --text-primary: #ececf5;
   --text-secondary: #9ca3b8;
   --text-muted: #6b7280;
   --accent: #6366f1;
   --accent-light: #1e1b4b;
-  --border: #2a2a3a;
+  --accent-glow: rgba(99, 102, 241, 0.3);
+  --border: #252535;
+  --border-light: rgba(37, 37, 53, 0.5);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
-  --radius: 8px;
-  --radius-lg: 16px;
-  --skeleton-from: #252535;
-  --skeleton-to: #1e1e30;
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.2);
+  --radius: 10px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --skeleton-from: #1e1e30;
+  --skeleton-to: #181828;
 }
 
 @theme inline {
@@ -65,6 +79,45 @@ body {
   color: var(--text-primary);
   font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Glass card utility */
+.glass {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.dark .glass {
+  background: rgba(20, 20, 31, 0.7);
+  border: 1px solid rgba(37, 37, 53, 0.8);
+}
+
+/* Subtle glass for sidebars/panels */
+.glass-subtle {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .glass-subtle {
+  background: rgba(20, 20, 31, 0.4);
+}
+
+/* Glow effect on accent elements */
+.glow-accent {
+  box-shadow: var(--shadow-glow);
+}
+
+/* Hover lift effect */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 
 /* Scrollbar */
@@ -137,6 +190,11 @@ input[type="range"]:hover::-webkit-slider-thumb {
   to { opacity: 1; transform: scale(1); }
 }
 
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .animate-fade-in-up {
   animation: fadeInUp 0.4s ease-out both;
 }
@@ -147,6 +205,10 @@ input[type="range"]:hover::-webkit-slider-thumb {
 
 .animate-scale-in {
   animation: scaleIn 0.3s ease-out both;
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown 0.3s ease-out both;
 }
 
 /* Toast animations */
@@ -175,6 +237,16 @@ input[type="range"]:hover::-webkit-slider-thumb {
 
 .animate-toast-progress {
   animation: toastProgress 2.5s linear forwards;
+}
+
+/* Now playing bar animation */
+@keyframes nowPlaying {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-now-playing {
+  animation: nowPlaying 1.5s ease-in-out infinite;
 }
 
 /* Safe area for mobile (notch/home indicator) */

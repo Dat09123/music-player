@@ -119,7 +119,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
 
   return (
     <div className="space-y-0.5">
-      <div className="grid grid-cols-[32px_1fr_64px_28px] gap-3 px-4 py-1.5 text-xs text-[var(--text-muted)] border-b border-[var(--border)]">
+      <div className="grid grid-cols-[32px_1fr_64px_28px] gap-3 px-4 py-1.5 text-[11px] text-[var(--text-muted)] font-medium border-b border-[var(--border)]/50">
         <span className="text-center">#</span>
         <span>Title</span>
         <span className="text-right">
@@ -132,7 +132,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
         const isCurrentTrack = currentTrack?.id === track.id
         const pt = playerTracks[i]
         return (
-          <div key={`${track.id}-${i}`} className={`grid grid-cols-[32px_1fr_64px_28px] gap-3 px-4 py-2 rounded-lg group cursor-pointer transition-all hover:bg-[var(--bg-hover)] ${isCurrentTrack ? "text-[var(--accent)] bg-[var(--accent-light)]" : "text-[var(--text-secondary)]"}`} onClick={() => handlePlay(index)}>
+          <div key={`${track.id}-${i}`} className={`grid grid-cols-[32px_1fr_64px_28px] gap-3 px-4 py-2 rounded-xl group cursor-pointer transition-all hover:bg-[var(--bg-hover)]/70 ${isCurrentTrack ? "text-[var(--accent)] bg-[var(--accent)]/8" : "text-[var(--text-secondary)]"}`} onClick={() => handlePlay(index)}>
             <div className="flex items-center justify-center">
               {isCurrentTrack && isPlaying ? (
                 <div className="flex items-end gap-[2px] h-3">
@@ -141,7 +141,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
                   <span className="w-[2px] bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: "200ms", height: "40%" }} />
                 </div>
               ) : (
-                <><span className="group-hover:hidden text-xs tabular-nums">{index + 1}</span><svg className="hidden group-hover:block w-3.5 h-3.5 text-[var(--text-primary)]" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg></>
+                <>              <span className="group-hover:hidden text-xs tabular-nums text-[var(--text-muted)]">{index + 1}</span><svg className="hidden group-hover:block w-3.5 h-3.5 text-[var(--accent)]" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg></>
               )}
             </div>
             <div className="flex items-center gap-2.5 min-w-0">

@@ -277,7 +277,7 @@ function PlayerBar() {
   const progressPercent = duration > 0 ? (isSeeking ? seekValue : (progress / duration) * 100) : 0
 
   return (
-    <div className="fixed bottom-16 md:bottom-4 left-4 right-4 max-w-4xl mx-auto bg-[var(--bg-secondary)] rounded-2xl shadow-lg border border-[var(--border)] backdrop-blur-xl z-50 px-4 py-3">
+    <div className="fixed bottom-16 md:bottom-4 left-4 right-4 max-w-4xl mx-auto glass rounded-2xl shadow-xl border border-[var(--border)] z-50 px-4 py-3">
       <div className="flex items-center gap-4">
         {/* Track Info */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -301,7 +301,7 @@ function PlayerBar() {
           <button onClick={prevTrack} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" /></svg>
           </button>
-          <button onClick={togglePlay} className="w-8 h-8 rounded-full bg-[var(--accent)] text-white flex items-center justify-center hover:opacity-90 transition-all shadow-sm">
+          <button onClick={togglePlay} className="w-9 h-9 rounded-full bg-[var(--accent)] text-white flex items-center justify-center hover:opacity-90 hover:shadow-glow transition-all shadow-md">
             {isPlaying ? (
               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
             ) : (
@@ -320,7 +320,7 @@ function PlayerBar() {
             onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); seekTo(((e.clientX - r.left) / r.width) * duration) }}
             onMouseEnter={() => setIsSeeking(true)} onMouseLeave={() => setIsSeeking(false)}
             onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSeekValue(((e.clientX - r.left) / r.width) * 100) }}>
-            <div className="h-full bg-[var(--accent)] rounded-full transition-all" style={{ width: `${Math.min(progressPercent, 100)}%` }} />
+            <div className="h-full bg-gradient-to-r from-[var(--accent)] to-indigo-400 rounded-full transition-all shadow-sm" style={{ width: `${Math.min(progressPercent, 100)}%` }} />
           </div>
           <span className="text-xs text-[var(--text-muted)] w-8 tabular-nums">{formatDuration(Math.round(duration) * 1000)}</span>
         </div>
