@@ -6,6 +6,7 @@ import { useState, useEffect } from "react"
 import { getPlaylists, createPlaylist } from "@/lib/playlists"
 import type { LocalPlaylist } from "@/lib/types"
 import { useSidebar } from "./SidebarContext"
+import { useTheme } from "@/lib/ThemeContext"
 
 const navItems = [
   { href: "/", label: "Home", icon: HomeIcon },
@@ -162,6 +163,11 @@ export default function Sidebar() {
           </button>
         </div>
         <SidebarContent localPlaylists={localPlaylists} collapsed={collapsed} onCreatePlaylist={() => setShowCreateModal(true)} />
+        {!collapsed && (
+          <div className="px-2 pb-3 border-t border-[var(--border)] pt-2 mt-auto">
+            <ThemeToggle collapsed={collapsed} />
+          </div>
+        )}
       </aside>
 
       {/* Mobile sidebar (overlay drawer) */}
@@ -180,6 +186,10 @@ export default function Sidebar() {
           </button>
         </div>
         <SidebarContent localPlaylists={localPlaylists} collapsed={false} onClose={() => setMobileOpen(false)} onCreatePlaylist={() => { setShowCreateModal(true); setMobileOpen(false) }} />
+        {/* Mobile theme toggle at bottom */}
+        <div className="px-2 py-3 border-t border-[var(--border)] mt-auto">
+          <ThemeToggle collapsed={false} onClose={() => setMobileOpen(false)} />
+        </div>
       </aside>
 
       {/* Create Playlist Modal */}
@@ -226,4 +236,26 @@ function TrendingIcon({ className }: { className?: string }) {
 
 function HistoryIcon({ className }: { className?: string }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+}
+
+function ThemeToggle({ collapsed, onClose }: { collapsed?: boolean; onClose?: () => void }) {
+  const { theme, toggleTheme } = useTheme()
+  return (
+    <button
+      onClick={() => { toggleTheme(); onClose?.() }}
+      className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all"
+      title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+    >
+      {theme === "dark" ? (
+        <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      ) : (
+        <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+      )}
+      {!collapsed && <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
+    </button>
+  )
 }
