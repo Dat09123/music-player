@@ -237,11 +237,14 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
             <button
               onClick={() => {
                 const url = `${window.location.origin}/track/${menuTrack!.id}`
-                navigator.clipboard.writeText(url).then(() => {
-                  showToast(`Link copied: "${menuTrack!.name}"`)
-                }).catch(() => {
-                  showToast("Failed to copy link")
-                })
+                const shareData = { title: menuTrack!.name, text: menuTrack!.name, url }
+                if (navigator.share && navigator.canShare?.(shareData)) {
+                  navigator.share(shareData).catch(() => {})
+                } else {
+                  navigator.clipboard.writeText(url).then(() => {
+                    showToast(`Link copied: "${menuTrack!.name}"`)
+                  }).catch(() => showToast("Failed to copy link"))
+                }
                 setMenuOpen(false)
               }}
               className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all"
@@ -249,7 +252,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
               <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
               </svg>
-              <span>Copy Track Link</span>
+              <span>Share Track</span>
             </button>
           </div>
 

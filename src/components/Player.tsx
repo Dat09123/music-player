@@ -10,6 +10,16 @@ import { addToRecentlyPlayed } from "@/lib/recently-played"
 
 export type { PlayerTrack }
 
+// Liked tracks stored in localStorage
+const LIKED_KEY = "muse-liked-tracks"
+function getLiked(): Set<string> {
+  if (typeof window === "undefined") return new Set()
+  try { return new Set(JSON.parse(localStorage.getItem(LIKED_KEY) || "[]")) } catch { return new Set() }
+}
+function saveLiked(ids: Set<string>) {
+  localStorage.setItem(LIKED_KEY, JSON.stringify([...ids]))
+}
+
 interface PlayerContextType {
   currentTrack: PlayerTrack | null
   isPlaying: boolean
@@ -36,6 +46,16 @@ interface PlayerContextType {
   clearQueue: () => void
   queuePanelOpen: boolean
   setQueuePanelOpen: (open: boolean) => void
+  // Sleep timer
+  sleepTimer: number | null
+  setSleepTimer: (minutes: number | null) => void
+  sleepRemaining: number | null
+  // Crossfade
+  crossfade: number
+  setCrossfade: (seconds: number) => void
+  // Liked
+  likedTracks: Set<string>
+  toggleLike: (id: string) => void
 }
 
 const PlayerContext = createContext<PlayerContextType | null>(null)
@@ -59,13 +79,25 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [queuePanelOpen, setQueuePanelOpen] = useState(false)
   const [shuffleOrder, setShuffleOrder] = useState<number[]>([])
   const [shuffleIndex, setShuffleIndex] = useState(0)
+  const [sleepTimer, setSleepTimerState] = useState<number | null>(null)
+  const [sleepRemaining, setSleepRemaining] = useState<number | null>(null)
+  const [crossfade, setCrossfadeState] = useState(0)
+  const [likedTracks, setLikedTracks] = useState<Set<string>>(new Set())
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const sleepTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const crossfadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Use refs to avoid stale closures in audio event handlers
   const nextTrackRef = useRef(nextTrack)
   nextTrackRef.current = nextTrack
   const repeatModeRef = useRef(repeatMode)
   repeatModeRef.current = repeatMode
+  const crossfadeRef = useRef(crossfade)
+  crossfadeRef.current = crossfade
+  const volumeRef = useRef(volume)
+  volumeRef.current = volume
+
+  // Load liked tracks on mount
+  useEffect(() => { setLikedTracks(getLiked()) }, [])
 
   useEffect(() => {
     audioRef.current = new Audio()
@@ -76,9 +108,20 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
-    const onTimeUpdate = () => setProgress(audio.currentTime)
+    const onTimeUpdate = () => {
+      setProgress(audio.currentTime)
+      // Crossfade: start fading out near the end
+      const cf = crossfadeRef.current
+      if (cf > 0 && audio.duration > 0) {
+        const remaining = audio.duration - audio.currentTime
+        if (remaining <= cf && remaining > 0) {
+          audio.volume = Math.max(0, volumeRef.current * (remaining / cf))
+        }
+      }
+    }
     const onDurationChange = () => setDuration(audio.duration || 0)
     const onEnded = () => {
+      audio.volume = volumeRef.current
       if (repeatModeRef.current === "one") { audio.currentTime = 0; audio.play().catch(() => {}) }
       else nextTrackRef.current()
     }
@@ -103,13 +146,77 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => { if (audioRef.current) audioRef.current.volume = volume }, [volume])
 
+  // Sleep timer
+  useEffect(() => {
+    if (sleepTimerRef.current) clearInterval(sleepTimerRef.current)
+    if (sleepTimer === null) { setSleepRemaining(null); return }
+    setSleepRemaining(sleepTimer * 60)
+    sleepTimerRef.current = setInterval(() => {
+      setSleepRemaining(prev => {
+        if (prev === null || prev <= 1) {
+          clearInterval(sleepTimerRef.current!)
+          audioRef.current?.pause()
+          setSleepTimerState(null)
+          return null
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => { if (sleepTimerRef.current) clearInterval(sleepTimerRef.current) }
+  }, [sleepTimer])
+
+  // Media Session API
+  useEffect(() => {
+    if (!currentTrack || typeof navigator === "undefined" || !("mediaSession" in navigator)) return
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: currentTrack.name,
+      artist: currentTrack.artists,
+      album: currentTrack.album,
+      artwork: currentTrack.albumImage ? [{ src: currentTrack.albumImage, sizes: "512x512", type: "image/jpeg" }] : [],
+    })
+    navigator.mediaSession.setActionHandler("play", () => audioRef.current?.play().catch(() => {}))
+    navigator.mediaSession.setActionHandler("pause", () => audioRef.current?.pause())
+    navigator.mediaSession.setActionHandler("nexttrack", () => nextTrackRef.current())
+    navigator.mediaSession.setActionHandler("previoustrack", () => prevTrackRef.current())
+    return () => {
+      navigator.mediaSession.setActionHandler("play", null)
+      navigator.mediaSession.setActionHandler("pause", null)
+      navigator.mediaSession.setActionHandler("nexttrack", null)
+      navigator.mediaSession.setActionHandler("previoustrack", null)
+    }
+  }, [currentTrack])
+
+  // Update media session playback state
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return
+    navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused"
+  }, [isPlaying])
+
   function playTrack(track: PlayerTrack) {
     const audio = audioRef.current
     if (!audio) return
+    // Crossfade: fade in new track
+    if (crossfadeRef.current > 0) {
+      audio.volume = 0
+      if (track.previewUrl) {
+        audio.src = track.previewUrl
+        audio.play().catch(() => setIsPlaying(false))
+        let elapsed = 0
+        const step = 50
+        const cf = crossfadeRef.current * 1000
+        if (crossfadeTimerRef.current) clearInterval(crossfadeTimerRef.current)
+        crossfadeTimerRef.current = setInterval(() => {
+          elapsed += step
+          if (audio) audio.volume = Math.min(volumeRef.current, volumeRef.current * (elapsed / cf))
+          if (elapsed >= cf) clearInterval(crossfadeTimerRef.current!)
+        }, step)
+      }
+    } else {
+      if (track.previewUrl) { audio.src = track.previewUrl; audio.play().catch(() => setIsPlaying(false)) }
+      else setIsPlaying(false)
+    }
     setCurrentTrack(track)
     addToRecentlyPlayed(track)
-    if (track.previewUrl) { audio.src = track.previewUrl; audio.play().catch(() => setIsPlaying(false)) }
-    else setIsPlaying(false)
   }
 
   function playAll(tracks: PlayerTrack[], startIndex = 0) {
@@ -132,10 +239,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   function generateShuffleOrderFor(tracks: PlayerTrack[], currentIndex: number) {
     const upcoming = []
-    for (let i = 0; i < tracks.length; i++) {
-      if (i !== currentIndex) upcoming.push(i)
-    }
-    // Fisher-Yates shuffle
+    for (let i = 0; i < tracks.length; i++) { if (i !== currentIndex) upcoming.push(i) }
     for (let i = upcoming.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
       ;[upcoming[i], upcoming[j]] = [upcoming[j], upcoming[i]]
@@ -143,40 +247,28 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     return upcoming
   }
 
-  function generateShuffleOrder() {
-    return generateShuffleOrderFor(queue, queueIndex)
-  }
+  function generateShuffleOrder() { return generateShuffleOrderFor(queue, queueIndex) }
 
   function nextTrack() {
     if (queue.length === 0) return
     if (shuffle) {
-      // Get next index from shuffle order
       let nextShuffleIdx = shuffleIndex + 1
-      // If we've gone through all shuffled tracks, regenerate
       if (nextShuffleIdx >= shuffleOrder.length) {
-        if (repeatMode === "all") {
-          const newOrder = generateShuffleOrder()
-          setShuffleOrder(newOrder)
-          nextShuffleIdx = 0
-        } else {
-          return
-        }
+        if (repeatMode === "all") { const newOrder = generateShuffleOrder(); setShuffleOrder(newOrder); nextShuffleIdx = 0 }
+        else return
       }
       const nextIndex = shuffleOrder[nextShuffleIdx]
       if (nextIndex === undefined) return
-      setShuffleIndex(nextShuffleIdx)
-      setQueueIndex(nextIndex)
-      playTrack(queue[nextIndex])
+      setShuffleIndex(nextShuffleIdx); setQueueIndex(nextIndex); playTrack(queue[nextIndex])
     } else {
       let nextIndex = queueIndex + 1
-      if (nextIndex >= queue.length) {
-        if (repeatMode === "all") nextIndex = 0
-        else return
-      }
-      setQueueIndex(nextIndex)
-      playTrack(queue[nextIndex])
+      if (nextIndex >= queue.length) { if (repeatMode === "all") nextIndex = 0; else return }
+      setQueueIndex(nextIndex); playTrack(queue[nextIndex])
     }
   }
+
+  const prevTrackRef = useRef(prevTrack)
+  prevTrackRef.current = prevTrack
 
   function prevTrack() {
     const audio = audioRef.current
@@ -184,23 +276,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     if (audio.currentTime > 3) { audio.currentTime = 0; return }
     if (shuffle) {
       let prevShuffleIdx = shuffleIndex - 1
-      if (prevShuffleIdx < 0) {
-        if (repeatMode === "all") prevShuffleIdx = shuffleOrder.length - 1
-        else return
-      }
+      if (prevShuffleIdx < 0) { if (repeatMode === "all") prevShuffleIdx = shuffleOrder.length - 1; else return }
       const prevIndex = shuffleOrder[prevShuffleIdx]
       if (prevIndex === undefined) return
-      setShuffleIndex(prevShuffleIdx)
-      setQueueIndex(prevIndex)
-      playTrack(queue[prevIndex])
+      setShuffleIndex(prevShuffleIdx); setQueueIndex(prevIndex); playTrack(queue[prevIndex])
     } else {
       let prevIndex = queueIndex - 1
-      if (prevIndex < 0) {
-        if (repeatMode === "all") prevIndex = queue.length - 1
-        else return
-      }
-      setQueueIndex(prevIndex)
-      playTrack(queue[prevIndex])
+      if (prevIndex < 0) { if (repeatMode === "all") prevIndex = queue.length - 1; else return }
+      setQueueIndex(prevIndex); playTrack(queue[prevIndex])
     }
   }
 
@@ -209,56 +292,48 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   function toggleRepeat() { setRepeatMode((r) => r === "off" ? "all" : r === "all" ? "one" : "off") }
   function toggleShuffle() {
     setShuffle((prev) => {
-      if (!prev) {
-        // Turning shuffle ON: generate initial order
-        const order = generateShuffleOrder()
-        setShuffleOrder(order)
-        setShuffleIndex(0)
-      }
+      if (!prev) { const order = generateShuffleOrder(); setShuffleOrder(order); setShuffleIndex(0) }
       return !prev
     })
   }
-
-  function addToQueue(track: PlayerTrack) {
-    setQueue((prev) => [...prev, track])
-  }
-
+  function addToQueue(track: PlayerTrack) { setQueue((prev) => [...prev, track]) }
   function playNext(track: PlayerTrack) {
-    setQueue((prev) => {
-      const next = [...prev]
-      next.splice(queueIndex + 1, 0, track)
-      return next
-    })
+    setQueue((prev) => { const next = [...prev]; next.splice(queueIndex + 1, 0, track); return next })
   }
-
   function removeFromQueue(idx: number) {
-    if (idx === queueIndex) return // Don't remove current track via this method
+    if (idx === queueIndex) return
     setQueue((prev) => prev.filter((_, i) => i !== idx))
     if (idx < queueIndex) setQueueIndex((prev) => prev - 1)
   }
-
   function moveInQueue(fromIndex: number, toIndex: number) {
     if (fromIndex === toIndex) return
-    setQueue((prev) => {
-      const next = [...prev]
-      const [moved] = next.splice(fromIndex, 1)
-      next.splice(toIndex, 0, moved)
-      return next
-    })
-    // Adjust queueIndex if needed
+    setQueue((prev) => { const next = [...prev]; const [moved] = next.splice(fromIndex, 1); next.splice(toIndex, 0, moved); return next })
     if (fromIndex === queueIndex) setQueueIndex(toIndex)
     else if (fromIndex < queueIndex && toIndex >= queueIndex) setQueueIndex((prev) => prev - 1)
     else if (fromIndex > queueIndex && toIndex <= queueIndex) setQueueIndex((prev) => prev + 1)
   }
+  function clearQueue() { const track = queue[queueIndex]; setQueue(track ? [track] : []); setQueueIndex(0) }
 
-  function clearQueue() {
-    const track = queue[queueIndex]
-    setQueue(track ? [track] : [])
-    setQueueIndex(0)
+  function setSleepTimer(minutes: number | null) { setSleepTimerState(minutes) }
+  function setCrossfade(seconds: number) { setCrossfadeState(seconds) }
+  function toggleLike(id: string) {
+    setLikedTracks(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      saveLiked(next)
+      return next
+    })
   }
 
   return (
-    <PlayerContext.Provider value={{ currentTrack, isPlaying, queue, queueIndex, playTrack, playAll, togglePlay, nextTrack, prevTrack, seekTo, setVolume, volume, progress, duration, repeatMode, toggleRepeat, shuffle, toggleShuffle, addToQueue, playNext, removeFromQueue, moveInQueue, clearQueue, queuePanelOpen, setQueuePanelOpen }}>
+    <PlayerContext.Provider value={{
+      currentTrack, isPlaying, queue, queueIndex, playTrack, playAll, togglePlay,
+      nextTrack, prevTrack, seekTo, setVolume, volume, progress, duration,
+      repeatMode, toggleRepeat, shuffle, toggleShuffle, addToQueue, playNext,
+      removeFromQueue, moveInQueue, clearQueue, queuePanelOpen, setQueuePanelOpen,
+      sleepTimer, setSleepTimer, sleepRemaining, crossfade, setCrossfade,
+      likedTracks, toggleLike,
+    }}>
       {children}
       <ErrorBoundary label="Player Bar">
         <PlayerBar />
@@ -269,103 +344,220 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 }
 
 function PlayerBar() {
-  const { currentTrack, isPlaying, togglePlay, nextTrack, prevTrack, progress, duration, seekTo, volume, setVolume, repeatMode, toggleRepeat, shuffle, toggleShuffle, queue, queuePanelOpen, setQueuePanelOpen } = usePlayer()
+  const {
+    currentTrack, isPlaying, togglePlay, nextTrack, prevTrack, progress, duration,
+    seekTo, volume, setVolume, repeatMode, toggleRepeat, shuffle, toggleShuffle,
+    queue, queuePanelOpen, setQueuePanelOpen,
+    sleepTimer, setSleepTimer, sleepRemaining,
+    crossfade, setCrossfade,
+    likedTracks, toggleLike,
+  } = usePlayer()
+
   const [isSeeking, setIsSeeking] = useState(false)
   const [seekValue, setSeekValue] = useState(0)
+  const [showSettings, setShowSettings] = useState(false)
+
+  // Swipe gesture on mobile
+  const touchStartX = useRef(0)
+  const touchStartY = useRef(0)
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX
+    touchStartY.current = e.touches[0].clientY
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    const dy = e.changedTouches[0].clientY - touchStartY.current
+    if (Math.abs(dx) < Math.abs(dy) * 1.5) return // mostly vertical — ignore
+    if (Math.abs(dx) < 50) return // too short
+    if (dx < 0) nextTrack()
+    else prevTrack()
+  }
 
   if (!currentTrack) return null
 
   const progressPercent = duration > 0 ? (isSeeking ? seekValue : (progress / duration) * 100) : 0
+  const isLiked = likedTracks.has(currentTrack.id)
 
   return (
-    <div className="fixed bottom-16 md:bottom-4 left-4 right-4 max-w-4xl mx-auto glass rounded-2xl shadow-xl border border-[var(--border)] z-50 px-4 py-3">
-      <div className="flex items-center gap-4">
-        {/* Track Info */}
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          <div className="w-10 h-10 rounded-lg bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden">
-            {currentTrack.albumImage ? (
-              <LazyImage src={currentTrack.albumImage} alt={currentTrack.album} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
-              </div>
-            )}
+    <>
+      <div
+        className="fixed bottom-16 md:bottom-4 left-4 right-4 max-w-4xl mx-auto glass rounded-2xl shadow-xl border border-[var(--border)] z-50 px-4 py-3"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div className="flex items-center gap-4">
+          {/* Track Info */}
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-lg bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden">
+              {currentTrack.albumImage ? (
+                <LazyImage src={currentTrack.albumImage} alt={currentTrack.album} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
+                </div>
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-[var(--text-primary)] truncate">{currentTrack.name}</p>
+              <p className="text-xs text-[var(--text-muted)] truncate">{currentTrack.artists}</p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-[var(--text-primary)] truncate">{currentTrack.name}</p>
-            <p className="text-xs text-[var(--text-muted)] truncate">{currentTrack.artists}</p>
-          </div>
-        </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-3">
-          <button onClick={prevTrack} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" /></svg>
-          </button>
-          <button onClick={togglePlay} className="w-9 h-9 rounded-full bg-[var(--accent)] text-white flex items-center justify-center hover:opacity-90 hover:shadow-glow transition-all shadow-md">
-            {isPlaying ? (
-              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
-            ) : (
-              <svg className="w-3.5 h-3.5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-            )}
-          </button>
-          <button onClick={nextTrack} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" /></svg>
-          </button>
-        </div>
-
-        {/* Progress */}
-        <div className="hidden md:flex items-center gap-2 w-48">
-          <span className="text-xs text-[var(--text-muted)] w-8 text-right tabular-nums">{formatDuration(Math.round(isSeeking ? (seekValue / 100) * duration : progress) * 1000)}</span>
-          <div className="flex-1 h-1 bg-[var(--border)] rounded-full cursor-pointer group relative"
-            onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); seekTo(((e.clientX - r.left) / r.width) * duration) }}
-            onMouseEnter={() => setIsSeeking(true)} onMouseLeave={() => setIsSeeking(false)}
-            onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSeekValue(((e.clientX - r.left) / r.width) * 100) }}>
-            <div className="h-full bg-gradient-to-r from-[var(--accent)] to-indigo-400 rounded-full transition-all shadow-sm" style={{ width: `${Math.min(progressPercent, 100)}%` }} />
-          </div>
-          <span className="text-xs text-[var(--text-muted)] w-8 tabular-nums">{formatDuration(Math.round(duration) * 1000)}</span>
-        </div>
-
-        {/* Queue button */}
-        <button
-          onClick={() => setQueuePanelOpen(!queuePanelOpen)}
-          className={`relative flex-shrink-0 transition-all ${queuePanelOpen ? "text-[var(--accent)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}
-          title="Queue"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-          </svg>
-          {queue.length > 1 && (
-            <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-[var(--accent)] text-white text-[8px] font-bold rounded-full flex items-center justify-center">
-              {queue.length - 1}
-            </span>
-          )}
-        </button>
-
-        {/* Volume & extras */}
-        <div className="hidden lg:flex items-center gap-2">
-          <button onClick={toggleShuffle} className={`text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all ${shuffle ? "text-[var(--accent)]" : ""}`}>
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 17h16l-4-4m0 8l4-4M4 7h16l-4 4m0-8l4 4" />
+          {/* Heart button */}
+          <button
+            onClick={() => toggleLike(currentTrack.id)}
+            className={`flex-shrink-0 transition-all ${isLiked ? "text-red-500 scale-110" : "text-[var(--text-muted)] hover:text-red-400"}`}
+            title={isLiked ? "Unlike" : "Like"}
+          >
+            <svg className="w-4 h-4" fill={isLiked ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
           </button>
-          <button onClick={toggleRepeat} className={`relative text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all ${repeatMode !== "off" ? "text-[var(--accent)]" : ""}`}>
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+
+          {/* Controls */}
+          <div className="flex items-center gap-3">
+            <button onClick={prevTrack} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" /></svg>
+            </button>
+            <button onClick={togglePlay} className="w-9 h-9 rounded-full bg-[var(--accent)] text-white flex items-center justify-center hover:opacity-90 hover:shadow-glow transition-all shadow-md">
+              {isPlaying ? (
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
+              ) : (
+                <svg className="w-3.5 h-3.5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+              )}
+            </button>
+            <button onClick={nextTrack} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" /></svg>
+            </button>
+          </div>
+
+          {/* Progress */}
+          <div className="hidden md:flex items-center gap-2 w-48">
+            <span className="text-xs text-[var(--text-muted)] w-8 text-right tabular-nums">{formatDuration(Math.round(isSeeking ? (seekValue / 100) * duration : progress) * 1000)}</span>
+            <div className="flex-1 h-1 bg-[var(--border)] rounded-full cursor-pointer group relative"
+              onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); seekTo(((e.clientX - r.left) / r.width) * duration) }}
+              onMouseEnter={() => setIsSeeking(true)} onMouseLeave={() => setIsSeeking(false)}
+              onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSeekValue(((e.clientX - r.left) / r.width) * 100) }}>
+              <div className="h-full bg-gradient-to-r from-[var(--accent)] to-indigo-400 rounded-full transition-all shadow-sm" style={{ width: `${Math.min(progressPercent, 100)}%` }} />
+            </div>
+            <span className="text-xs text-[var(--text-muted)] w-8 tabular-nums">{formatDuration(Math.round(duration) * 1000)}</span>
+          </div>
+
+          {/* Queue button */}
+          <button
+            onClick={() => setQueuePanelOpen(!queuePanelOpen)}
+            className={`relative flex-shrink-0 transition-all ${queuePanelOpen ? "text-[var(--accent)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}
+            title="Queue"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
             </svg>
-            {repeatMode === "one" && <span className="absolute -top-1 -right-1 text-[8px] font-bold">1</span>}
+            {queue.length > 1 && (
+              <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-[var(--accent)] text-white text-[8px] font-bold rounded-full flex items-center justify-center">
+                {queue.length - 1}
+              </span>
+            )}
           </button>
-          <div className="flex items-center gap-1.5">
-            <button onClick={() => setVolume(volume === 0 ? 0.7 : 0)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+
+          {/* Volume & extras */}
+          <div className="hidden lg:flex items-center gap-2">
+            <button onClick={toggleShuffle} className={`text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all ${shuffle ? "text-[var(--accent)]" : ""}`}>
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                {volume > 0 && <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072" />}
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 17h16l-4-4m0 8l4-4M4 7h16l-4 4m0-8l4 4" />
               </svg>
             </button>
-            <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} className="w-16 h-1 bg-[var(--border)] rounded-full appearance-none cursor-pointer accent-[var(--accent)] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--accent)]" />
+            <button onClick={toggleRepeat} className={`relative text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all ${repeatMode !== "off" ? "text-[var(--accent)]" : ""}`}>
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {repeatMode === "one" && <span className="absolute -top-1 -right-1 text-[8px] font-bold">1</span>}
+            </button>
+            <div className="flex items-center gap-1.5">
+              <button onClick={() => setVolume(volume === 0 ? 0.7 : 0)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                  {volume > 0 && <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072" />}
+                </svg>
+              </button>
+              <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} className="w-16 h-1 bg-[var(--border)] rounded-full appearance-none cursor-pointer accent-[var(--accent)] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--accent)]" />
+            </div>
+
+            {/* Settings button (sleep timer + crossfade) */}
+            <button
+              onClick={() => setShowSettings(v => !v)}
+              className={`text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all relative ${sleepTimer !== null ? "text-amber-400" : ""}`}
+              title="Settings"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              {sleepTimer !== null && sleepRemaining !== null && (
+                <span className="absolute -top-2 -right-2 text-[7px] font-bold bg-amber-400 text-black rounded-full px-0.5 leading-tight">
+                  {Math.ceil(sleepRemaining / 60)}m
+                </span>
+              )}
+            </button>
           </div>
         </div>
+
+        {/* Mobile swipe hint */}
+        <p className="md:hidden text-center text-[9px] text-[var(--text-muted)] mt-1 opacity-50">swipe ← → to skip</p>
       </div>
-    </div>
+
+      {/* Settings panel (sleep timer + crossfade) */}
+      {showSettings && (
+        <div className="fixed bottom-36 md:bottom-24 right-4 z-50 bg-[var(--bg-secondary)] rounded-2xl shadow-xl border border-[var(--border)] p-4 w-64 animate-scale-in">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-[var(--text-primary)]">Player Settings</h3>
+            <button onClick={() => setShowSettings(false)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+
+          {/* Sleep Timer */}
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+              Sleep Timer {sleepRemaining !== null && <span className="text-amber-400 normal-case font-normal">({Math.floor(sleepRemaining / 60)}:{String(sleepRemaining % 60).padStart(2, "0")} left)</span>}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {[5, 10, 15, 30, 60].map(m => (
+                <button
+                  key={m}
+                  onClick={() => setSleepTimer(sleepTimer === m ? null : m)}
+                  className={`px-2.5 py-1 text-xs rounded-lg transition-all ${sleepTimer === m ? "bg-amber-400 text-black font-semibold" : "bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"}`}
+                >
+                  {m}m
+                </button>
+              ))}
+              {sleepTimer !== null && (
+                <button onClick={() => setSleepTimer(null)} className="px-2.5 py-1 text-xs rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all">
+                  Off
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Crossfade */}
+          <div>
+            <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+              Crossfade: {crossfade}s
+            </p>
+            <input
+              type="range" min="0" max="8" step="1" value={crossfade}
+              onChange={(e) => setCrossfade(parseInt(e.target.value))}
+              className="w-full h-1 bg-[var(--border)] rounded-full appearance-none cursor-pointer accent-[var(--accent)]"
+            />
+            <div className="flex justify-between text-[10px] text-[var(--text-muted)] mt-1">
+              <span>Off</span><span>8s</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

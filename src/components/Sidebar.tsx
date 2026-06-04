@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import { getPlaylists, createPlaylist } from "@/lib/playlists"
 import type { LocalPlaylist } from "@/lib/types"
 import { useSidebar } from "./SidebarContext"
-import { useTheme } from "@/lib/ThemeContext"
+import { useTheme, ACCENT_COLORS } from "@/lib/ThemeContext"
 
 const navItems = [
   { href: "/", label: "Home", icon: HomeIcon },
@@ -167,6 +167,7 @@ export default function Sidebar() {
         {!collapsed && (
           <div className="px-2 pb-3 border-t border-[var(--border)] pt-2 mt-auto">
             <ThemeToggle collapsed={collapsed} />
+            <AccentPicker collapsed={collapsed} />
           </div>
         )}
       </aside>
@@ -190,6 +191,7 @@ export default function Sidebar() {
         {/* Mobile theme toggle at bottom */}
         <div className="px-2 py-3 border-t border-[var(--border)] mt-auto">
           <ThemeToggle collapsed={false} onClose={() => setMobileOpen(false)} />
+          <AccentPicker collapsed={false} />
         </div>
       </aside>
 
@@ -266,5 +268,29 @@ function ThemeToggle({ collapsed, onClose }: { collapsed?: boolean; onClose?: ()
       )}
       {!collapsed && <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
     </button>
+  )
+}
+
+function AccentPicker({ collapsed }: { collapsed?: boolean }) {
+  const { theme, accentIndex, setAccentIndex } = useTheme()
+  if (collapsed) return null
+  return (
+    <div className="px-3 py-2">
+      <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">Accent Color</p>
+      <div className="flex flex-wrap gap-1.5">
+        {ACCENT_COLORS.map((color, i) => (
+          <button
+            key={color.name}
+            onClick={() => setAccentIndex(i)}
+            title={color.name}
+            className={`w-5 h-5 rounded-full transition-all ${accentIndex === i ? "ring-2 ring-offset-1 ring-offset-[var(--bg-secondary)] scale-110" : "hover:scale-110"}`}
+            style={{
+              backgroundColor: theme === "dark" ? color.dark : color.light,
+              ringColor: theme === "dark" ? color.dark : color.light,
+            }}
+          />
+        ))}
+      </div>
+    </div>
   )
 }

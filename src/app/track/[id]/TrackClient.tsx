@@ -120,11 +120,20 @@ export default function TrackClient({ track }: Props) {
 
   async function handleShare() {
     const url = `${window.location.origin}/track/${track.id}`
+    const shareData = {
+      title: track.name,
+      text: `${track.name} by ${track.artists?.map((a: any) => a.name).join(", ")}`,
+      url,
+    }
     try {
-      await navigator.clipboard.writeText(url)
-      showToast(`Link copied: "${track.name}"`)
-    } catch {
-      showToast("Failed to copy link")
+      if (navigator.share && navigator.canShare?.(shareData)) {
+        await navigator.share(shareData)
+      } else {
+        await navigator.clipboard.writeText(url)
+        showToast(`Link copied: "${track.name}"`)
+      }
+    } catch (e: any) {
+      if (e?.name !== "AbortError") showToast("Failed to share")
     }
   }
 
