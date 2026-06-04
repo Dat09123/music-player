@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, createContext, useContext, type ReactNode 
 import { formatDuration } from "@/lib/utils"
 import type { PlayerTrack, RepeatMode } from "@/lib/types"
 import ErrorBoundary from "./ErrorBoundary"
+import QueuePanel from "./QueuePanel"
 
 export type { PlayerTrack }
 
@@ -11,6 +12,7 @@ interface PlayerContextType {
   currentTrack: PlayerTrack | null
   isPlaying: boolean
   queue: PlayerTrack[]
+  queueIndex: number
   playTrack: (track: PlayerTrack) => void
   playAll: (tracks: PlayerTrack[], startIndex?: number) => void
   togglePlay: () => void
@@ -25,6 +27,13 @@ interface PlayerContextType {
   toggleRepeat: () => void
   shuffle: boolean
   toggleShuffle: () => void
+  addToQueue: (track: PlayerTrack) => void
+  playNext: (track: PlayerTrack) => void
+  removeFromQueue: (queueIndex: number) => void
+  moveInQueue: (fromIndex: number, toIndex: number) => void
+  clearQueue: () => void
+  queuePanelOpen: boolean
+  setQueuePanelOpen: (open: boolean) => void
 }
 
 const PlayerContext = createContext<PlayerContextType | null>(null)
@@ -45,6 +54,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [duration, setDuration] = useState(0)
   const [repeatMode, setRepeatMode] = useState<RepeatMode>("off")
   const [shuffle, setShuffle] = useState(false)
+  const [queuePanelOpen, setQueuePanelOpen] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // Use refs to avoid stale closures in audio event handlers
@@ -130,18 +140,57 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   function toggleRepeat() { setRepeatMode((r) => r === "off" ? "all" : r === "all" ? "one" : "off") }
   function toggleShuffle() { setShuffle((s) => !s) }
 
+  function addToQueue(track: PlayerTrack) {
+    setQueue((prev) => [...prev, track])
+  }
+
+  function playNext(track: PlayerTrack) {
+    setQueue((prev) => {
+      const next = [...prev]
+      next.splice(queueIndex + 1, 0, track)
+      return next
+    })
+  }
+
+  function removeFromQueue(idx: number) {
+    if (idx === queueIndex) return // Don't remove current track via this method
+    setQueue((prev) => prev.filter((_, i) => i !== idx))
+    if (idx < queueIndex) setQueueIndex((prev) => prev - 1)
+  }
+
+  function moveInQueue(fromIndex: number, toIndex: number) {
+    if (fromIndex === toIndex) return
+    setQueue((prev) => {
+      const next = [...prev]
+      const [moved] = next.splice(fromIndex, 1)
+      next.splice(toIndex, 0, moved)
+      return next
+    })
+    // Adjust queueIndex if needed
+    if (fromIndex === queueIndex) setQueueIndex(toIndex)
+    else if (fromIndex < queueIndex && toIndex >= queueIndex) setQueueIndex((prev) => prev - 1)
+    else if (fromIndex > queueIndex && toIndex <= queueIndex) setQueueIndex((prev) => prev + 1)
+  }
+
+  function clearQueue() {
+    const track = queue[queueIndex]
+    setQueue(track ? [track] : [])
+    setQueueIndex(0)
+  }
+
   return (
-    <PlayerContext.Provider value={{ currentTrack, isPlaying, queue, playTrack, playAll, togglePlay, nextTrack, prevTrack, seekTo, setVolume, volume, progress, duration, repeatMode, toggleRepeat, shuffle, toggleShuffle }}>
+    <PlayerContext.Provider value={{ currentTrack, isPlaying, queue, queueIndex, playTrack, playAll, togglePlay, nextTrack, prevTrack, seekTo, setVolume, volume, progress, duration, repeatMode, toggleRepeat, shuffle, toggleShuffle, addToQueue, playNext, removeFromQueue, moveInQueue, clearQueue, queuePanelOpen, setQueuePanelOpen }}>
       {children}
       <ErrorBoundary label="Player Bar">
         <PlayerBar />
       </ErrorBoundary>
+      <QueuePanel />
     </PlayerContext.Provider>
   )
 }
 
 function PlayerBar() {
-  const { currentTrack, isPlaying, togglePlay, nextTrack, prevTrack, progress, duration, seekTo, volume, setVolume, repeatMode, toggleRepeat, shuffle, toggleShuffle } = usePlayer()
+  const { currentTrack, isPlaying, togglePlay, nextTrack, prevTrack, progress, duration, seekTo, volume, setVolume, repeatMode, toggleRepeat, shuffle, toggleShuffle, queue, queuePanelOpen, setQueuePanelOpen } = usePlayer()
   const [isSeeking, setIsSeeking] = useState(false)
   const [seekValue, setSeekValue] = useState(0)
 
@@ -197,6 +246,22 @@ function PlayerBar() {
           </div>
           <span className="text-xs text-[var(--text-muted)] w-8 tabular-nums">{formatDuration(Math.round(duration) * 1000)}</span>
         </div>
+
+        {/* Queue button */}
+        <button
+          onClick={() => setQueuePanelOpen(!queuePanelOpen)}
+          className={`relative flex-shrink-0 transition-all ${queuePanelOpen ? "text-[var(--accent)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}
+          title="Queue"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+          </svg>
+          {queue.length > 1 && (
+            <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-[var(--accent)] text-white text-[8px] font-bold rounded-full flex items-center justify-center">
+              {queue.length - 1}
+            </span>
+          )}
+        </button>
 
         {/* Volume & extras */}
         <div className="hidden lg:flex items-center gap-2">

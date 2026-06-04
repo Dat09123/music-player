@@ -18,7 +18,7 @@ interface TrackListProps {
 }
 
 export default function TrackList({ tracks, showAlbum = true, showImage = true, showIndex = false, startIndex = 0 }: TrackListProps) {
-  const { playAll, currentTrack, isPlaying } = usePlayer()
+  const { playAll, playNext, addToQueue, currentTrack, isPlaying } = usePlayer()
   const { showToast } = useToast()
   const [menuTrack, setMenuTrack] = useState<PlayerTrack | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -190,7 +190,30 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
               ))}
             </div>
           )}
+
+          {/* Play Next & Add to Queue */}
           <div className="border-t border-[var(--border)] pt-1 mt-1">
+            <button
+              onClick={() => { playNext(menuTrack!); setMenuOpen(false); showToast(`"${menuTrack!.name}" will play next`) }}
+              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all"
+            >
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6 18l8.5-6L6 6v12zM16 6v2h2v12h-2V6z" />
+              </svg>
+              <span>Play Next</span>
+            </button>
+            <button
+              onClick={() => { addToQueue(menuTrack!); setMenuOpen(false); showToast(`Added "${menuTrack!.name}" to queue`) }}
+              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all"
+            >
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Add to Queue</span>
+            </button>
+          </div>
+
+          <div className="border-t border-[var(--border)] pt-1.5 mt-1">
             {showNewPlaylistInput ? (
               <div className="px-3 py-1.5 flex items-center gap-1.5">
                 <input
