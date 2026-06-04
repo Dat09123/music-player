@@ -71,6 +71,16 @@ export function addTrackToPlaylist(playlistId: string, track: PlayerTrack): void
   saveAll(playlists)
 }
 
+export function importTracksAsPlaylist(name: string, tracks: PlayerTrack[]): LocalPlaylist {
+  const pl = createPlaylist({ name })
+  const playlists = loadAll()
+  const saved = playlists.find((p) => p.id === pl.id)!
+  saved.tracks = tracks.filter((t, i, arr) => arr.findIndex((x) => x.id === t.id) === i) // deduplicate
+  saved.updatedAt = Date.now()
+  saveAll(playlists)
+  return saved
+}
+
 export function removeTrackFromPlaylist(playlistId: string, trackId: string): void {
   const playlists = loadAll()
   const pl = playlists.find((p) => p.id === playlistId)

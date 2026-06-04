@@ -130,7 +130,7 @@ export default function PlaylistPage({ params }: Props) {
         </div>
       </div>
 
-      <PlaylistClient tracks={playlist.tracks?.items || []} playlistUri={playlist.uri} />
+      <PlaylistClient tracks={playlist.tracks?.items || []} playlistName={playlist.name || "Imported Playlist"} playlistUri={playlist.uri} />
     </div>
   )
 }
