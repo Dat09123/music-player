@@ -149,6 +149,11 @@ input[type="range"]:hover::-webkit-slider-thumb {
   animation: scaleIn 0.3s ease-out both;
 }
 
+/* Safe area for mobile (notch/home indicator) */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 /* Stagger delays for grid items */
 .stagger-1 { animation-delay: 0ms; }
 .stagger-2 { animation-delay: 50ms; }

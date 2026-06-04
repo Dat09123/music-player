@@ -2,13 +2,13 @@
 
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { useState } from "react"
 import { useAuth } from "@/lib/AuthContext"
 import { useTheme } from "@/lib/ThemeContext"
+import { useSidebar } from "./SidebarContext"
 
 export default function Header() {
   const pathname = usePathname()
-  const [showMobileMenu, setShowMobileMenu] = useState(false)
+  const { mobileOpen, toggleMobile } = useSidebar()
   const { authError } = useAuth()
   const { theme, toggleTheme } = useTheme()
 
@@ -67,9 +67,9 @@ export default function Header() {
               </svg>
             )}
           </button>
-          <button onClick={() => setShowMobileMenu(!showMobileMenu)} className="md:hidden text-[var(--text-muted)] hover:text-[var(--text-primary)] p-1">
+          <button onClick={toggleMobile} className="md:hidden text-[var(--text-muted)] hover:text-[var(--text-primary)] p-1">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              {showMobileMenu ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /> : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />}
+              {mobileOpen ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /> : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />}
             </svg>
           </button>
         </div>

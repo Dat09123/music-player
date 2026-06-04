@@ -10,6 +10,8 @@ import ErrorBoundary from "@/components/ErrorBoundary"
 import ErrorFallback from "@/components/ErrorFallback"
 import { ToastProvider } from "@/components/Toast"
 import KeyboardShortcuts from "@/components/KeyboardShortcuts"
+import { SidebarProvider } from "@/components/SidebarContext"
+import MobileNav from "@/components/MobileNav"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -36,24 +38,27 @@ export default function RootLayout({
         <ThemeProvider>
         <AuthProvider>
         <ToastProvider>
+        <SidebarProvider>
           <PlayerProvider>
             <KeyboardShortcuts />
             <div className="flex h-full">
               <ErrorBoundary label="Sidebar">
                 <Sidebar />
               </ErrorBoundary>
-              <div className="flex-1 flex flex-col min-w-0">
+              <div className="flex-1 flex flex-col min-w-0 min-h-0">
                 <ErrorBoundary label="Header">
                   <Header />
                 </ErrorBoundary>
                 <ErrorBoundary label="Page Content" fallback={<ErrorFallback />}>
-                  <main className="flex-1 overflow-y-auto pb-20">
+                  <main className="flex-1 overflow-y-auto pb-20 md:pb-20">
                     {children}
                   </main>
                 </ErrorBoundary>
               </div>
             </div>
+            <MobileNav />
           </PlayerProvider>
+        </SidebarProvider>
         </ToastProvider>
         </AuthProvider>
         </ThemeProvider>
