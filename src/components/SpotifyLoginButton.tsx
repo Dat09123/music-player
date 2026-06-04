@@ -20,37 +20,49 @@ export default function SpotifyLoginButton() {
     return <div className="w-7 h-7 rounded-full bg-gray-200 animate-pulse" />
   }
 
-  if (isAuthenticated && user) {
-    const avatarUrl = user.images?.[0]?.url
-    const initials = user.display_name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "U"
+  if (isAuthenticated) {
+    // If user data is available, show full UI; otherwise show compact loading state
+    if (user) {
+      const avatarUrl = user.images?.[0]?.url
+      const initials = user.display_name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "U"
 
+      return (
+        <div className="relative" ref={menuRef}>
+          <button onClick={() => setShowMenu(!showMenu)} className="flex items-center gap-2 p-0.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+            <div className="w-7 h-7 rounded-full overflow-hidden bg-[var(--accent)] flex items-center justify-center">
+              {avatarUrl ? <img src={avatarUrl} alt={user.display_name} className="w-full h-full object-cover" /> : <span className="text-[10px] font-bold text-white">{initials}</span>}
+            </div>
+            <span className="hidden md:block text-xs font-medium text-[var(--text-primary)] pr-1.5 max-w-[100px] truncate">{user.display_name}</span>
+          </button>
+
+          {showMenu && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-[var(--border)] overflow-hidden z-50">
+              <div className="px-3 py-2.5 border-b border-[var(--border)]">
+                <p className="text-sm font-medium text-[var(--text-primary)] truncate">{user.display_name}</p>
+                <p className="text-xs text-[var(--text-muted)] truncate">{user.email}</p>
+              </div>
+              <div className="py-1">
+                <button onClick={() => { setShowMenu(false); window.open(user.external_urls?.spotify, "_blank") }} className="w-full px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-gray-50 hover:text-[var(--text-primary)] flex items-center gap-2 transition-colors">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0" /></svg>
+                  Open in Spotify
+                </button>
+                <button onClick={() => { setShowMenu(false); logout() }} className="w-full px-3 py-2 text-xs text-red-500 hover:bg-red-50 flex items-center gap-2 transition-colors">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                  Log out
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    // Authenticated but no user profile yet — show a simple indicator
     return (
-      <div className="relative" ref={menuRef}>
-        <button onClick={() => setShowMenu(!showMenu)} className="flex items-center gap-2 p-0.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
-          <div className="w-7 h-7 rounded-full overflow-hidden bg-[var(--accent)] flex items-center justify-center">
-            {avatarUrl ? <img src={avatarUrl} alt={user.display_name} className="w-full h-full object-cover" /> : <span className="text-[10px] font-bold text-white">{initials}</span>}
-          </div>
-          <span className="hidden md:block text-xs font-medium text-[var(--text-primary)] pr-1.5 max-w-[100px] truncate">{user.display_name}</span>
-        </button>
-
-        {showMenu && (
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-[var(--border)] overflow-hidden z-50">
-            <div className="px-3 py-2.5 border-b border-[var(--border)]">
-              <p className="text-sm font-medium text-[var(--text-primary)] truncate">{user.display_name}</p>
-              <p className="text-xs text-[var(--text-muted)] truncate">{user.email}</p>
-            </div>
-            <div className="py-1">
-              <button onClick={() => { setShowMenu(false); window.open(user.external_urls?.spotify, "_blank") }} className="w-full px-3 py-2 text-xs text-[var(--text-secondary)] hover:bg-gray-50 hover:text-[var(--text-primary)] flex items-center gap-2 transition-colors">
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0" /></svg>
-                Open in Spotify
-              </button>
-              <button onClick={() => { setShowMenu(false); logout() }} className="w-full px-3 py-2 text-xs text-red-500 hover:bg-red-50 flex items-center gap-2 transition-colors">
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                Log out
-              </button>
-            </div>
-          </div>
-        )}
+      <div className="w-7 h-7 rounded-full bg-[var(--accent)] flex items-center justify-center">
+        <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
       </div>
     )
   }
