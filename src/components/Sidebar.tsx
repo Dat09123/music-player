@@ -190,7 +190,7 @@ export default function Sidebar() {
         <SidebarContent localPlaylists={localPlaylists} collapsed={false} onClose={() => setMobileOpen(false)} onCreatePlaylist={() => { setShowCreateModal(true); setMobileOpen(false) }} />
         {/* Mobile theme toggle at bottom */}
         <div className="px-2 py-3 border-t border-[var(--border)] mt-auto">
-          <ThemeToggle collapsed={false} onClose={() => setMobileOpen(false)} />
+          <ThemeToggle collapsed={false} />
           <AccentPicker collapsed={false} />
         </div>
       </aside>

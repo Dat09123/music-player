@@ -102,6 +102,8 @@ export default function SearchClient() {
 
   function handleSearch(q: string) {
     setQuery(q)
+    setShowSuggestions(false)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
     doSearch(q)
   }
 
@@ -295,8 +297,8 @@ export default function SearchClient() {
             <div key={i} className="flex items-center gap-4 p-3">
               <Skeleton variant="circle" width={48} height={48} />
               <div className="flex-1 space-y-2">
-                <Skeleton width={`${55 + Math.random() * 30}%`} height={16} />
-                <Skeleton width={`${35 + Math.random() * 25}%`} height={12} />
+                <Skeleton width="70%" height={16} />
+                <Skeleton width="50%" height={12} />
               </div>
             </div>
           ))}

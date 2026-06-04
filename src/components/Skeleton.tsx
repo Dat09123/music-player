@@ -99,8 +99,8 @@ export function SkeletonTrackRow({ count = 5, showImage = true }: { count?: numb
           <Skeleton width={20} height={20} />
           {showImage && <Skeleton variant="circle" width={36} height={36} />}
           <div className="flex-1 min-w-0 space-y-1.5">
-            <Skeleton width={`${50 + Math.random() * 30}%`} height={14} />
-            <Skeleton width={`${30 + Math.random() * 30}%`} height={12} />
+            <Skeleton width="75%" height={14} />
+            <Skeleton width="50%" height={12} />
           </div>
           <Skeleton width={40} height={12} />
         </div>
@@ -193,7 +193,7 @@ export function SkeletonLyrics() {
         <span>Loading lyrics...</span>
       </div>
       {[...Array(8)].map((_, i) => (
-        <Skeleton key={i} width={`${40 + Math.random() * 50}%`} height={16} accent />
+        <Skeleton key={i} width={i % 2 === 0 ? "70%" : "60%"} height={16} accent />
       ))}
     </div>
   )

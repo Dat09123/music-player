@@ -27,41 +27,27 @@ export default function LazyImage({
   useEffect(() => {
     const el = imgRef.current
     if (!el) return
-
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true)
-          observer.disconnect()
-        }
-      },
+      ([entry]) => { if (entry.isIntersecting) { setInView(true); observer.disconnect() } },
       { rootMargin, threshold }
     )
-
     observer.observe(el)
     return () => observer.disconnect()
   }, [rootMargin, threshold])
 
-  // If the image is already in the initial viewport or has been observed
   if (!inView) {
     return (
-      <div
-        ref={imgRef}
-        className={`bg-[var(--bg-hover)] ${placeholderClassName || className}`}
-        {...(props as any)}
-      />
+      <div ref={imgRef} className={`bg-[var(--bg-hover)] ${placeholderClassName || className}`} {...(props as any)} />
     )
   }
 
   return (
     <div ref={imgRef} className={`relative overflow-hidden ${className}`} {...(props as any)}>
-      {!loaded && !error && (
-        <div className="absolute inset-0 skeleton" />
-      )}
+      {!loaded && !error && <div className="absolute inset-0 skeleton" />}
       <img
         src={src}
         alt={alt}
-        className={`w-full h-full object-cover transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"} ${className.replace(/[^\s\w-]/g, "").trim()}`}
+        className={`w-full h-full object-cover transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
         onLoad={() => setLoaded(true)}
         onError={() => { setError(true); setLoaded(true) }}
         loading="lazy"

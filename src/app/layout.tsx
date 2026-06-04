@@ -60,7 +60,7 @@ export default function RootLayout({
                   <Header />
                 </ErrorBoundary>
                 <ErrorBoundary label="Page Content" fallback={<ErrorFallback />}>
-                  <main className="flex-1 overflow-y-auto pb-32 md:pb-20">
+                  <main className="flex-1 overflow-y-auto pb-40 md:pb-24" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 10rem)" }}>
                     <PageTransition>
                       {children}
                     </PageTransition>

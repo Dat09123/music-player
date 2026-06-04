@@ -23,7 +23,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
   const { showToast } = useToast()
   const [menuTrack, setMenuTrack] = useState<PlayerTrack | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [menuPos, setMenuPos] = useState({ x: 0, y: 0 })
+  const [menuPos, setMenuPos] = useState({ x: 0, y: 0, adjustedX: 0, adjustedY: 0 })
   const [playlists, setPlaylists] = useState(getPlaylists())
   const [showNewPlaylistInput, setShowNewPlaylistInput] = useState(false)
   const [newPlaylistName, setNewPlaylistName] = useState("")
@@ -69,7 +69,9 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
   function openMenu(track: PlayerTrack, e: React.MouseEvent) {
     e.stopPropagation()
     setMenuTrack(track)
-    setMenuPos({ x: e.clientX, y: e.clientY })
+    const x = Math.min(e.clientX, window.innerWidth - 280)
+    const y = Math.min(e.clientY, window.innerHeight - 300)
+    setMenuPos({ x: e.clientX, y: e.clientY, adjustedX: x, adjustedY: y })
     setPlaylists(getPlaylists())
     setMenuOpen(true)
     setShowNewPlaylistInput(false)
@@ -185,7 +187,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
         <div
           ref={menuRef}
           className="fixed z-50 bg-[var(--bg-secondary)] rounded-xl shadow-xl border border-[var(--border)] py-1.5 min-w-[200px] max-w-[260px] animate-scale-in"
-          style={{ left: Math.min(menuPos.x, window.innerWidth - 280), top: Math.min(menuPos.y, window.innerHeight - 300) }}
+          style={{ left: menuPos.adjustedX, top: menuPos.adjustedY }}
         >
           <div className="px-3 py-2 text-xs font-medium text-[var(--text-muted)] border-b border-[var(--border)] truncate">
             Add “{menuTrack.name}” to…

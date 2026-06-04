@@ -57,21 +57,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* Smooth theme transition — only on layout/surface elements to avoid jank */
-html, body, #__next, main, header, aside, section, article,
-div:not(.skeleton):not([class*="animate-"]):not([role="slider"]),
-nav, ul, li, a, button, p, h1, h2, h3, h4, h5, h6, span, form, input, label,
-tbody, thead, tr, td, th,
-.bg-white, .bg-gray-50, .bg-indigo-50, .bg-red-50, .bg-purple-100,
-.border, .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl,
-[class*="bg-"][class*="rounded"],
-[class*="text-["] {
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease, box-shadow 0.3s ease;
-}
-
-/* Exclude skeleton/images/inputs from transitions */
-.skeleton, .skeleton *, img, svg, input[type="range"], .no-transition {
-  transition: none !important;
+/* Smooth theme transition — scoped to layout/surface elements only */
+header, aside, nav, main, footer,
+.glass, .glass-subtle,
+[class*="bg-[var("], [class*="border-[var("], [class*="text-[var("] {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease;
 }
 
 body {

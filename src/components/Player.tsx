@@ -23,16 +23,6 @@ function getLikedData(): PlayerTrack[] {
   if (typeof window === "undefined") return []
   try { return JSON.parse(localStorage.getItem(LIKED_DATA_KEY) || "[]") } catch { return [] }
 }
-function saveLikedData(ids: Set<string>, track: PlayerTrack, add: boolean) {
-  const data = getLikedData()
-  if (add) {
-    if (!data.find(t => t.id === track.id)) data.unshift(track)
-  } else {
-    const idx = data.findIndex(t => t.id === track.id)
-    if (idx !== -1) data.splice(idx, 1)
-  }
-  localStorage.setItem(LIKED_DATA_KEY, JSON.stringify(data))
-}
 
 interface PlayerContextType {
   currentTrack: PlayerTrack | null
@@ -116,7 +106,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     audioRef.current = new Audio()
     audioRef.current.volume = volume
-    return () => { audioRef.current?.pause(); audioRef.current = null }
+    return () => {
+      audioRef.current?.pause()
+      audioRef.current = null
+      if (crossfadeTimerRef.current) clearInterval(crossfadeTimerRef.current)
+    }
   }, [])
 
   useEffect(() => {
@@ -333,14 +327,29 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   function setSleepTimer(minutes: number | null) { setSleepTimerState(minutes) }
   function setCrossfade(seconds: number) { setCrossfadeState(seconds) }
-  function toggleLike(id: string) {
-    const track = queue.find(t => t.id === id) || (currentTrack?.id === id ? currentTrack : null)
+  function toggleLike(id: string, trackData?: PlayerTrack) {
     setLikedTracks(prev => {
       const next = new Set(prev)
       const adding = !next.has(id)
       if (adding) next.add(id); else next.delete(id)
       saveLiked(next)
-      if (track) saveLikedData(next, track, adding)
+      
+      // Find track: passed in, or from queue, or from currentTrack, or from likedData
+      const track = trackData || queue.find(t => t.id === id) || (currentTrack?.id === id ? currentTrack : null) || getLikedData().find(t => t.id === id)
+      
+      if (adding && track) {
+        // Add to data
+        const data = getLikedData()
+        if (!data.find(t => t.id === track.id)) {
+          data.unshift(track)
+          localStorage.setItem(LIKED_DATA_KEY, JSON.stringify(data))
+        }
+      } else if (!adding) {
+        // Remove from data even if track not found
+        const data = getLikedData().filter(t => t.id !== id)
+        localStorage.setItem(LIKED_DATA_KEY, JSON.stringify(data))
+      }
+      
       return next
     })
   }
@@ -525,6 +534,17 @@ function PlayerBar() {
 
         {/* Mobile swipe hint */}
         <p className="md:hidden text-center text-[9px] text-[var(--text-muted)] mt-1 opacity-50">swipe ← → to skip</p>
+        
+        {/* Mobile progress bar */}
+        <div className="md:hidden mt-2">
+          <div
+            className="h-1 bg-[var(--border)] rounded-full cursor-pointer relative"
+            onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); seekTo(((e.clientX - r.left) / r.width) * duration) }}
+            onTouchStart={(e) => { const r = e.currentTarget.getBoundingClientRect(); seekTo(((e.touches[0].clientX - r.left) / r.width) * duration) }}
+          >
+            <div className="h-full bg-gradient-to-r from-[var(--accent)] to-indigo-400 rounded-full" style={{ width: `${Math.min(progressPercent, 100)}%` }} />
+          </div>
+        </div>
       </div>
 
       {/* Settings panel (sleep timer + crossfade) */}

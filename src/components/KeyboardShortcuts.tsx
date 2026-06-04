@@ -31,7 +31,7 @@ export default function KeyboardShortcuts() {
     function handleKeyDown(e: KeyboardEvent) {
       const target = e.target as HTMLElement
       const isInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA" ||
-        target.isContentEditable || !!target.closest("button, a, [role='button'], select")
+        target.isContentEditable
 
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault(); routerRef.current.push("/search"); return
