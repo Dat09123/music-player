@@ -100,16 +100,16 @@ export default function TopClient() {
   if (!authLoading && !isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
-        <div className="w-20 h-20 bg-zinc-800 rounded-full flex items-center justify-center mb-6">
-          <svg className="w-10 h-10 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mb-5">
+          <svg className="w-8 h-8 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-white mb-3">Your Top Charts</h2>
-        <p className="text-zinc-400 max-w-md mb-6 leading-relaxed">Log in with your Spotify account to see your most played tracks and artists.</p>
+        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Your Top Charts</h2>
+        <p className="text-sm text-[var(--text-muted)] max-w-sm mb-6">Log in with your Spotify account to see your most played tracks and artists.</p>
         <button
           onClick={login}
-          className="bg-green-500 hover:bg-green-400 text-black font-semibold px-8 py-3 rounded-full text-sm transition-all hover:scale-105"
+          className="bg-[var(--accent)] hover:opacity-90 text-white font-medium px-4 py-2 rounded-lg text-sm transition-all hover:shadow-sm"
         >
           Log in to Spotify
         </button>
@@ -121,27 +121,27 @@ export default function TopClient() {
   if (authLoading || loading) {
     return (
       <div className="p-6 space-y-8 pb-20">
-        <div className="h-10 w-48 bg-zinc-800 rounded-lg skeleton" />
+        <div className="h-10 w-48 bg-gray-200 rounded-lg skeleton" />
         <div className="flex gap-2">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-8 w-28 bg-zinc-800 rounded-full skeleton" />
+            <div key={i} className="h-8 w-28 bg-gray-200 rounded-full skeleton" />
           ))}
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="space-y-3">
-              <div className="w-full aspect-square rounded-full bg-zinc-800 skeleton" />
-              <div className="h-4 w-20 bg-zinc-800 rounded skeleton mx-auto" />
+              <div className="w-full aspect-square rounded-full bg-gray-100 skeleton" />
+              <div className="h-4 w-20 bg-gray-100 rounded skeleton mx-auto" />
             </div>
           ))}
         </div>
         <div className="space-y-2">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="flex items-center gap-4 p-3">
-              <div className="w-10 h-10 bg-zinc-800 rounded skeleton" />
+              <div className="w-10 h-10 bg-gray-100 rounded skeleton" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 w-48 bg-zinc-800 rounded skeleton" />
-                <div className="h-3 w-32 bg-zinc-800 rounded skeleton" />
+                <div className="h-4 w-48 bg-gray-100 rounded skeleton" />
+                <div className="h-3 w-32 bg-gray-100 rounded skeleton" />
               </div>
             </div>
           ))}
@@ -154,13 +154,13 @@ export default function TopClient() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
-        <svg className="w-16 h-16 text-red-400/50 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <svg className="w-16 h-16 text-red-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
         </svg>
-        <p className="text-lg text-zinc-300 mb-2">Failed to load your top charts</p>
-        <p className="text-sm text-zinc-500 mb-4">{error}</p>
-        <button            onClick={() => setRetryCount((c) => c + 1)}
-          className="text-sm text-green-400 hover:underline"
+        <p className="text-lg font-medium text-[var(--text-primary)] mb-2">Failed to load your top charts</p>
+        <p className="text-sm text-[var(--text-muted)] mb-4">{error}</p>
+        <button onClick={() => setRetryCount((c) => c + 1)}
+          className="text-sm font-medium text-[var(--accent)] hover:underline"
         >
           Try again
         </button>
@@ -173,8 +173,8 @@ export default function TopClient() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-white">Top Charts</h1>
-          <p className="text-zinc-400 mt-1">Your most played tracks and artists</p>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-[var(--text-primary)]">Top Charts</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">Your most played tracks and artists</p>
         </div>
       </div>
 
@@ -186,8 +186,8 @@ export default function TopClient() {
             onClick={() => setTimeRange(range)}
             className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
               timeRange === range
-                ? "bg-white text-black"
-                : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                ? "bg-[var(--accent)] text-white shadow-sm"
+                : "bg-white text-[var(--text-secondary)] border border-[var(--border)] hover:bg-gray-50"
             }`}
           >
             {timeRangeLabels[range]}
@@ -199,18 +199,18 @@ export default function TopClient() {
       {artists.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-2xl font-bold text-white">Top Artists</h2>
-            <span className="text-xs text-zinc-500">{artists.length} artists</span>
+            <h2 className="text-2xl font-bold text-[var(--text-primary)]">Top Artists</h2>
+            <span className="text-xs text-[var(--text-muted)]">{artists.length} artists</span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
             {artists.map((artist, index) => (
               <Link
                 key={artist.id}
                 href={`/artist/${artist.id}`}
-                className="group bg-zinc-900/40 hover:bg-zinc-800/60 rounded-xl p-4 transition-all text-center"
+                className="group bg-white hover:bg-gray-50 rounded-xl p-4 transition-all text-center border border-[var(--border)]"
               >
                 <div className="relative mb-3">
-                  <div className="w-full aspect-square rounded-full overflow-hidden bg-zinc-800 shadow-lg mx-auto">
+                  <div className="w-full aspect-square rounded-full overflow-hidden bg-gray-100 shadow-sm mx-auto">
                     {artist.images?.[0]?.url ? (
                       <img
                         src={artist.images[0].url}
@@ -219,26 +219,26 @@ export default function TopClient() {
                         loading="lazy"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-700 to-zinc-900">
-                        <svg className="w-12 h-12 text-zinc-600" fill="currentColor" viewBox="0 0 24 24">
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                        <svg className="w-12 h-12 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                         </svg>
                       </div>
                     )}
                   </div>
                   {/* Rank badge */}
-                  <div className="absolute -top-1 -left-1 w-7 h-7 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-xs font-bold text-black">{index + 1}</span>
+                  <div className="absolute -top-1 -left-1 w-7 h-7 bg-[var(--accent)] rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-xs font-bold text-white">{index + 1}</span>
                   </div>
                   {/* Play button */}
-                  <button className="absolute bottom-2 right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-xl translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 hover:bg-green-400 hover:scale-105">
-                    <svg className="w-4 h-4 text-black ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                  <button className="absolute bottom-2 right-2 w-10 h-10 bg-[var(--accent)] rounded-full flex items-center justify-center shadow-xl translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 hover:opacity-90 hover:scale-105">
+                    <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M8 5v14l11-7z" />
                     </svg>
                   </button>
                 </div>
-                <p className="font-semibold text-sm text-white truncate">{artist.name}</p>
-                <p className="text-xs text-zinc-400 mt-1">
+                <p className="font-semibold text-sm text-[var(--text-primary)] truncate">{artist.name}</p>
+                <p className="text-xs text-[var(--text-muted)] mt-1">
                   {artist.genres?.slice(0, 2).join(", ") || "Artist"}
                 </p>
               </Link>
@@ -251,17 +251,17 @@ export default function TopClient() {
       {tracks.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-2xl font-bold text-white">Top Tracks</h2>
+            <h2 className="text-2xl font-bold text-[var(--text-primary)]">Top Tracks</h2>
             <button
               onClick={playAllTracks}
-              className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+              className="text-sm font-medium text-[var(--accent)] hover:underline"
             >
               Play all
             </button>
           </div>
 
           <div className="space-y-0.5">
-            <div className="grid grid-cols-[40px_1fr_80px] gap-3 px-4 py-2 text-xs uppercase tracking-wider text-zinc-500 border-b border-white/5">
+            <div className="grid grid-cols-[40px_1fr_80px] gap-3 px-4 py-2 text-xs uppercase tracking-wider text-[var(--text-muted)] border-b border-[var(--border)]">
               <span className="text-center">#</span>
               <span>Title</span>
               <span className="text-right">
@@ -273,31 +273,31 @@ export default function TopClient() {
             {tracks.map((track, index) => (
               <div
                 key={track.id}
-                className="grid grid-cols-[40px_1fr_80px] gap-3 px-4 py-2.5 rounded-lg group cursor-pointer transition-all duration-200 hover:bg-white/5 text-zinc-400"
+                className="grid grid-cols-[40px_1fr_80px] gap-3 px-4 py-2.5 rounded-lg group cursor-pointer transition-all duration-200 hover:bg-gray-50 text-[var(--text-secondary)]"
                 onClick={() => {
                   if (index < playerTracks.length) playAll(playerTracks, index)
                 }}
               >
                 <div className="flex items-center justify-center">
                   <span className="group-hover:hidden text-sm tabular-nums">{index + 1}</span>
-                  <svg className="hidden group-hover:block w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="hidden group-hover:block w-4 h-4 text-[var(--text-primary)]" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
                   </svg>
                 </div>
                 <div className="flex items-center gap-3 min-w-0">
                   {track.album?.images && (
-                    <div className="w-10 h-10 rounded bg-zinc-800 flex-shrink-0 overflow-hidden hidden sm:block">
+                    <div className="w-10 h-10 rounded bg-gray-100 flex-shrink-0 overflow-hidden hidden sm:block">
                       <img src={getImage(track.album.images, "sm")} alt="" className="w-full h-full object-cover" loading="lazy" />
                     </div>
                   )}
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{track.name}</p>
-                    <p className="text-xs truncate text-zinc-500">{formatArtists(track.artists || [])}</p>
+                    <p className="text-sm font-medium text-[var(--text-primary)] truncate">{track.name}</p>
+                    <p className="text-xs truncate text-[var(--text-muted)]">{formatArtists(track.artists || [])}</p>
                   </div>
                 </div>
                 <div className="flex items-center justify-end gap-2">
                   {track.explicit && (
-                    <span className="text-[10px] bg-zinc-700 text-zinc-400 font-bold px-1.5 py-0.5 rounded uppercase">E</span>
+                    <span className="text-[10px] bg-gray-200 text-[var(--text-muted)] font-bold px-1.5 py-0.5 rounded uppercase">E</span>
                   )}
                   <span className="text-sm tabular-nums">{formatDuration(track.duration_ms || 0)}</span>
                 </div>
@@ -309,11 +309,11 @@ export default function TopClient() {
 
       {/* Empty state */}
       {tracks.length === 0 && artists.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-zinc-500">
+        <div className="flex flex-col items-center justify-center py-20 text-[var(--text-muted)]">
           <svg className="w-20 h-20 mb-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
           </svg>
-          <p className="text-lg font-medium mb-1">No top tracks yet</p>
+          <p className="text-lg font-medium text-[var(--text-primary)] mb-1">No top tracks yet</p>
           <p className="text-sm">Start listening to music to see your personalized top charts</p>
         </div>
       )}

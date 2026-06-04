@@ -11,7 +11,6 @@ interface Props {
   topTracks: SpotifyTrack[]
   albums: SpotifyAlbum[]
   relatedArtists: SpotifyArtist[]
-  artistId: string
   artistName: string
 }
 

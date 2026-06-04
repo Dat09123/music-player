@@ -160,20 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .then(async (tokens) => {
           if (cancelled) return
 
-          // Fetch user profile
-          const res = await fetch("https://api.spotify.com/v1/me", {
-            headers: { Authorization: `Bearer ${tokens.accessToken}` },
-          })
-          const userData = await res.json()
-
-          if (!cancelled) {
-            setUser(userData)
-            setAccessToken(tokens.accessToken)
-            setRefreshToken(tokens.refreshToken)
-            setIsLoading(false)
-          }
-
-          // Store session
+          // Store session immediately
           localStorage.setItem(
             "spotify_session",
             JSON.stringify({
@@ -183,12 +170,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             })
           )
 
+          setAccessToken(tokens.accessToken)
+          setRefreshToken(tokens.refreshToken)
+
+          // Fetch user profile
+          try {
+            const res = await fetch("https://api.spotify.com/v1/me", {
+              headers: { Authorization: `Bearer ${tokens.accessToken}` },
+            })
+            if (res.ok && !cancelled) {
+              const userData = await res.json()
+              setUser(userData)
+            } else if (!cancelled) {
+              const text = await res.text()
+              console.warn("User profile fetch failed:", res.status, text.slice(0, 200))
+            }
+          } catch (profileErr) {
+            console.warn("User profile fetch error:", profileErr)
+          }
+
+          if (!cancelled) {
+            setIsLoading(false)
+          }
+
           // Cleanup URL params and verifier
           localStorage.removeItem("spotify_code_verifier")
           window.history.replaceState({}, document.title, window.location.pathname)
         })
         .catch((err) => {
-          console.error("Token exchange failed:", err)
+          console.error("Token exchange failed:", err?.message || err)
           setIsLoading(false)
           window.history.replaceState({}, document.title, window.location.pathname)
         })

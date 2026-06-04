@@ -158,7 +158,6 @@ export default function ArtistPage({ params }: Props) {
         topTracks={topTracks}
         albums={albums}
         relatedArtists={relatedArtists}
-        artistId={artist.id}
         artistName={artist.name}
       />
     </div>

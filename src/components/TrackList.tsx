@@ -16,12 +16,14 @@ interface TrackListProps {
 export default function TrackList({ tracks, showAlbum = true, showImage = true, showIndex = false, startIndex = 0 }: TrackListProps) {
   const { playAll, currentTrack, isPlaying } = usePlayer()
 
-  const normalized: { track: SpotifyTrack; index: number }[] = tracks.map((t, i) => ({
-    track: "track" in t ? (t as SpotifyPlaylistTrack).track : (t as SpotifyTrack),
-    index: startIndex + i,
-  }))
+  const validTracks: { track: SpotifyTrack; index: number }[] = tracks
+    .map((t, i) => ({
+      track: "track" in t ? (t as SpotifyPlaylistTrack).track : (t as SpotifyTrack),
+      index: startIndex + i,
+    }))
+    .filter(({ track }) => track?.id)
 
-  const playerTracks: PlayerTrack[] = normalized.filter(({ track }) => track?.id).map(({ track }) => ({
+  const playerTracks: PlayerTrack[] = validTracks.map(({ track }) => ({
     id: track.id, name: track.name, artists: formatArtists(track.artists || []),
     artistIds: (track.artists || []).map((a) => a.id), album: track.album?.name || "",
     albumId: track.album?.id || "", albumImage: getImage(track.album?.images, "sm"),
@@ -49,8 +51,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
         </span>
       </div>
 
-      {normalized.map(({ track, index }, i) => {
-        if (!track?.id) return null
+      {validTracks.map(({ track, index }, i) => {
         const isCurrentTrack = currentTrack?.id === track.id
         return (
           <div key={`${track.id}-${i}`} className={`grid grid-cols-[32px_1fr_64px] gap-3 px-4 py-2 rounded-lg group cursor-pointer transition-all hover:bg-gray-50 ${isCurrentTrack ? "text-[var(--accent)] bg-indigo-50/50" : "text-[var(--text-secondary)]"}`} onClick={() => handlePlay(index)}>

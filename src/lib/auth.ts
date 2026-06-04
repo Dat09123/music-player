@@ -38,16 +38,6 @@ function base64URLEncode(buffer: Uint8Array): string {
 }
 
 /**
- * Parse Spotify callback hash parameters
- */
-export function parseSpotifyCallback(hash: string): { accessToken?: string; error?: string } {
-  const params = new URLSearchParams(hash.replace("#", "?"))
-  const accessToken = params.get("access_token") || undefined
-  const error = params.get("error") || undefined
-  return { accessToken, error }
-}
-
-/**
  * Get auth URL for Spotify Authorization Code Flow with PKCE
  */
 export async function getSpotifyAuthUrl(clientId: string, redirectUri: string): Promise<URL> {
@@ -112,10 +102,17 @@ export async function exchangeCodeForTokens(
 
   if (!res.ok) {
     const error = await res.text()
-    throw new Error(`Token exchange failed: ${res.status} ${error}`)
+    throw new Error(`Spotify token error (${res.status}): ${error.slice(0, 200)}`)
   }
 
-  const data = await res.json()
+  let data
+  try {
+    data = await res.json()
+  } catch {
+    const text = await res.text()
+    throw new Error(`Invalid token response: ${text.slice(0, 200)}`)
+  }
+
   return {
     accessToken: data.access_token,
     refreshToken: data.refresh_token,

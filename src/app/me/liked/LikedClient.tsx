@@ -86,18 +86,18 @@ export default function LikedClient() {
   if (!authLoading && !isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
-        <div className="w-20 h-20 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-full flex items-center justify-center mb-6">
-          <svg className="w-10 h-10 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className="w-16 h-16 bg-pink-50 rounded-2xl flex items-center justify-center mb-5">
+          <svg className="w-8 h-8 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-white mb-3">Your Liked Songs</h2>
-        <p className="text-zinc-400 max-w-md mb-6 leading-relaxed">
+        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Your Liked Songs</h2>
+        <p className="text-sm text-[var(--text-muted)] max-w-sm mb-6">
           Log in with your Spotify account to see all the songs you&apos;ve liked.
         </p>
         <button
           onClick={login}
-          className="bg-green-500 hover:bg-green-400 text-black font-semibold px-8 py-3 rounded-full text-sm transition-all hover:scale-105"
+          className="bg-[var(--accent)] hover:opacity-90 text-white font-medium px-4 py-2 rounded-lg text-sm transition-all hover:shadow-sm"
         >
           Log in to Spotify
         </button>
@@ -109,23 +109,23 @@ export default function LikedClient() {
   if (authLoading || loading) {
     return (
       <div>
-        <div className="bg-gradient-to-b from-purple-800 via-purple-900 to-zinc-900 px-6 pt-16 pb-8">
+        <div className="bg-gradient-to-b from-purple-100 via-pink-50 to-[var(--bg-primary)] px-6 pt-16 pb-8">
           <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
-            <div className="w-48 h-48 md:w-56 md:h-56 rounded-xl bg-zinc-700 skeleton shadow-2xl" />
+            <div className="w-48 h-48 md:w-56 md:h-56 rounded-xl bg-gray-200 skeleton shadow-2xl" />
             <div className="text-center md:text-left space-y-3">
-              <div className="h-4 w-24 bg-zinc-700 rounded skeleton" />
-              <div className="h-10 w-48 bg-zinc-700 rounded skeleton" />
-              <div className="h-4 w-36 bg-zinc-700 rounded skeleton" />
+              <div className="h-4 w-24 bg-gray-200 rounded skeleton" />
+              <div className="h-10 w-48 bg-gray-200 rounded skeleton" />
+              <div className="h-4 w-36 bg-gray-200 rounded skeleton" />
             </div>
           </div>
         </div>
         <div className="px-3 py-4 space-y-2">
           {[...Array(8)].map((_, i) => (
             <div key={i} className="flex items-center gap-4 p-3">
-              <div className="w-10 h-10 rounded bg-zinc-800 skeleton" />
+              <div className="w-10 h-10 rounded bg-gray-100 skeleton" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 w-48 bg-zinc-800 rounded skeleton" />
-                <div className="h-3 w-32 bg-zinc-800 rounded skeleton" />
+                <div className="h-4 w-48 bg-gray-100 rounded skeleton" />
+                <div className="h-3 w-32 bg-gray-100 rounded skeleton" />
               </div>
             </div>
           ))}
@@ -138,14 +138,14 @@ export default function LikedClient() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
-        <svg className="w-16 h-16 text-red-400/50 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <svg className="w-16 h-16 text-red-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
         </svg>
-        <p className="text-lg text-zinc-300 mb-2">Failed to load liked songs</p>
-        <p className="text-sm text-zinc-500 mb-4">{error}</p>
+        <p className="text-lg font-medium text-[var(--text-primary)] mb-2">Failed to load liked songs</p>
+        <p className="text-sm text-[var(--text-muted)] mb-4">{error}</p>
         <button
           onClick={() => setRetryCount((c) => c + 1)}
-          className="text-sm text-green-400 hover:underline"
+          className="text-sm font-medium text-[var(--accent)] hover:underline"
         >
           Try again
         </button>
@@ -156,39 +156,39 @@ export default function LikedClient() {
   return (
     <div>
       {/* Gradient header */}
-      <div className="bg-gradient-to-b from-purple-800 via-purple-900 to-zinc-900 px-6 pt-12 pb-8 md:pt-20 md:pb-10">
+      <div className="bg-gradient-to-b from-purple-100 via-pink-50 to-[var(--bg-primary)] px-6 pt-12 pb-8 md:pt-20 md:pb-10">
         <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
           {/* Cover */}
-          <div className="w-48 h-48 md:w-56 md:h-56 rounded-xl overflow-hidden shadow-2xl flex-shrink-0 bg-gradient-to-br from-purple-500 via-blue-500 to-pink-500 flex items-center justify-center">
+          <div className="w-48 h-48 md:w-56 md:h-56 rounded-xl overflow-hidden shadow-2xl flex-shrink-0 bg-gradient-to-br from-purple-400 via-pink-400 to-red-400 flex items-center justify-center">
             <svg className="w-24 h-24 text-white/80" fill="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
           </div>
 
           <div className="text-center md:text-left min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-300 mb-2">Playlist</p>
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-white mb-3 leading-tight">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">Playlist</p>
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-[var(--text-primary)] mb-3 leading-tight">
               Liked Songs
             </h1>
-            <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-zinc-300">
-              <span className="font-semibold text-white">{total} songs</span>
-              <span className="text-zinc-600">•</span>
-              <span className="text-zinc-400">Your favorite tracks</span>
+            <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-[var(--text-secondary)]">
+              <span className="font-semibold text-[var(--text-primary)]">{total} songs</span>
+              <span className="text-[var(--text-muted)]">•</span>
+              <span className="text-[var(--text-muted)]">Your favorite tracks</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="bg-zinc-900/50 px-3 py-4">
+      <div className="bg-white/50 px-3 py-4">
         {/* Play controls */}
         {tracks.length > 0 && (
           <div className="flex items-center gap-4 px-4 py-2 mb-4">
             <button
               onClick={playAllTracks}
-              className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl hover:bg-green-400"
+              className="w-14 h-14 bg-[var(--accent)] rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl hover:opacity-90"
             >
-              <svg className="w-6 h-6 text-black ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
             </button>
@@ -205,18 +205,18 @@ export default function LikedClient() {
             startIndex={0}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-zinc-500">
+          <div className="flex flex-col items-center justify-center py-20 text-[var(--text-muted)]">
             <svg className="w-20 h-20 mb-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
-            <p className="text-lg font-medium mb-1">No liked songs yet</p>
+            <p className="text-lg font-medium text-[var(--text-primary)] mb-1">No liked songs yet</p>
             <p className="text-sm">Tap the heart icon on any song to add it to your collection</p>
           </div>
         )}
 
         {/* Footer */}
         {tracks.length > 0 && (
-          <div className="px-4 py-6 text-xs text-zinc-500">
+          <div className="px-4 py-6 text-xs text-[var(--text-muted)]">
             {total} liked songs
           </div>
         )}
