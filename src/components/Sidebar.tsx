@@ -2,7 +2,9 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
+import { getPlaylists, createPlaylist } from "@/lib/playlists"
+import type { LocalPlaylist } from "@/lib/types"
 
 const navItems = [
   { href: "/", label: "Home", icon: HomeIcon },
@@ -11,7 +13,7 @@ const navItems = [
   { href: "/me/liked", label: "Trending Now", icon: TrendingIcon },
 ]
 
-const playlistLinks = [
+const deezerPlaylists = [
   { href: "/playlist/3155776842", label: "Pop Hits" },
   { href: "/playlist/3155776762", label: "Rock Classics" },
   { href: "/playlist/1111149871", label: "Electronic" },
@@ -22,19 +24,48 @@ const playlistLinks = [
 export default function Sidebar() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [playlistName, setPlaylistName] = useState("")
+  const [localPlaylists, setLocalPlaylists] = useState<LocalPlaylist[]>([])
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Refresh playlists on mount and after creation
+  function refreshPlaylists() {
+    setLocalPlaylists(getPlaylists())
+  }
+
+  useEffect(() => { refreshPlaylists() }, [])
+
+  useEffect(() => {
+    if (showCreateModal) {
+      setTimeout(() => inputRef.current?.focus(), 100)
+    }
+  }, [showCreateModal])
+
+  function handleCreate() {
+    if (!playlistName.trim()) return
+    createPlaylist({ name: playlistName.trim() })
+    setPlaylistName("")
+    setShowCreateModal(false)
+    refreshPlaylists()
+  }
+
+  function isLocalPlaylistActive(id: string) {
+    return pathname === `/playlist/local/${id}`
+  }
 
   return (
     <aside className={`${collapsed ? "w-16" : "w-64"} bg-white text-[var(--text-primary)] flex flex-col transition-all duration-300 flex-shrink-0 h-full border-r border-[var(--border)]`}>
       {/* Logo */}
       <div className="p-5 pb-3 flex items-center gap-3">
-        <div className="w-8 h-8 bg-[var(--accent)] rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+        <Link href="/" className="w-8 h-8 bg-[var(--accent)] rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm hover:opacity-90 transition-all">
           <svg className="w-4 h-4 text-white" viewBox="0 0 20 20" fill="currentColor">
             <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
           </svg>
-        </div>
+        </Link>
         {!collapsed && <span className="font-bold text-lg tracking-tight">Muse</span>}
-        <button onClick={() => setCollapsed(!collapsed)} className="ml-auto text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors hidden md:block">
-          <svg className={`w-4 h-4 transition-transform ${collapsed ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <button onClick={() => setCollapsed(!collapsed)} className="ml-auto p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all hidden md:block cursor-pointer" title={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
+          <svg className={`w-4 h-4 transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
           </svg>
         </button>
@@ -59,7 +90,36 @@ export default function Sidebar() {
 
       {/* Playlists */}
       {!collapsed && <>
-        <div className="px-5 py-2 flex items-center gap-2 border-t border-[var(--border)]">
+        {/* Your Playlists */}
+        {localPlaylists.length > 0 && (
+          <>
+            <div className="px-5 py-2 flex items-center justify-between border-t border-[var(--border)]">
+              <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                Your Playlists
+              </span>
+            </div>
+            <nav className="px-2 overflow-y-auto max-h-40">
+              <ul className="space-y-0.5">
+                {localPlaylists.map((pl) => (
+                  <li key={pl.id}>
+                    <Link
+                      href={`/playlist/local/${pl.id}`}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm truncate transition-all ${isLocalPlaylistActive(pl.id) ? "bg-[var(--accent-light)] text-[var(--accent)] font-medium" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"}`}
+                    >
+                      <svg className="w-3.5 h-3.5 flex-shrink-0 opacity-60" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+                      </svg>
+                      <span className="truncate">{pl.name}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </>
+        )}
+
+        {/* Deezer Charts */}
+        <div className="px-5 py-2 flex items-center justify-between border-t border-[var(--border)]">
           <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
             Deezer Charts
           </span>
@@ -67,7 +127,7 @@ export default function Sidebar() {
 
         <nav className="flex-1 px-2 overflow-y-auto">
           <ul className="space-y-0.5">
-            {playlistLinks.map((item) => (
+            {deezerPlaylists.map((item) => (
               <li key={item.href}>
                 <Link href={item.href} className={`block px-3 py-1.5 rounded-lg text-sm truncate transition-all ${pathname === item.href ? "bg-[var(--accent-light)] text-[var(--accent)] font-medium" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"}`}>
                   {item.label}
@@ -76,7 +136,54 @@ export default function Sidebar() {
             ))}
           </ul>
         </nav>
+
+        {/* Create Playlist Button */}
+        <div className="px-2 py-2 border-t border-[var(--border)]">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--accent-light)] transition-all"
+          >
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>New Playlist</span>
+          </button>
+        </div>
       </>}
+
+      {/* Create Playlist Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => { setShowCreateModal(false); setPlaylistName("") }}>
+          <div className="bg-white rounded-2xl shadow-xl border border-[var(--border)] w-80 p-6 animate-scale-in" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-bold text-[var(--text-primary)] mb-4">Create Playlist</h3>
+            <input
+              ref={inputRef}
+              type="text"
+              value={playlistName}
+              onChange={(e) => setPlaylistName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") { setShowCreateModal(false); setPlaylistName("") } }}
+              placeholder="My Awesome Playlist"
+              className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition-all"
+              maxLength={100}
+            />
+            <div className="flex items-center justify-end gap-2 mt-4">
+              <button
+                onClick={() => { setShowCreateModal(false); setPlaylistName("") }}
+                className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreate}
+                disabled={!playlistName.trim()}
+                className="px-4 py-2 text-sm font-medium text-white bg-[var(--accent)] hover:opacity-90 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   )
 }

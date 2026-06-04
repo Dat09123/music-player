@@ -151,3 +151,16 @@ export interface PlayerTrack {
 }
 
 export type RepeatMode = "off" | "all" | "one"
+
+// Local playlist (stored in localStorage)
+export interface LocalPlaylist {
+  id: string
+  name: string
+  tracks: PlayerTrack[]
+  createdAt: number
+  updatedAt: number
+}
+
+export interface LocalPlaylistCreate {
+  name: string
+}
