@@ -50,7 +50,7 @@ export default function AlbumClient({ album }: Props) {
   }
 
   return (
-    <div className="bg-[var(--bg-secondary)]/50 px-3 py-4">
+    <div className="px-3 py-4">
       {/* Play controls */}
       <div className="flex items-center gap-4 px-4 py-2 mb-4">
         <button
@@ -82,7 +82,7 @@ export default function AlbumClient({ album }: Props) {
       />
 
       {/* Album info footer */}
-      <div className="px-4 py-6 space-y-2">
+      <div className="mx-4 p-4 rounded-xl bg-[var(--bg-secondary)]/50 backdrop-blur-sm border border-[var(--border)] space-y-1">
         <p className="text-xs text-[var(--text-muted)]">
           {album.total_tracks} songs
         </p>

@@ -59,7 +59,7 @@ export default function ArtistClient({ topTracks, albums, relatedArtists, artist
   const hasMoreAlbums = albums.length > INITIAL_ALBUMS
 
   return (
-    <div className="bg-[var(--bg-secondary)]/50 px-3 py-4 space-y-10 pb-20">
+    <div className="px-3 py-4 space-y-10 pb-20">
       {/* Play all button */}
       <div className="flex items-center gap-4 px-4">
         <button
@@ -122,7 +122,7 @@ export default function ArtistClient({ topTracks, albums, relatedArtists, artist
                 <Link
                   key={album.id}
                   href={`/album/${album.id}`}
-                  className="group bg-[var(--bg-secondary)] hover:bg-[var(--bg-hover)] rounded-xl p-4 transition-all border border-[var(--border)] animate-fade-in"
+                  className="group bg-[var(--bg-secondary)]/50 backdrop-blur-sm hover:bg-[var(--bg-hover)]/70 rounded-xl p-4 transition-all border border-[var(--border)] hover:shadow-lg hover:-translate-y-0.5 hover:border-[var(--accent)]/20 animate-fade-in"
                 >
                   <div className="w-full aspect-square rounded-lg overflow-hidden bg-[var(--bg-hover)] mb-3 shadow-sm">
                     <img
@@ -147,7 +147,7 @@ export default function ArtistClient({ topTracks, albums, relatedArtists, artist
             <div className="flex justify-center mt-6">
               <button
                 onClick={() => setShowAllAlbums(!showAllAlbums)}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-[var(--accent)] hover:bg-[var(--accent-light)] rounded-lg transition-all"
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 rounded-xl transition-all"
               >
                 <span>{showAllAlbums ? "Show less" : `Show all ${albums.length} albums`}</span>
                 <svg
@@ -173,7 +173,7 @@ export default function ArtistClient({ topTracks, albums, relatedArtists, artist
               <Link
                 key={artist.id}
                 href={`/artist/${artist.id}`}
-                className="group bg-[var(--bg-secondary)] hover:bg-[var(--bg-hover)] rounded-xl p-4 transition-all text-center border border-[var(--border)]"
+                className="group bg-[var(--bg-secondary)]/50 backdrop-blur-sm hover:bg-[var(--bg-hover)]/70 rounded-xl p-4 transition-all text-center border border-[var(--border)] hover:shadow-lg hover:-translate-y-0.5 hover:border-[var(--accent)]/20"
               >
                 <div className="w-full aspect-square rounded-full overflow-hidden bg-[var(--bg-hover)] mb-3 shadow-sm">
                   <img

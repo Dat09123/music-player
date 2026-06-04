@@ -57,7 +57,7 @@ export default function PlaylistClient({ tracks, playlistName, playlistUri, play
   }
 
   return (
-    <div className="bg-[var(--bg-secondary)]/50 px-3 py-4">
+    <div className="px-3 py-4">
       {/* Play controls */}
       <div className="flex items-center gap-4 px-4 py-2 mb-4">
         <button
@@ -80,7 +80,7 @@ export default function PlaylistClient({ tracks, playlistName, playlistUri, play
         <button
           onClick={handleImport}
           disabled={imported || playerTracks.length === 0}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${imported ? "bg-green-500 text-white" : "text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--accent-light)] border border-[var(--border)]"}`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${imported ? "bg-green-500/90 text-white shadow-sm" : "text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 border border-[var(--border)]"}`}
           title="Save all tracks to your playlists"
         >
           {imported ? (
@@ -101,7 +101,7 @@ export default function PlaylistClient({ tracks, playlistName, playlistUri, play
       />
 
       {/* Track count */}
-      <div className="px-4 py-6 text-xs text-[var(--text-muted)]">
+      <div className="mx-4 p-4 rounded-xl bg-[var(--bg-secondary)]/50 backdrop-blur-sm border border-[var(--border)] text-xs text-[var(--text-muted)]">
         {tracks.filter((t) => t?.track?.id).length} songs
       </div>
     </div>
