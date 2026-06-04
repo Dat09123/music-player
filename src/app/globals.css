@@ -14,6 +14,26 @@
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
   --radius: 8px;
   --radius-lg: 16px;
+  --skeleton-from: #e5e7eb;
+  --skeleton-to: #f3f4f6;
+}
+
+.dark {
+  --bg-primary: #0f0f14;
+  --bg-secondary: #1a1a25;
+  --bg-hover: #252535;
+  --text-primary: #e8e8f0;
+  --text-secondary: #9ca3b8;
+  --text-muted: #6b7280;
+  --accent: #6366f1;
+  --accent-light: #1e1b4b;
+  --border: #2a2a3a;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --radius: 8px;
+  --radius-lg: 16px;
+  --skeleton-from: #252535;
+  --skeleton-to: #1e1e30;
 }
 
 @theme inline {
@@ -21,6 +41,23 @@
   --color-foreground: var(--text-primary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+/* Smooth theme transition — only on layout/surface elements to avoid jank */
+html, body, #__next, main, header, aside, section, article,
+div:not(.skeleton):not([class*="animate-"]):not([role="slider"]),
+nav, ul, li, a, button, p, h1, h2, h3, h4, h5, h6, span, form, input, label,
+tbody, thead, tr, td, th,
+.bg-white, .bg-gray-50, .bg-indigo-50, .bg-red-50, .bg-purple-100,
+.border, .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl,
+[class*="bg-"][class*="rounded"],
+[class*="text-["] {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease, box-shadow 0.3s ease;
+}
+
+/* Exclude skeleton/images/inputs from transitions */
+.skeleton, .skeleton *, img, svg, input[type="range"], .no-transition {
+  transition: none !important;
 }
 
 body {
@@ -74,7 +111,7 @@ input[type="range"]:hover::-webkit-slider-thumb {
 
 /* Skeleton */
 .skeleton {
-  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background: linear-gradient(90deg, var(--skeleton-from) 25%, var(--skeleton-to) 50%, var(--skeleton-from) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
@@ -83,3 +120,47 @@ input[type="range"]:hover::-webkit-slider-thumb {
   0% { background-position: -200px 0; }
   100% { background-position: calc(200px + 100%) 0; }
 }
+
+/* Fade-in animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out both;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out both;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out both;
+}
+
+/* Stagger delays for grid items */
+.stagger-1 { animation-delay: 0ms; }
+.stagger-2 { animation-delay: 50ms; }
+.stagger-3 { animation-delay: 100ms; }
+.stagger-4 { animation-delay: 150ms; }
+.stagger-5 { animation-delay: 200ms; }
+.stagger-6 { animation-delay: 250ms; }
+.stagger-7 { animation-delay: 300ms; }
+.stagger-8 { animation-delay: 350ms; }
+.stagger-9 { animation-delay: 400ms; }
+.stagger-10 { animation-delay: 450ms; }
+.stagger-11 { animation-delay: 500ms; }
+.stagger-12 { animation-delay: 550ms; }
+
+/* Scrollbar */

@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar"
 import Header from "@/components/Header"
 import { PlayerProvider } from "@/components/Player"
 import { AuthProvider } from "@/lib/AuthContext"
+import { ThemeProvider } from "@/lib/ThemeContext"
 import ErrorBoundary from "@/components/ErrorBoundary"
 
 const inter = Inter({
@@ -24,8 +25,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html lang="en" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem("muse-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.classList.toggle("dark",t==="dark")}catch(e){}})()` }} />
+      </head>
       <body className="h-full bg-[var(--bg-primary)] text-[var(--text-primary)]">
+        <ThemeProvider>
         <AuthProvider>
           <PlayerProvider>
             <div className="flex h-full">
@@ -56,6 +61,7 @@ export default function RootLayout({
             </div>
           </PlayerProvider>
         </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

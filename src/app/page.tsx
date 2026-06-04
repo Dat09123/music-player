@@ -95,8 +95,10 @@ export default function HomePage() {
             <Link href="/search" className="text-xs font-medium text-[var(--accent)] hover:underline">Show all</Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-            {playlists.slice(0, 12).map((pl: any) => (
-              <Card key={pl.id} id={pl.id} name={pl.name} description={pl.description} imageUrl={getImage(pl.images)} type="playlist" href={`/playlist/${pl.id}`} subtext={pl.tracks?.total ? `${formatNumber(pl.tracks.total)} tracks` : undefined} />
+            {playlists.slice(0, 12).map((pl: any, i: number) => (
+              <div key={pl.id} className={`animate-fade-in-up stagger-${Math.min(i + 1, 12)}`}>
+                <Card id={pl.id} name={pl.name} description={pl.description} imageUrl={getImage(pl.images)} type="playlist" href={`/playlist/${pl.id}`} subtext={pl.tracks?.total ? `${formatNumber(pl.tracks.total)} tracks` : undefined} />
+              </div>
             ))}
           </div>
         </section>
@@ -109,8 +111,10 @@ export default function HomePage() {
             <h2 className="text-lg font-bold text-[var(--text-primary)]">Popular Albums</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-            {albums.slice(0, 12).map((album: any) => (
-              <Card key={album.id} id={album.id} name={album.name} imageUrl={getImage(album.images)} type="album" href={`/album/${album.id}`} subtext={`${new Date(album.release_date).getFullYear()} • ${album.artists?.map((a: any) => a.name).join(", ")}`} />
+            {albums.slice(0, 12).map((album: any, i: number) => (
+              <div key={album.id} className={`animate-fade-in-up stagger-${Math.min(i + 1, 12)}`}>
+                <Card id={album.id} name={album.name} imageUrl={getImage(album.images)} type="album" href={`/album/${album.id}`} subtext={`${new Date(album.release_date).getFullYear()} • ${album.artists?.map((a: any) => a.name).join(", ")}`} />
+              </div>
             ))}
           </div>
         </section>
