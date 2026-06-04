@@ -66,6 +66,20 @@ export default function TrackClient({ track }: Props) {
     }
   }
 
+  async function handleCopyLyrics() {
+    const textToCopy = lyrics || syncedLyrics || ""
+    if (!textToCopy) {
+      showToast("No lyrics to copy")
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(textToCopy)
+      showToast(`Lyrics copied: "${track.name}"`)
+    } catch {
+      showToast("Failed to copy lyrics")
+    }
+  }
+
   function toggleLyrics() {
     if (!lyricsOpen) {
       fetchLyrics()
@@ -318,9 +332,15 @@ export default function TrackClient({ track }: Props) {
                         </button>
                       </div>
                     )}
-                    <svg className="w-4 h-4 text-[var(--text-muted)]" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M6 18l8.5-6L6 6v12zM16 6v2h2v12h-2V6z" />
-                    </svg>
+                    <button
+                      onClick={handleCopyLyrics}
+                      className="p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--bg-hover)] transition-all"
+                      title="Copy lyrics"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
 
