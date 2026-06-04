@@ -19,6 +19,18 @@ export default function PlaylistPage({ params }: Props) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!playlist) return
+    trackPageView({
+      id: playlist.id,
+      type: "playlist",
+      name: playlist.name,
+      imageUrl: getImage(playlist.images),
+      subtext: playlist.tracks?.total ? `${playlist.tracks.total} tracks` : undefined,
+      href: `/playlist/${playlist.id}`,
+    })
+  }, [playlist?.id])
+
+  useEffect(() => {
     let cancelled = false
 
     async function loadData() {
@@ -77,19 +89,6 @@ export default function PlaylistPage({ params }: Props) {
       </div>
     )
   }
-
-  // Track page view
-  useEffect(() => {
-    if (!playlist) return
-    trackPageView({
-      id: playlist.id,
-      type: "playlist",
-      name: playlist.name,
-      imageUrl: getImage(playlist.images),
-      subtext: playlist.tracks?.total ? `${playlist.tracks.total} tracks` : undefined,
-      href: `/playlist/${playlist.id}`,
-    })
-  }, [playlist?.id])
 
   return (
     <div>

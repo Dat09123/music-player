@@ -19,6 +19,18 @@ export default function TrackPage({ params }: Props) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!track) return
+    trackPageView({
+      id: track.id,
+      type: "track",
+      name: track.name,
+      imageUrl: getImage(track.album?.images),
+      subtext: track.artists?.map((a: any) => a.name).join(", "),
+      href: `/track/${track.id}`,
+    })
+  }, [track?.id])
+
+  useEffect(() => {
     let cancelled = false
 
     async function loadData() {
@@ -74,19 +86,6 @@ export default function TrackPage({ params }: Props) {
       </div>
     )
   }
-
-  // Track page view
-  useEffect(() => {
-    if (!track) return
-    trackPageView({
-      id: track.id,
-      type: "track",
-      name: track.name,
-      imageUrl: getImage(track.album?.images),
-      subtext: track.artists?.map((a: any) => a.name).join(", "),
-      href: `/track/${track.id}`,
-    })
-  }, [track?.id])
 
   if (error || !track) {
     return (

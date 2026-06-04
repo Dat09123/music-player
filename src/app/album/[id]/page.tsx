@@ -39,6 +39,18 @@ export default function AlbumPage({ params }: Props) {
     return () => { cancelled = true }
   }, [id])
 
+  useEffect(() => {
+    if (!album) return
+    trackPageView({
+      id: album.id,
+      type: "album",
+      name: album.name,
+      imageUrl: getImage(album.images),
+      subtext: album.artists?.map((a: any) => a.name).join(", "),
+      href: `/album/${album.id}`,
+    })
+  }, [album?.id])
+
   if (loading) {
     return (
       <div>
@@ -75,19 +87,6 @@ export default function AlbumPage({ params }: Props) {
       </div>
     )
   }
-
-  // Track page view
-  useEffect(() => {
-    if (!album) return
-    trackPageView({
-      id: album.id,
-      type: "album",
-      name: album.name,
-      imageUrl: getImage(album.images),
-      subtext: album.artists?.map((a: any) => a.name).join(", "),
-      href: `/album/${album.id}`,
-    })
-  }, [album?.id])
 
   const totalDuration = (album.tracks?.items || []).reduce((sum: number, t: any) => sum + (t.duration_ms || 0), 0)
   const totalMinutes = Math.floor(totalDuration / 60000)
