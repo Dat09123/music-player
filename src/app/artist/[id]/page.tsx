@@ -53,21 +53,20 @@ export default function ArtistPage({ params }: Props) {
   if (loading) {
     return (
       <div className="animate-pulse">
-        {/* Hero skeleton */}
-        <div className="relative overflow-hidden bg-gradient-to-b from-gray-200/50 to-zinc-900">
+        {/* Hero skeleton */}          <div className="relative overflow-hidden bg-gradient-to-b from-gray-200/50 dark:from-gray-800/50 to-zinc-900">
           <div className="px-6 pt-20 pb-8 md:pt-28 md:pb-12">
             <div className="flex flex-col md:flex-row items-center md:items-end gap-8">
-              <div className="w-48 h-48 md:w-60 md:h-60 rounded-full bg-gray-300 flex-shrink-0 ring-4 ring-white/10" />
+              <div className="w-48 h-48 md:w-60 md:h-60 rounded-full flex-shrink-0 ring-4 ring-white/10 skeleton" />
               <div className="text-center md:text-left flex-1">
-                <div className="h-4 w-16 bg-gray-300 rounded mb-3" />
-                <div className="h-12 w-48 bg-gray-300 rounded mb-3" />
-                <div className="h-4 w-32 bg-gray-300 rounded" />
+                <div className="h-4 w-16 skeleton rounded mb-3" />
+                <div className="h-12 w-48 skeleton rounded mb-3" />
+                <div className="h-4 w-32 skeleton rounded" />
               </div>
             </div>
           </div>
         </div>
         {/* Content skeleton */}
-        <div className="bg-white/50 px-3 py-4 space-y-10 pb-20">
+        <div className="bg-[var(--bg-secondary)]/50 px-3 py-4 space-y-10 pb-20">
           {/* Play button */}
           <div className="flex items-center gap-4 px-4">
             <div className="w-14 h-14 rounded-full skeleton" />
@@ -94,7 +93,7 @@ export default function ArtistPage({ params }: Props) {
             <div className="h-5 w-20 skeleton rounded mb-4 ml-4" />
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 px-2">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white rounded-xl p-4 border border-[var(--border)]">
+                <div key={i} className="bg-[var(--bg-secondary)] rounded-xl p-4 border border-[var(--border)]">
                   <div className="w-full aspect-square rounded-lg skeleton mb-3" />
                   <div className="h-3.5 w-24 skeleton rounded mb-1" />
                   <div className="h-3 w-16 skeleton rounded" />

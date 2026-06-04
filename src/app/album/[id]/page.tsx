@@ -40,7 +40,7 @@ export default function AlbumPage({ params }: Props) {
     return (
       <div className="animate-pulse">
         {/* Hero skeleton */}
-        <div className="px-6 pt-12 pb-8 md:pt-20 md:pb-10 bg-gradient-to-b from-gray-100 to-[var(--bg-primary)]">
+        <div className="px-6 pt-12 pb-8 md:pt-20 md:pb-10 bg-gradient-to-b from-gray-100 dark:from-gray-800 to-[var(--bg-primary)]">
           <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
             <div className="w-48 h-48 md:w-56 md:h-56 rounded-xl flex-shrink-0 shadow-2xl skeleton" />
             <div className="text-center md:text-left flex-1">
@@ -95,8 +95,8 @@ export default function AlbumPage({ params }: Props) {
             {album.images?.[0]?.url ? (
               <img src={album.images[0].url} alt={album.name} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                <svg className="w-20 h-20 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
+              <div className="w-full h-full bg-[var(--bg-hover)] flex items-center justify-center">
+                <svg className="w-20 h-20 text-[var(--text-muted)]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
               </div>
             )}
           </div>

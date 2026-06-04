@@ -20,8 +20,8 @@ export default function Card({ name, description, imageUrl, type, href, subtext 
           {imageUrl ? (
             <img src={imageUrl} alt={name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-              <svg className="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[var(--bg-hover)] to-[var(--border)]">
+              <svg className="w-10 h-10 text-[var(--text-muted)]" fill="currentColor" viewBox="0 0 24 24">
                 {type === "artist" ? (
                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                 ) : (
