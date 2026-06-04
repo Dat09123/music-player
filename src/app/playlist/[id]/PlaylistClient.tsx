@@ -13,9 +13,10 @@ interface Props {
   tracks: SpotifyPlaylistTrack[]
   playlistName: string
   playlistUri?: string
+  playlistId?: string
 }
 
-export default function PlaylistClient({ tracks, playlistName, playlistUri }: Props) {
+export default function PlaylistClient({ tracks, playlistName, playlistUri, playlistId }: Props) {
   const { playAll, isPlaying } = usePlayer()
   const { showToast } = useToast()
   const [imported, setImported] = useState(false)
@@ -45,6 +46,16 @@ export default function PlaylistClient({ tracks, playlistName, playlistUri }: Pr
     showToast(`Imported "${playlistName}" (${playerTracks.length} tracks) to your library`)
   }
 
+  async function handleShare() {
+    const url = `${window.location.origin}/playlist/${playlistId || playlistUri?.split(":").pop() || ""}`
+    try {
+      await navigator.clipboard.writeText(url)
+      showToast(`Link copied: "${playlistName}"`)
+    } catch {
+      showToast("Failed to copy link", "error")
+    }
+  }
+
   return (
     <div className="bg-[var(--bg-secondary)]/50 px-3 py-4">
       {/* Play controls */}
@@ -57,9 +68,13 @@ export default function PlaylistClient({ tracks, playlistName, playlistUri }: Pr
             <path d="M8 5v14l11-7z" />
           </svg>
         </button>
-        <button className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
-          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        <button
+          onClick={handleShare}
+          className="w-10 h-10 rounded-full border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all"
+          title="Copy playlist link"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>
         </button>
         <button
