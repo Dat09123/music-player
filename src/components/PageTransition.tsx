@@ -3,71 +3,37 @@
 import { usePathname } from "next/navigation"
 import { useState, useEffect, useRef, type ReactNode } from "react"
 
-type TransitionState = "enter" | "exit" | "idle"
-
 export default function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname()
-  const [displayChildren, setDisplayChildren] = useState(children)
-  const [transitionState, setTransitionState] = useState<TransitionState>("enter")
+  const [visible, setVisible] = useState(true)
   const prevPathRef = useRef(pathname)
-  const mountedRef = useRef(false)
-  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const enterTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // Cleanup all timers helper
-  function clearAllTimers() {
-    if (exitTimerRef.current) {
-      clearTimeout(exitTimerRef.current)
-      exitTimerRef.current = null
-    }
-    if (enterTimerRef.current) {
-      clearTimeout(enterTimerRef.current)
-      enterTimerRef.current = null
-    }
-  }
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    // On first mount — animate in
-    if (!mountedRef.current) {
-      mountedRef.current = true
-      const timer = setTimeout(() => setTransitionState("idle"), 400)
-      return () => clearTimeout(timer)
-    }
-
-    // Only animate on actual route change
     if (pathname === prevPathRef.current) return
-
     prevPathRef.current = pathname
-    clearAllTimers()
 
-    // Start exit animation
-    setTransitionState("exit")
+    if (timerRef.current) clearTimeout(timerRef.current)
 
-    exitTimerRef.current = setTimeout(() => {
-      exitTimerRef.current = null
-      // Swap to new children
-      setDisplayChildren(children)
-      setTransitionState("enter")
+    setVisible(false)
+    timerRef.current = setTimeout(() => {
+      setVisible(true)
+      timerRef.current = null
+    }, 150)
 
-      enterTimerRef.current = setTimeout(() => {
-        enterTimerRef.current = null
-        setTransitionState("idle")
-      }, 400)
-    }, 200)
-
-    return clearAllTimers
-  }, [pathname, children])
-
-  const className =
-    transitionState === "exit"
-      ? "animate-page-exit"
-      : transitionState === "enter"
-      ? "animate-page-enter"
-      : ""
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [pathname])
 
   return (
-    <div className={className} style={transitionState === "idle" ? { opacity: 1 } : undefined}>
-      {displayChildren}
+    <div
+      style={{
+        opacity: visible ? 1 : 0,
+        transition: "opacity 0.15s ease",
+      }}
+    >
+      {children}
     </div>
   )
 }
