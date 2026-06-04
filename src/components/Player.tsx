@@ -46,6 +46,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [shuffle, setShuffle] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
+  // Use refs to avoid stale closures in audio event handlers
+  const nextTrackRef = useRef(nextTrack)
+  nextTrackRef.current = nextTrack
+  const repeatModeRef = useRef(repeatMode)
+  repeatModeRef.current = repeatMode
+
   useEffect(() => {
     audioRef.current = new Audio()
     audioRef.current.volume = volume
@@ -58,8 +64,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     const onTimeUpdate = () => setProgress(audio.currentTime)
     const onDurationChange = () => setDuration(audio.duration || 0)
     const onEnded = () => {
-      if (repeatMode === "one") { audio.currentTime = 0; audio.play() }
-      else nextTrack()
+      if (repeatModeRef.current === "one") { audio.currentTime = 0; audio.play().catch(() => {}) }
+      else nextTrackRef.current()
     }
     const onPlay = () => setIsPlaying(true)
     const onPause = () => setIsPlaying(false)
@@ -78,7 +84,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       audio.removeEventListener("pause", onPause)
       audio.removeEventListener("error", onError)
     }
-  }, [currentTrack, repeatMode])
+  }, [currentTrack])
 
   useEffect(() => { if (audioRef.current) audioRef.current.volume = volume }, [volume])
 

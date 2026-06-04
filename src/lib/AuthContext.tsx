@@ -9,6 +9,7 @@ interface AuthContextType {
   accessToken: string | null
   isLoading: boolean
   isAuthenticated: boolean
+  authError: string | null
   login: () => Promise<void>
   logout: () => void
   getToken: () => Promise<string | null>
@@ -28,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [refreshToken, setRefreshToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [authError, setAuthError] = useState<string | null>(null)
 
   // Force loading to resolve after 3 seconds max (safety net)
   useEffect(() => {
@@ -143,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (error) {
       console.error("Spotify auth error:", error)
+      setAuthError(`Spotify returned an error: ${error}. Make sure the redirect URI is added to your Spotify Dashboard. Current redirect URI: ${REDIRECT_URI}`)
       window.history.replaceState({}, document.title, window.location.pathname)
       return
     }
@@ -151,6 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const codeVerifier = localStorage.getItem("spotify_code_verifier")
       if (!codeVerifier) {
         console.error("No code verifier found")
+        setAuthError("Login session expired. Please try logging in again.")
         window.history.replaceState({}, document.title, window.location.pathname)
         return
       }
@@ -198,7 +202,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           window.history.replaceState({}, document.title, window.location.pathname)
         })
         .catch((err) => {
-          console.error("Token exchange failed:", err?.message || err)
+          if (cancelled) return
+          const msg = err?.message || "Token exchange failed"
+          console.error("Token exchange failed:", msg)
+          setAuthError(`Login failed: ${msg}. Try logging in again. (Redirect URI: ${REDIRECT_URI})`)
           setIsLoading(false)
           window.history.replaceState({}, document.title, window.location.pathname)
         })
@@ -209,10 +216,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async () => {
     try {
+      setAuthError(null)
+      // Check crypto.subtle availability
+      if (!crypto?.subtle?.digest) {
+        throw new Error("Crypto API not available. Make sure you're using HTTPS or localhost.")
+      }
       const authUrl = await getSpotifyAuthUrl(CLIENT_ID, REDIRECT_URI)
       window.location.href = authUrl.toString()
     } catch (err) {
-      console.error("Failed to start login:", err)
+      const msg = err instanceof Error ? err.message : "Failed to start login"
+      console.error("Failed to start login:", msg)
+      setAuthError(msg)
     }
   }, [])
 
@@ -220,6 +234,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setAccessToken(null)
     setRefreshToken(null)
+    setAuthError(null)
     localStorage.removeItem("spotify_session")
     setIsLoading(false)
   }, [])
@@ -254,6 +269,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         accessToken,
         isLoading,
         isAuthenticated: !!user && !!accessToken,
+        authError,
         login,
         logout,
         getToken,
