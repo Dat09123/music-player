@@ -81,6 +81,17 @@ export function importTracksAsPlaylist(name: string, tracks: PlayerTrack[]): Loc
   return saved
 }
 
+export function reorderTrack(playlistId: string, fromIndex: number, toIndex: number): void {
+  const playlists = loadAll()
+  const pl = playlists.find((p) => p.id === playlistId)
+  if (!pl || fromIndex === toIndex) return
+  if (fromIndex < 0 || fromIndex >= pl.tracks.length || toIndex < 0 || toIndex >= pl.tracks.length) return
+  const [moved] = pl.tracks.splice(fromIndex, 1)
+  pl.tracks.splice(toIndex, 0, moved)
+  pl.updatedAt = Date.now()
+  saveAll(playlists)
+}
+
 export function removeTrackFromPlaylist(playlistId: string, trackId: string): void {
   const playlists = loadAll()
   const pl = playlists.find((p) => p.id === playlistId)

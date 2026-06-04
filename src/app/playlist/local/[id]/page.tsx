@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { useState, useEffect } from "react"
-import { getPlaylist, deletePlaylist, renamePlaylist, removeTrackFromPlaylist } from "@/lib/playlists"
+import { getPlaylist, deletePlaylist, renamePlaylist, removeTrackFromPlaylist, reorderTrack } from "@/lib/playlists"
 import { usePlayer } from "@/components/Player"
 import { formatDuration } from "@/lib/utils"
 import type { LocalPlaylist, PlayerTrack } from "@/lib/types"
@@ -15,6 +15,8 @@ export default function LocalPlaylistPage() {
   const [isEditing, setIsEditing] = useState(false)
   const [editName, setEditName] = useState("")
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const { playAll, currentTrack, isPlaying } = usePlayer()
 
   function refresh() {
@@ -49,6 +51,39 @@ export default function LocalPlaylistPage() {
   function handlePlay(index: number) {
     if (!playlist || !playlist.tracks[index]) return
     playAll(playlist.tracks, index)
+  }
+
+  function handleDragStart(index: number) {
+    setDragIndex(index)
+  }
+
+  function handleDragOver(e: React.DragEvent, index: number) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = "move"
+    if (dragIndex === index) return
+    setDragOverIndex(index)
+  }
+
+  function handleDragLeave() {
+    setDragOverIndex(null)
+  }
+
+  function handleDragEnd() {
+    setDragIndex(null)
+    setDragOverIndex(null)
+  }
+
+  function handleDrop(e: React.DragEvent, dropIndex: number) {
+    e.preventDefault()
+    if (dragIndex === null || dragIndex === dropIndex) {
+      setDragIndex(null)
+      setDragOverIndex(null)
+      return
+    }
+    reorderTrack(id, dragIndex, dropIndex)
+    setDragIndex(null)
+    setDragOverIndex(null)
+    refresh()
   }
 
   function handleDelete() {
@@ -145,7 +180,8 @@ export default function LocalPlaylistPage() {
           </div>
         ) : (
           <div className="space-y-0.5">
-            <div className="grid grid-cols-[32px_1fr_64px_28px] gap-3 px-4 py-1.5 text-xs text-[var(--text-muted)] border-b border-[var(--border)]">
+            <div className="grid grid-cols-[20px_32px_1fr_64px_28px] gap-3 px-4 py-1.5 text-xs text-[var(--text-muted)] border-b border-[var(--border)]">
+              <span></span>
               <span className="text-center">#</span>
               <span>Title</span>
               <span className="text-right">
@@ -155,12 +191,26 @@ export default function LocalPlaylistPage() {
             </div>
             {playerTracks.map((track, i) => {
               const isCurrent = currentTrack?.id === track.id
+              const isDragging = dragIndex === i
+              const isDragOver = dragOverIndex === i
               return (
                 <div
                   key={`${track.id}-${i}`}
-                  className={`grid grid-cols-[32px_1fr_64px_28px] gap-3 px-4 py-2 rounded-lg group cursor-pointer transition-all hover:bg-[var(--bg-hover)] ${isCurrent ? "text-[var(--accent)] bg-[var(--accent-light)]" : "text-[var(--text-secondary)]"}`}
+                  draggable
+                  onDragStart={() => handleDragStart(i)}
+                  onDragOver={(e) => handleDragOver(e, i)}
+                  onDragLeave={handleDragLeave}
+                  onDragEnd={handleDragEnd}
+                  onDrop={(e) => handleDrop(e, i)}
+                  className={`grid grid-cols-[20px_32px_1fr_64px_28px] gap-3 px-4 py-2 rounded-lg group cursor-grab active:cursor-grabbing transition-all ${isDragging ? "opacity-40 ring-1 ring-[var(--accent)]" : "hover:bg-[var(--bg-hover)]"} ${isDragOver ? "ring-2 ring-[var(--accent)] ring-inset bg-[var(--accent-light)]" : ""} ${isCurrent ? "text-[var(--accent)] bg-[var(--accent-light)]" : "text-[var(--text-secondary)]"}`}
                   onClick={() => handlePlay(i)}
                 >
+                  {/* Drag handle */}
+                  <div className="flex items-center justify-center cursor-grab active:cursor-grabbing text-[var(--text-muted)] opacity-0 group-hover:opacity-60 hover:opacity-100 transition-opacity" onMouseDown={(e) => e.stopPropagation()}>
+                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z" />
+                    </svg>
+                  </div>
                   <div className="flex items-center justify-center">
                     {isCurrent && isPlaying ? (
                       <div className="flex items-end gap-[2px] h-3">
