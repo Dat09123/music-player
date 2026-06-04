@@ -230,6 +230,13 @@ export async function getAlbum(id: string) {
   return transformAlbum(data)
 }
 
+/** Get a single track by ID */
+export async function getTrack(id: string) {
+  console.debug(`[Deezer] 🎵 getTrack(${id})`)
+  const data = await fetchDeezer<DeezerTrack>(`/track/${id}`)
+  return transformTrack(data)
+}
+
 /** Get a single artist */
 export async function getArtist(id: string) {
   console.debug(`[Deezer] 🎤 getArtist(${id})`)

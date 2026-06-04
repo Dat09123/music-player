@@ -352,7 +352,20 @@ export default function SearchClient() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-[var(--text-primary)] truncate">{track.name}</p>
-                      <p className="text-xs text-[var(--text-secondary)] truncate">{formatArtists(track.artists || [])}</p>
+                      <p className="text-xs text-[var(--text-secondary)] truncate">
+                        {(track.artists || []).map((artist: any, i: number) => (
+                          <span key={artist.id}>
+                            <Link
+                              href={`/artist/${artist.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="hover:text-[var(--accent)] hover:underline transition-colors"
+                            >
+                              {artist.name}
+                            </Link>
+                            {i < (track.artists?.length || 0) - 1 && <span>, </span>}
+                          </span>
+                        ))}
+                      </p>
                     </div>
                     <span className="text-xs text-[var(--text-muted)] tabular-nums">{formatDuration(track.duration_ms || 0)}</span>
                     <button className="opacity-0 group-hover:opacity-100 text-[var(--accent)] hover:text-[var(--accent)] transition-all">

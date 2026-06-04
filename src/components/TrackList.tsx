@@ -95,6 +95,21 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
     showToast(`Created "${pl.name}" and added "${menuTrack.name}"`)
   }
 
+  function formatArtistLinks(artists: { id: string; name: string }[]) {
+    return artists.map((artist, i) => (
+      <span key={artist.id}>
+        <Link
+          href={`/artist/${artist.id}`}
+          onClick={(e) => e.stopPropagation()}
+          className="hover:text-[var(--accent)] hover:underline transition-colors"
+        >
+          {artist.name}
+        </Link>
+        {i < artists.length - 1 && <span className="mx-0.5">, </span>}
+      </span>
+    ))
+  }
+
   if (tracks.length === 0) {
     return <div className="flex flex-col items-center justify-center py-16 text-[var(--text-muted)]">
       <svg className="w-12 h-12 mb-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>
@@ -137,7 +152,10 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
               )}
               <div className="min-w-0">
                 <p className={`text-xs font-medium truncate ${isCurrentTrack ? "text-[var(--accent)]" : "text-[var(--text-primary)]"}`}>{track.name}</p>
-                <p className="text-xs truncate text-[var(--text-muted)]">{formatArtists(track.artists || [])}{showAlbum && track.album?.name && <span className="hidden md:inline"><span className="mx-1">•</span>{track.album.name}</span>}</p>
+                <p className="text-xs truncate text-[var(--text-muted)]">
+                  {formatArtistLinks(track.artists || [])}
+                  {showAlbum && track.album?.name && <span className="hidden md:inline"><span className="mx-0.5">•</span><Link href={`/album/${track.album.id}`} onClick={(e) => e.stopPropagation()} className="hover:text-[var(--accent)] hover:underline transition-colors">{track.album.name}</Link></span>}
+                </p>
               </div>
             </div>
             <div className="flex items-center justify-end gap-1.5">
@@ -211,6 +229,30 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
               </svg>
               <span>Add to Queue</span>
             </button>
+          </div>
+
+          {/* Go to Track & Go to Artist */}
+          <div className="border-t border-[var(--border)] pt-1 mt-1">
+            <Link
+              href={`/track/${menuTrack!.id}`}
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all"
+            >
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <span>Go to Track</span>
+            </Link>
+            <Link
+              href={`/artist/${menuTrack!.artistIds?.[0] || ""}`}
+              onClick={(e) => { if (!menuTrack!.artistIds?.[0]) e.preventDefault(); setMenuOpen(false) }}
+              className={`flex items-center gap-2 w-full px-3 py-2 text-sm text-left transition-all ${menuTrack!.artistIds?.[0] ? "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]" : "text-[var(--text-muted)] cursor-not-allowed"}`}
+            >
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+              </svg>
+              <span>Go to Artist</span>
+            </Link>
           </div>
 
           <div className="border-t border-[var(--border)] pt-1.5 mt-1">

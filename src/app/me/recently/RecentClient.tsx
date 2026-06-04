@@ -99,7 +99,19 @@ export default function RecentClient() {
               {/* Track info */}
               <div className="min-w-0 flex-1">
                 <p className={`text-sm font-medium truncate ${isCurrentTrack ? "text-[var(--accent)]" : "text-[var(--text-primary)]"}`}>{track.name}</p>
-                <p className="text-xs text-[var(--text-muted)] truncate">{track.artists}</p>
+                <p className="text-xs text-[var(--text-muted)] truncate">
+                  {track.artistIds?.[0] ? (
+                    <Link
+                      href={`/artist/${track.artistIds[0]}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="hover:text-[var(--accent)] hover:underline transition-colors"
+                    >
+                      {track.artists}
+                    </Link>
+                  ) : (
+                    track.artists
+                  )}
+                </p>
               </div>
 
               {/* Time ago */}

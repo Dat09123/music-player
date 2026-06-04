@@ -200,7 +200,20 @@ export default function TopClient() {
                   )}
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-[var(--text-primary)] truncate">{track.name}</p>
-                    <p className="text-xs truncate text-[var(--text-muted)]">{formatArtists(track.artists || [])}</p>
+                    <p className="text-xs truncate text-[var(--text-muted)]">
+                      {(track.artists || []).map((artist: any, i: number) => (
+                        <span key={artist.id}>
+                          <Link
+                            href={`/artist/${artist.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="hover:text-[var(--accent)] hover:underline transition-colors"
+                          >
+                            {artist.name}
+                          </Link>
+                          {i < (track.artists?.length || 0) - 1 && <span>, </span>}
+                        </span>
+                      ))}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center justify-end gap-2">
