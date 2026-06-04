@@ -4,7 +4,8 @@
  * See: https://developers.deezer.com/api
  */
 
-const API = "https://api.deezer.com"
+// Proxy through Next.js API route to avoid CORS issues
+const API = "/api/deezer"
 
 // ─── Raw fetch ───────────────────────────────────────────
 
