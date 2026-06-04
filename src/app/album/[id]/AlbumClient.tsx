@@ -38,7 +38,7 @@ export default function AlbumClient({ album }: Props) {
   }
 
   return (
-    <div className="bg-white/50 px-3 py-4">
+    <div className="bg-[var(--bg-secondary)]/50 px-3 py-4">
       {/* Play controls */}
       <div className="flex items-center gap-4 px-4 py-2 mb-4">
         <button

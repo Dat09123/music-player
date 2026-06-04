@@ -14,9 +14,9 @@ interface CardProps {
 
 export default function Card({ name, description, imageUrl, type, href, subtext }: CardProps) {
   return (
-    <Link href={href} className="group bg-white rounded-xl border border-[var(--border)] p-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+    <Link href={href} className="group bg-[var(--bg-secondary)] rounded-xl border border-[var(--border)] p-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
       <div className="relative mb-3">
-        <div className={`w-full aspect-square overflow-hidden bg-gray-100 shadow-sm ${type === "artist" ? "rounded-full" : "rounded-lg"}`}>
+        <div className={`w-full aspect-square overflow-hidden bg-[var(--bg-hover)] shadow-sm ${type === "artist" ? "rounded-full" : "rounded-lg"}`}>
           {imageUrl ? (
             <img src={imageUrl} alt={name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
           ) : (

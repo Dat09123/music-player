@@ -62,7 +62,7 @@ export default function LikedClient() {
   if (loading) {
     return (
       <div>
-        <div className="bg-gradient-to-b from-purple-100 via-pink-50 to-[var(--bg-primary)] px-6 pt-16 pb-8">
+        <div className="bg-gradient-to-b from-purple-100 via-pink-50 to-[var(--bg-primary)] dark:from-purple-950/30 dark:via-pink-950/20 dark:to-[var(--bg-primary)] px-6 pt-16 pb-8">
           <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
             <div className="w-48 h-48 md:w-56 md:h-56 rounded-xl bg-gray-200 skeleton shadow-2xl" />
             <div className="text-center md:text-left space-y-3">
@@ -103,7 +103,7 @@ export default function LikedClient() {
   return (
     <div>
       {/* Gradient header */}
-      <div className="bg-gradient-to-b from-purple-100 via-pink-50 to-[var(--bg-primary)] px-6 pt-12 pb-8 md:pt-20 md:pb-10">
+      <div className="bg-gradient-to-b from-purple-100 via-pink-50 to-[var(--bg-primary)] dark:from-purple-950/30 dark:via-pink-950/20 dark:to-[var(--bg-primary)] px-6 pt-12 pb-8 md:pt-20 md:pb-10">
         <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
           {/* Cover */}
           <div className="w-48 h-48 md:w-56 md:h-56 rounded-xl overflow-hidden shadow-2xl flex-shrink-0 bg-gradient-to-br from-purple-400 via-pink-400 to-red-400 flex items-center justify-center">
@@ -127,7 +127,7 @@ export default function LikedClient() {
       </div>
 
       {/* Content */}
-      <div className="bg-white/50 px-3 py-4">
+      <div className="bg-[var(--bg-secondary)]/50 px-3 py-4">
         {/* Play controls */}
         {tracks.length > 0 && (
           <div className="flex items-center gap-4 px-4 py-2 mb-4">

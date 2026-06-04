@@ -37,7 +37,7 @@ export default function ArtistClient({ topTracks, albums, relatedArtists, artist
   }
 
   return (
-    <div className="bg-white/50 px-3 py-4 space-y-10 pb-20">
+    <div className="bg-[var(--bg-secondary)]/50 px-3 py-4 space-y-10 pb-20">
       {/* Play all button */}
       <div className="flex items-center gap-4 px-4">
         <button
@@ -75,9 +75,9 @@ export default function ArtistClient({ topTracks, albums, relatedArtists, artist
               <Link
                 key={album.id}
                 href={`/album/${album.id}`}
-                className="group bg-white hover:bg-gray-50 rounded-xl p-4 transition-all border border-[var(--border)]"
+                className="group bg-[var(--bg-secondary)] hover:bg-[var(--bg-hover)] rounded-xl p-4 transition-all border border-[var(--border)]"
               >
-                <div className="w-full aspect-square rounded-lg overflow-hidden bg-gray-100 mb-3 shadow-sm">
+                <div className="w-full aspect-square rounded-lg overflow-hidden bg-[var(--bg-hover)] mb-3 shadow-sm">
                   <img
                     src={getImage(album.images)}
                     alt={album.name}
@@ -106,9 +106,9 @@ export default function ArtistClient({ topTracks, albums, relatedArtists, artist
               <Link
                 key={artist.id}
                 href={`/artist/${artist.id}`}
-                className="group bg-white hover:bg-gray-50 rounded-xl p-4 transition-all text-center border border-[var(--border)]"
+                className="group bg-[var(--bg-secondary)] hover:bg-[var(--bg-hover)] rounded-xl p-4 transition-all text-center border border-[var(--border)]"
               >
-                <div className="w-full aspect-square rounded-full overflow-hidden bg-gray-100 mb-3 shadow-sm">
+                <div className="w-full aspect-square rounded-full overflow-hidden bg-[var(--bg-hover)] mb-3 shadow-sm">
                   <img
                     src={getImage(artist.images)}
                     alt={artist.name}

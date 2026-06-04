@@ -37,18 +37,18 @@ export default function HomePage() {
   if (loading) {
     return (
       <div className="p-5 space-y-8 max-w-7xl mx-auto pb-20">
-        <div className="rounded-xl bg-gray-50 border border-[var(--border)] p-6 md:p-8 animate-pulse">
-          <div className="h-8 w-48 bg-gray-200 rounded mb-2" />
-          <div className="h-4 w-72 bg-gray-200 rounded" />
+        <div className="rounded-xl border border-[var(--border)] p-6 md:p-8">
+          <div className="h-8 w-48 skeleton rounded mb-2" />
+          <div className="h-4 w-72 skeleton rounded" />
         </div>
         <div>
           <div className="h-5 w-40 bg-gray-200 rounded mb-4" />
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="aspect-square bg-gray-100 rounded-lg mb-2" />
-                <div className="h-4 w-24 bg-gray-100 rounded mb-1" />
-                <div className="h-3 w-16 bg-gray-100 rounded" />
+              <div key={i}>
+                <div className="aspect-square skeleton rounded-lg mb-2" />
+                <div className="h-4 w-24 skeleton rounded mb-1" />
+                <div className="h-3 w-16 skeleton rounded" />
               </div>
             ))}
           </div>
@@ -74,7 +74,7 @@ export default function HomePage() {
   return (
     <div className="p-5 space-y-8 pb-28 max-w-7xl mx-auto">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100/50 p-6 md:p-8">
+      <section className="relative overflow-hidden rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/20 border border-indigo-100/50 dark:border-indigo-900/30 p-6 md:p-8">
         <div className="relative z-10">
           <h1 className="text-2xl md:text-3xl font-bold text-[var(--text-primary)] mb-1">Discover Music</h1>
           <p className="text-sm text-[var(--text-secondary)] max-w-lg">Explore popular playlists, albums, and more from Deezer.</p>

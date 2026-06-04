@@ -114,7 +114,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
         const isCurrentTrack = currentTrack?.id === track.id
         const pt = playerTracks[i]
         return (
-          <div key={`${track.id}-${i}`} className={`grid grid-cols-[32px_1fr_64px_28px] gap-3 px-4 py-2 rounded-lg group cursor-pointer transition-all hover:bg-gray-50 ${isCurrentTrack ? "text-[var(--accent)] bg-indigo-50/50" : "text-[var(--text-secondary)]"}`} onClick={() => handlePlay(index)}>
+          <div key={`${track.id}-${i}`} className={`grid grid-cols-[32px_1fr_64px_28px] gap-3 px-4 py-2 rounded-lg group cursor-pointer transition-all hover:bg-[var(--bg-hover)] ${isCurrentTrack ? "text-[var(--accent)] bg-[var(--accent-light)]" : "text-[var(--text-secondary)]"}`} onClick={() => handlePlay(index)}>
             <div className="flex items-center justify-center">
               {isCurrentTrack && isPlaying ? (
                 <div className="flex items-end gap-[2px] h-3">
@@ -128,7 +128,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
             </div>
             <div className="flex items-center gap-2.5 min-w-0">
               {showImage && track.album?.images && (
-                <div className="w-8 h-8 rounded bg-gray-100 flex-shrink-0 overflow-hidden hidden sm:block">
+                <div className="w-8 h-8 rounded bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden hidden sm:block">
                   <img src={getImage(track.album.images, "sm")} alt="" className="w-full h-full object-cover" loading="lazy" />
                 </div>
               )}
@@ -138,7 +138,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
               </div>
             </div>
             <div className="flex items-center justify-end gap-1.5">
-              {track.explicit && <span className="text-[9px] bg-gray-200 text-[var(--text-muted)] font-bold px-1 py-0.5 rounded uppercase leading-none">E</span>}
+              {track.explicit && <span className="text-[9px] bg-[var(--bg-hover)] text-[var(--text-muted)] font-bold px-1 py-0.5 rounded uppercase leading-none">E</span>}
               <span className="text-xs tabular-nums">{formatDuration(track.duration_ms || 0)}</span>
             </div>
             <div className="flex items-center justify-end">
@@ -162,7 +162,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
       {menuOpen && menuTrack && (
         <div
           ref={menuRef}
-          className="fixed z-50 bg-white rounded-xl shadow-xl border border-[var(--border)] py-1.5 min-w-[200px] max-w-[260px] animate-scale-in"
+          className="fixed z-50 bg-[var(--bg-secondary)] rounded-xl shadow-xl border border-[var(--border)] py-1.5 min-w-[200px] max-w-[260px] animate-scale-in"
           style={{ left: Math.min(menuPos.x, window.innerWidth - 280), top: Math.min(menuPos.y, window.innerHeight - 300) }}
         >
           <div className="px-3 py-2 text-xs font-medium text-[var(--text-muted)] border-b border-[var(--border)] truncate">

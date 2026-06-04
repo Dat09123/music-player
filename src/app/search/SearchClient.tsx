@@ -98,7 +98,7 @@ export default function SearchClient() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="What do you want to listen to?"
-          className="w-full pl-12 pr-4 py-3.5 bg-white text-[var(--text-primary)] rounded-xl border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/10 text-lg placeholder-[var(--text-muted)] transition-all shadow-sm"
+          className="w-full pl-12 pr-4 py-3.5 bg-[var(--bg-secondary)] text-[var(--text-primary)] rounded-xl border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/10 text-lg placeholder-[var(--text-muted)] transition-all shadow-sm"
         />
         {query && (
           <button
@@ -174,10 +174,9 @@ export default function SearchClient() {
                 {tracks.map((track) => (
                   <div
                     key={track.id}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer group transition-colors"
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-[var(--bg-hover)] cursor-pointer group transition-colors"
                     onClick={() => playTrackFromSearch(track)}
-                  >
-                    <div className="w-12 h-12 rounded bg-gray-100 flex-shrink-0 overflow-hidden">
+                  >                      <div className="w-12 h-12 rounded bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden">
                       {track.album?.images ? (
                         <img src={getImage(track.album.images, "sm")} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -206,8 +205,8 @@ export default function SearchClient() {
               <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4">Albums</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {albums.slice(0, 5).map((album) => (
-                  <Link key={album.id} href={`/album/${album.id}`} className="group bg-white hover:bg-gray-50 rounded-xl p-4 transition-all border border-[var(--border)]">
-                    <div className="w-full aspect-square rounded-lg overflow-hidden bg-gray-100 mb-3 shadow-sm">
+                  <Link key={album.id} href={`/album/${album.id}`} className="group bg-[var(--bg-secondary)] hover:bg-[var(--bg-hover)] rounded-xl p-4 transition-all border border-[var(--border)]">
+                    <div className="w-full aspect-square rounded-lg overflow-hidden bg-[var(--bg-hover)] mb-3 shadow-sm">
                       <img src={getImage(album.images)} alt={album.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                     </div>
                     <p className="font-semibold text-sm text-[var(--text-primary)] truncate">{album.name}</p>
@@ -224,8 +223,8 @@ export default function SearchClient() {
               <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4">Artists</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {artists.slice(0, 5).map((artist) => (
-                  <Link key={artist.id} href={`/artist/${artist.id}`} className="group bg-white hover:bg-gray-50 rounded-xl p-4 transition-all text-center border border-[var(--border)]">
-                    <div className="w-full aspect-square rounded-full overflow-hidden bg-gray-100 mb-3 mx-auto shadow-sm">
+                  <Link key={artist.id} href={`/artist/${artist.id}`} className="group bg-[var(--bg-secondary)] hover:bg-[var(--bg-hover)] rounded-xl p-4 transition-all text-center border border-[var(--border)]">
+                    <div className="w-full aspect-square rounded-full overflow-hidden bg-[var(--bg-hover)] mb-3 mx-auto shadow-sm">
                       <img src={getImage(artist.images)} alt={artist.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                     </div>
                     <p className="font-semibold text-sm text-[var(--text-primary)] truncate">{artist.name}</p>
@@ -242,8 +241,8 @@ export default function SearchClient() {
               <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4">Playlists</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {playlists.slice(0, 5).map((playlist) => (
-                  <Link key={playlist.id} href={`/playlist/${playlist.id}`} className="group bg-white hover:bg-gray-50 rounded-xl p-4 transition-all border border-[var(--border)]">
-                    <div className="w-full aspect-square rounded-lg overflow-hidden bg-gray-100 mb-3 shadow-sm">
+                  <Link key={playlist.id} href={`/playlist/${playlist.id}`} className="group bg-[var(--bg-secondary)] hover:bg-[var(--bg-hover)] rounded-xl p-4 transition-all border border-[var(--border)]">
+                    <div className="w-full aspect-square rounded-lg overflow-hidden bg-[var(--bg-hover)] mb-3 shadow-sm">
                       <img src={getImage(playlist.images)} alt={playlist.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                     </div>
                     <p className="font-semibold text-sm text-[var(--text-primary)] truncate">{playlist.name}</p>

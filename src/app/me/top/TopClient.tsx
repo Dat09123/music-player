@@ -123,10 +123,10 @@ export default function TopClient() {
               <Link
                 key={artist.id}
                 href={`/artist/${artist.id}`}
-                className="group bg-white hover:bg-gray-50 rounded-xl p-4 transition-all text-center border border-[var(--border)]"
+                className="group bg-[var(--bg-secondary)] hover:bg-[var(--bg-hover)] rounded-xl p-4 transition-all text-center border border-[var(--border)]"
               >
                 <div className="relative mb-3">
-                  <div className="w-full aspect-square rounded-full overflow-hidden bg-gray-100 shadow-sm mx-auto">
+                  <div className="w-full aspect-square rounded-full overflow-hidden bg-[var(--bg-hover)] shadow-sm mx-auto">
                     {artist.images?.[0]?.url ? (
                       <img
                         src={artist.images[0].url}
@@ -181,7 +181,7 @@ export default function TopClient() {
             {tracks.map((track, index) => (
               <div
                 key={track.id}
-                className="grid grid-cols-[40px_1fr_80px] gap-3 px-4 py-2.5 rounded-lg group cursor-pointer transition-all duration-200 hover:bg-gray-50 text-[var(--text-secondary)]"
+                className="grid grid-cols-[40px_1fr_80px] gap-3 px-4 py-2.5 rounded-lg group cursor-pointer transition-all duration-200 hover:bg-[var(--bg-hover)] text-[var(--text-secondary)]"
                 onClick={() => {
                   if (index < playerTracks.length) playAll(playerTracks, index)
                 }}
@@ -194,7 +194,7 @@ export default function TopClient() {
                 </div>
                 <div className="flex items-center gap-3 min-w-0">
                   {track.album?.images && (
-                    <div className="w-10 h-10 rounded bg-gray-100 flex-shrink-0 overflow-hidden hidden sm:block">
+                    <div className="w-10 h-10 rounded bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden hidden sm:block">
                       <img src={getImage(track.album.images, "sm")} alt="" className="w-full h-full object-cover" loading="lazy" />
                     </div>
                   )}

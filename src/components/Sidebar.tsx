@@ -55,7 +55,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className={`${collapsed ? "w-16" : "w-64"} bg-white text-[var(--text-primary)] flex flex-col transition-all duration-300 flex-shrink-0 h-full border-r border-[var(--border)]`}>
+    <aside className={`${collapsed ? "w-16" : "w-64"} bg-[var(--bg-secondary)] text-[var(--text-primary)] flex flex-col transition-all duration-300 flex-shrink-0 h-full border-r border-[var(--border)]`}>
       {/* Logo */}
       <div className="p-5 pb-3 flex items-center gap-3">
         <Link href="/" className="w-8 h-8 bg-[var(--accent)] rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm hover:opacity-90 transition-all">
@@ -154,7 +154,7 @@ export default function Sidebar() {
       {/* Create Playlist Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => { setShowCreateModal(false); setPlaylistName("") }}>
-          <div className="bg-white rounded-2xl shadow-xl border border-[var(--border)] w-80 p-6 animate-scale-in" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-[var(--bg-secondary)] rounded-2xl shadow-xl border border-[var(--border)] w-80 p-6 animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-base font-bold text-[var(--text-primary)] mb-4">Create Playlist</h3>
             <input
               ref={inputRef}

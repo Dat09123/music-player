@@ -150,11 +150,11 @@ function PlayerBar() {
   const progressPercent = duration > 0 ? (isSeeking ? seekValue : (progress / duration) * 100) : 0
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 max-w-4xl mx-auto bg-white rounded-2xl shadow-lg border border-[var(--border)] backdrop-blur-xl z-50 px-4 py-3">
+    <div className="fixed bottom-4 left-4 right-4 max-w-4xl mx-auto bg-[var(--bg-secondary)] rounded-2xl shadow-lg border border-[var(--border)] backdrop-blur-xl z-50 px-4 py-3">
       <div className="flex items-center gap-4">
         {/* Track Info */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <div className="w-10 h-10 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden">
+          <div className="w-10 h-10 rounded-lg bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden">
             {currentTrack.albumImage ? (
               <img src={currentTrack.albumImage} alt={currentTrack.album} className="w-full h-full object-cover" />
             ) : (
@@ -189,7 +189,7 @@ function PlayerBar() {
         {/* Progress */}
         <div className="hidden md:flex items-center gap-2 w-48">
           <span className="text-xs text-[var(--text-muted)] w-8 text-right tabular-nums">{formatDuration(Math.round(isSeeking ? (seekValue / 100) * duration : progress) * 1000)}</span>
-          <div className="flex-1 h-1 bg-gray-200 rounded-full cursor-pointer group relative"
+          <div className="flex-1 h-1 bg-[var(--border)] rounded-full cursor-pointer group relative"
             onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); seekTo(((e.clientX - r.left) / r.width) * duration) }}
             onMouseEnter={() => setIsSeeking(true)} onMouseLeave={() => setIsSeeking(false)}
             onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSeekValue(((e.clientX - r.left) / r.width) * 100) }}>
@@ -218,7 +218,7 @@ function PlayerBar() {
                 {volume > 0 && <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072" />}
               </svg>
             </button>
-            <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} className="w-16 h-1 bg-gray-200 rounded-full appearance-none cursor-pointer accent-[var(--accent)] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--accent)]" />
+            <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} className="w-16 h-1 bg-[var(--border)] rounded-full appearance-none cursor-pointer accent-[var(--accent)] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--accent)]" />
           </div>
         </div>
       </div>

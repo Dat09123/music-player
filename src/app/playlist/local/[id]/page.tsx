@@ -27,8 +27,8 @@ export default function LocalPlaylistPage() {
   if (!playlist) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
-        <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-5">
-          <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className="w-16 h-16 bg-[var(--bg-hover)] rounded-2xl flex items-center justify-center mb-5">
+          <svg className="w-8 h-8 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
@@ -158,7 +158,7 @@ export default function LocalPlaylistPage() {
               return (
                 <div
                   key={`${track.id}-${i}`}
-                  className={`grid grid-cols-[32px_1fr_64px_28px] gap-3 px-4 py-2 rounded-lg group cursor-pointer transition-all hover:bg-gray-50 ${isCurrent ? "text-[var(--accent)] bg-indigo-50/50" : "text-[var(--text-secondary)]"}`}
+                  className={`grid grid-cols-[32px_1fr_64px_28px] gap-3 px-4 py-2 rounded-lg group cursor-pointer transition-all hover:bg-[var(--bg-hover)] ${isCurrent ? "text-[var(--accent)] bg-[var(--accent-light)]" : "text-[var(--text-secondary)]"}`}
                   onClick={() => handlePlay(i)}
                 >
                   <div className="flex items-center justify-center">
@@ -173,11 +173,11 @@ export default function LocalPlaylistPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded bg-gray-100 flex-shrink-0 overflow-hidden hidden sm:block">
+                    <div className="w-8 h-8 rounded bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden hidden sm:block">
                       {track.albumImage ? (
                         <img src={track.albumImage} alt="" className="w-full h-full object-cover" loading="lazy" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300">
+                        <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">
                           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
                         </div>
                       )}
@@ -211,7 +211,7 @@ export default function LocalPlaylistPage() {
       {/* Delete confirmation modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)}>
-          <div className="bg-white rounded-2xl shadow-xl border border-[var(--border)] w-80 p-6 animate-scale-in" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-[var(--bg-secondary)] rounded-2xl shadow-xl border border-[var(--border)] w-80 p-6 animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-base font-bold text-[var(--text-primary)] mb-2">Delete &quot;{playlist.name}&quot;?</h3>
             <p className="text-sm text-[var(--text-muted)] mb-4">This action cannot be undone. All tracks will be removed.</p>
             <div className="flex items-center justify-end gap-2">
