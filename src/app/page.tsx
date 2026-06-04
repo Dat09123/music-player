@@ -36,13 +36,13 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="p-5 space-y-8 max-w-7xl mx-auto pb-20">
+      <div className="p-5 space-y-8 max-w-7xl mx-auto">
         <div className="rounded-xl border border-[var(--border)] p-6 md:p-8">
           <div className="h-8 w-48 skeleton rounded mb-2" />
           <div className="h-4 w-72 skeleton rounded" />
         </div>
         <div>
-          <div className="h-5 w-40 bg-gray-200 rounded mb-4" />
+          <div className="h-5 w-40 skeleton rounded mb-4" />
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i}>
@@ -72,7 +72,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="p-5 space-y-8 pb-28 max-w-7xl mx-auto">
+    <div className="p-5 space-y-8 max-w-7xl mx-auto">
       {/* Hero */}
       <section className="relative overflow-hidden rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/20 border border-indigo-100/50 dark:border-indigo-900/30 p-6 md:p-8">
         <div className="relative z-10">
