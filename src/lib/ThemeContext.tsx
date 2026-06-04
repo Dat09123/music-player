@@ -56,11 +56,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setThemeState((prev) => (prev === "dark" ? "light" : "dark"))
   }
 
-  // Prevent flash of wrong theme on SSR
-  if (!mounted) {
-    return <>{children}</>
-  }
-
+  // Always wrap children with Provider so useTheme() works during SSR/prerender too
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
       {children}
