@@ -116,8 +116,8 @@ function transformSearchResults(
 }
 
 function transformTrack(t: DeezerTrack): any {
-  if (!t.artist) console.warn(`[Deezer] ⚠ Track ${t.id} missing artist, using fallback`)
-  if (!t.album) console.warn(`[Deezer] ⚠ Track ${t.id} missing album, using fallback`)
+  if (!t.artist) console.debug(`[Deezer] ⚠ Track ${t.id} missing artist, using fallback`)
+  if (!t.album) console.debug(`[Deezer] ⚠ Track ${t.id} missing album, using fallback`)
 
   const artist = t.artist || {} as any
   return {
@@ -140,7 +140,7 @@ function transformTrack(t: DeezerTrack): any {
 }
 
 function transformAlbum(a: DeezerAlbum): any {
-  if (!a.artist) console.warn(`[Deezer] ⚠ Album ${a.id} missing artist, using fallback`)
+  if (!a.artist) console.debug(`[Deezer] ⚠ Album ${a.id} missing artist, using fallback`)
 
   const artist = a.artist || {} as any
   return {
