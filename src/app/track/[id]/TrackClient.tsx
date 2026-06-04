@@ -4,6 +4,7 @@ import { useState } from "react"
 import { usePlayer } from "@/components/Player"
 import { useToast } from "@/components/Toast"
 import SyncedLyrics from "@/components/SyncedLyrics"
+import CinemaMode from "@/components/CinemaMode"
 import Link from "next/link"
 import { formatDuration, getImage } from "@/lib/utils"
 import type { PlayerTrack } from "@/lib/types"
@@ -21,6 +22,7 @@ export default function TrackClient({ track }: Props) {
   const [lyricsLoading, setLyricsLoading] = useState(false)
   const [lyricsError, setLyricsError] = useState<string | null>(null)
   const [lyricsOpen, setLyricsOpen] = useState(false)
+  const [cinemaMode, setCinemaMode] = useState(false)
 
   async function fetchLyrics() {
     if (lyrics !== null || lyricsLoading) return
@@ -166,7 +168,17 @@ export default function TrackClient({ track }: Props) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>
         </button>
-        <div className="ml-auto">
+        <div className="flex items-center gap-2 ml-auto">
+          <button
+            onClick={() => { if (!lyricsOpen) fetchLyrics(); setCinemaMode(true) }}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all"
+            title="Cinema mode"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+            <span className="hidden sm:inline">Cinema</span>
+          </button>
           <button
             onClick={toggleLyrics}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${lyricsOpen ? "bg-[var(--accent)] text-white" : "text-[var(--text-secondary)] border border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)]"}`}
@@ -278,6 +290,17 @@ export default function TrackClient({ track }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Cinema mode overlay */}
+      {cinemaMode && (
+        <CinemaMode
+          track={track}
+          syncedLyrics={syncedLyrics}
+          lyrics={lyrics}
+          lyricsMode={lyricsMode}
+          onClose={() => setCinemaMode(false)}
+        />
+      )}
 
       {/* Lyrics section */}
       {lyricsOpen && (

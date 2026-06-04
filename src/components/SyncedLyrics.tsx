@@ -92,10 +92,10 @@ export default function SyncedLyrics({ syncedLyrics }: Props) {
   return (
     <div
       ref={containerRef}
-      className="relative h-[400px] overflow-y-auto scroll-smooth px-2 [&::-webkit-scrollbar]:hidden scrollbar-none"
+      className={`relative ${cinemaMode ? "h-full max-h-[70vh]" : "h-[400px]"} overflow-y-auto scroll-smooth px-2 [&::-webkit-scrollbar]:hidden scrollbar-none`}
     >
       {/* Spacer top */}
-      <div className="h-[160px]" />
+      {!cinemaMode && <div className="h-[160px]" />}
 
       {timedLines.map((line, i) => {
         const isPast = i < currentIndex
@@ -106,7 +106,7 @@ export default function SyncedLyrics({ syncedLyrics }: Props) {
           <div key={i} className="relative mb-5">
             <p
               ref={(el) => { lineRefs.current[i] = el }}
-              className={`text-lg leading-relaxed transition-all duration-300 ${
+              className={`${cinemaMode ? "text-2xl leading-[3rem]" : "text-lg leading-relaxed"} transition-all duration-300 ${
                 isCurrent
                   ? "text-[var(--accent)] font-bold scale-105"
                   : isPast
@@ -127,7 +127,7 @@ export default function SyncedLyrics({ syncedLyrics }: Props) {
       })}
 
       {/* Spacer bottom */}
-      <div className="h-[160px]" />
+      {!cinemaMode && <div className="h-[160px]" />}
 
       {/* Pause indicator */}
       {!isPlaying && timedLines.length > 0 && (

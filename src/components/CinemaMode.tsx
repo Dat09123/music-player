@@ -1,0 +1,130 @@
+"use client"
+
+import { useEffect } from "react"
+import { usePlayer } from "./Player"
+import SyncedLyrics from "./SyncedLyrics"
+import { formatDuration } from "@/lib/utils"
+
+interface Props {
+  track: any
+  syncedLyrics: string | null
+  lyrics: string | null
+  lyricsMode: "plain" | "synced"
+  onClose: () => void
+}
+
+export default function CinemaMode({ track, syncedLyrics, lyrics, lyricsMode, onClose }: Props) {
+  const { progress, duration, isPlaying, togglePlay, currentTrack, nextTrack, prevTrack } = usePlayer()
+
+  // Close on Escape
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose()
+    }
+    document.addEventListener("keydown", handleKey)
+    return () => document.removeEventListener("keydown", handleKey)
+  }, [onClose])
+
+  const albumImage = track.album?.images?.[0]?.url || track.album?.images?.[1]?.url || ""
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-black flex flex-col animate-fade-in">
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-6 py-4 z-10">
+        <button
+          onClick={onClose}
+          className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          <span className="hidden sm:inline">Exit Cinema</span>
+        </button>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-white/40 tabular-nums">
+            {formatDuration(Math.round(progress) * 1000)} / {formatDuration(Math.round(duration) * 1000)}
+          </span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16 px-6 pb-4 overflow-hidden">
+        {/* Album art */}
+        <div className="flex-shrink-0 w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 lg:w-96 lg:h-96">
+          <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl ring-2 ring-white/10">
+            {albumImage ? (
+              <img
+                src={albumImage}
+                alt={track.album?.name || track.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center">
+                <svg className="w-20 h-20 text-zinc-600" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+                </svg>
+              </div>
+            )}
+          </div>
+
+          {/* Track info below album art */}
+          <div className="text-center mt-4 hidden lg:block">
+            <p className="text-white font-semibold text-lg truncate max-w-xs mx-auto">{track.name}</p>
+            <p className="text-white/50 text-sm truncate max-w-xs mx-auto mt-1">
+              {track.artists?.map((a: any) => a.name).join(", ")}
+            </p>
+          </div>
+        </div>
+
+        {/* Lyrics */}
+        <div className="flex-1 w-full max-w-2xl lg:max-w-xl xl:max-w-2xl max-h-[60vh] lg:max-h-[70vh] overflow-hidden">
+          {lyricsMode === "synced" && syncedLyrics ? (
+            <SyncedLyrics syncedLyrics={syncedLyrics} cinemaMode={true} />
+          ) : lyrics ? (
+            <div className="text-white/80 text-lg leading-relaxed whitespace-pre-line text-center lg:text-left overflow-y-auto h-full scroll-smooth px-4 [&::-webkit-scrollbar]:hidden scrollbar-none">
+              {lyrics.split("\n").map((line, i) => (
+                <p key={i} className={line.trim() === "" ? "h-4" : "mb-2"}>
+                  {line || "\u00A0"}
+                </p>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <p className="text-white/30 text-lg">No lyrics available</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Bottom controls */}
+      <div className="flex items-center justify-center gap-6 px-6 py-4">
+        <button onClick={prevTrack} className="text-white/50 hover:text-white transition-colors">
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" /></svg>
+        </button>
+        <button
+          onClick={togglePlay}
+          className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
+        >
+          {isPlaying ? (
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
+          ) : (
+            <svg className="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+          )}
+        </button>
+        <button onClick={nextTrack} className="text-white/50 hover:text-white transition-colors">
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" /></svg>
+        </button>
+      </div>
+
+      {/* Progress bar */}
+      <div className="h-0.5 bg-white/10 mx-6 mb-2 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-white rounded-full transition-all duration-200"
+          style={{ width: `${duration > 0 ? (progress / duration) * 100 : 0}%` }}
+        />
+      </div>
+
+      {/* Styles are handled via cinemaMode prop on SyncedLyrics */}
+    </div>
+  )
+}
