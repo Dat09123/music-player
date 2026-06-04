@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, createContext, useContext, type ReactNode } from "react"
 import { formatDuration } from "@/lib/utils"
 import type { PlayerTrack, RepeatMode } from "@/lib/types"
+import ErrorBoundary from "./ErrorBoundary"
 
 export type { PlayerTrack }
 
@@ -132,7 +133,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   return (
     <PlayerContext.Provider value={{ currentTrack, isPlaying, queue, playTrack, playAll, togglePlay, nextTrack, prevTrack, seekTo, setVolume, volume, progress, duration, repeatMode, toggleRepeat, shuffle, toggleShuffle }}>
       {children}
-      <PlayerBar />
+      <ErrorBoundary label="Player Bar">
+        <PlayerBar />
+      </ErrorBoundary>
     </PlayerContext.Provider>
   )
 }
