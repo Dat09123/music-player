@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { usePlayer } from "@/components/Player"
 import { useToast } from "@/components/Toast"
 import Link from "next/link"
@@ -13,6 +14,53 @@ interface Props {
 export default function TrackClient({ track }: Props) {
   const { playAll, playNext, addToQueue } = usePlayer()
   const { showToast } = useToast()
+  const [lyrics, setLyrics] = useState<string | null>(null)
+  const [lyricsLoading, setLyricsLoading] = useState(false)
+  const [lyricsError, setLyricsError] = useState<string | null>(null)
+  const [lyricsOpen, setLyricsOpen] = useState(false)
+
+  async function fetchLyrics() {
+    if (lyrics !== null || lyricsLoading) return
+    setLyricsLoading(true)
+    setLyricsError(null)
+
+    const artistName = track.artists?.[0]?.name || ""
+    const trackName = track.name || ""
+
+    try {
+      const res = await fetch(`/api/lyrics?artist=${encodeURIComponent(artistName)}&track=${encodeURIComponent(trackName)}`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      if (data.results && data.results.length > 0) {
+        setLyrics(data.results[0].plainLyrics)
+        if (!data.results[0].plainLyrics) {
+          setLyricsError("No lyrics available for this track")
+        }
+      } else {
+        // Fallback: search by track name only
+        const fallbackRes = await fetch(`/api/lyrics?track=${encodeURIComponent(trackName)}`)
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json()
+          if (fallbackData.results && fallbackData.results.length > 0) {
+            setLyrics(fallbackData.results[0].plainLyrics)
+            return
+          }
+        }
+        setLyricsError("No lyrics found for this track")
+      }
+    } catch (err: any) {
+      setLyricsError(err?.message || "Failed to load lyrics")
+    } finally {
+      setLyricsLoading(false)
+    }
+  }
+
+  function toggleLyrics() {
+    if (!lyricsOpen) {
+      fetchLyrics()
+    }
+    setLyricsOpen(!lyricsOpen)
+  }
 
   const playerTrack: PlayerTrack = {
     id: track.id,
@@ -74,6 +122,18 @@ export default function TrackClient({ track }: Props) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
         </button>
+        <div className="ml-auto">
+          <button
+            onClick={toggleLyrics}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${lyricsOpen ? "bg-[var(--accent)] text-white" : "text-[var(--text-secondary)] border border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)]"}`}
+            title={lyricsOpen ? "Hide lyrics" : "Show lyrics"}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            <span className="hidden sm:inline">{lyricsOpen ? "Hide" : "Lyrics"}</span>
+          </button>
+        </div>
       </div>
 
       {/* Track details */}
@@ -174,6 +234,61 @@ export default function TrackClient({ track }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Lyrics section */}
+      {lyricsOpen && (
+        <div className="px-4 max-w-2xl mt-6 animate-fade-in">
+          <div className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border)] p-6">
+            {lyricsLoading ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-4">
+                  <span className="flex gap-0.5">
+                    <span className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </span>
+                  <span>Loading lyrics...</span>
+                </div>
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="h-4 skeleton rounded" style={{ width: `${40 + Math.random() * 50}%` }} />
+                ))}
+              </div>
+            ) : lyricsError ? (
+              <div className="flex flex-col items-center py-6 text-center">
+                <svg className="w-8 h-8 text-[var(--text-muted)] mb-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm text-[var(--text-muted)]">{lyricsError}</p>
+                <button
+                  onClick={fetchLyrics}
+                  className="mt-3 text-xs font-medium text-[var(--accent)] hover:underline"
+                >
+                  Try again
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-[var(--text-primary)]">Lyrics</h3>
+                  <svg className="w-4 h-4 text-[var(--text-muted)]" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 18l8.5-6L6 6v12zM16 6v2h2v12h-2V6z" />
+                  </svg>
+                </div>
+                <div className="text-sm text-[var(--text-primary)] leading-relaxed whitespace-pre-line space-y-2">
+                  {lyrics?.split("\n").map((line, i) => (
+                    <p key={i} className={line.trim() === "" ? "h-3" : "hover:text-[var(--accent)] transition-colors"}>
+                      {line || "\u00A0"}
+                    </p>
+                  ))}
+                </div>
+                <p className="mt-6 text-[10px] text-[var(--text-muted)] text-center">
+                  Lyrics provided by LRCLIB
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
