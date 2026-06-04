@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { usePlayer } from "./Player"
 import SyncedLyrics from "./SyncedLyrics"
+import LazyImage from "./LazyImage"
 import { formatDuration } from "@/lib/utils"
 
 interface Props {
@@ -53,7 +54,7 @@ export default function CinemaMode({ track, syncedLyrics, lyrics, lyricsMode, on
         <div className="flex-shrink-0 w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 lg:w-96 lg:h-96">
           <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl ring-2 ring-white/10">
             {albumImage ? (
-              <img
+              <LazyImage
                 src={albumImage}
                 alt={track.album?.name || track.name}
                 className="w-full h-full object-cover"

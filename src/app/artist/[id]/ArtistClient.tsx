@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { usePlayer } from "@/components/Player"
+import LazyImage from "@/components/LazyImage"
 import TrackList from "@/components/TrackList"
 import { useToast } from "@/components/Toast"
 import Link from "next/link"
@@ -125,11 +126,10 @@ export default function ArtistClient({ topTracks, albums, relatedArtists, artist
                   className="group bg-[var(--bg-secondary)]/50 backdrop-blur-sm hover:bg-[var(--bg-hover)]/70 rounded-xl p-4 transition-all border border-[var(--border)] hover:shadow-lg hover:-translate-y-0.5 hover:border-[var(--accent)]/20 animate-fade-in"
                 >
                   <div className="w-full aspect-square rounded-lg overflow-hidden bg-[var(--bg-hover)] mb-3 shadow-sm">
-                    <img
+                    <LazyImage
                       src={getImage(album.images)}
                       alt={album.name}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      loading="lazy"
                     />
                   </div>
                   <p className="font-semibold text-sm text-[var(--text-primary)] truncate">{album.name}</p>
@@ -176,11 +176,10 @@ export default function ArtistClient({ topTracks, albums, relatedArtists, artist
                 className="group bg-[var(--bg-secondary)]/50 backdrop-blur-sm hover:bg-[var(--bg-hover)]/70 rounded-xl p-4 transition-all text-center border border-[var(--border)] hover:shadow-lg hover:-translate-y-0.5 hover:border-[var(--accent)]/20"
               >
                 <div className="w-full aspect-square rounded-full overflow-hidden bg-[var(--bg-hover)] mb-3 shadow-sm">
-                  <img
+                  <LazyImage
                     src={getImage(artist.images)}
                     alt={artist.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    loading="lazy"
                   />
                 </div>
                 <p className="font-semibold text-sm text-[var(--text-primary)] truncate">{artist.name}</p>

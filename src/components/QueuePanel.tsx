@@ -3,6 +3,7 @@
 import { useState, useRef } from "react"
 import { usePlayer } from "./Player"
 import { formatDuration } from "@/lib/utils"
+import LazyImage from "./LazyImage"
 
 export default function QueuePanel() {
   const {
@@ -98,7 +99,7 @@ export default function QueuePanel() {
               <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[var(--accent-light)] border border-[var(--accent)]/20">
                 <div className="w-9 h-9 rounded-lg bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden shadow-sm">
                   {currentTrack.albumImage ? (
-                    <img src={currentTrack.albumImage} alt="" className="w-full h-full object-cover" />
+                    <LazyImage src={currentTrack.albumImage} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
@@ -159,7 +160,7 @@ export default function QueuePanel() {
                       {/* Track image */}
                       <div className="w-8 h-8 rounded-md bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden">
                         {track.albumImage ? (
-                          <img src={track.albumImage} alt="" className="w-full h-full object-cover" />
+                          <LazyImage src={track.albumImage} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>

@@ -6,6 +6,7 @@ import { useToast } from "@/components/Toast"
 import SyncedLyrics from "@/components/SyncedLyrics"
 import CinemaMode from "@/components/CinemaMode"
 import { SkeletonLyrics } from "@/components/Skeleton"
+import LazyImage from "@/components/LazyImage"
 import Link from "next/link"
 import { formatDuration, getImage } from "@/lib/utils"
 import type { PlayerTrack } from "@/lib/types"
@@ -209,7 +210,7 @@ export default function TrackClient({ track }: Props) {
                 >
                   <div className="w-10 h-10 rounded-full overflow-hidden bg-[var(--bg-hover)] flex-shrink-0">
                     {artist.images?.[0]?.url ? (
-                      <img src={getImage(artist.images, "sm")} alt={artist.name} className="w-full h-full object-cover" />
+                      <LazyImage src={getImage(artist.images, "sm")} alt={artist.name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -244,7 +245,7 @@ export default function TrackClient({ track }: Props) {
               <div className="flex items-center gap-3">
                 <div className="w-16 h-16 rounded-lg overflow-hidden bg-[var(--bg-hover)] flex-shrink-0 shadow-sm">
                   {albumImage && !albumImage.endsWith("/placeholder.svg") ? (
-                    <img src={albumImage} alt={track.album.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                    <LazyImage src={albumImage} alt={track.album.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">
                       <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">

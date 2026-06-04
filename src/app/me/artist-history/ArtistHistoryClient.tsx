@@ -5,6 +5,7 @@ import { usePlayer } from "@/components/Player"
 import { getRecentlyPlayedArtists, clearRecentlyPlayed, type RecentArtist } from "@/lib/recently-played"
 import { getTimeAgo } from "@/lib/utils"
 import Link from "next/link"
+import LazyImage from "@/components/LazyImage"
 
 export default function ArtistHistoryClient() {
   const { currentTrack } = usePlayer()
@@ -97,7 +98,7 @@ export default function ArtistHistoryClient() {
               <div className="relative mb-3">
                 <div className={`w-full aspect-square rounded-full overflow-hidden bg-[var(--bg-hover)] shadow-sm mx-auto`}>
                   {artist.imageUrl && !artist.imageUrl.endsWith("/placeholder.svg") ? (
-                    <img
+                    <LazyImage
                       src={artist.imageUrl}
                       alt={artist.name}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"

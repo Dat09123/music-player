@@ -5,6 +5,7 @@ import { getImage, formatNumber } from "@/lib/utils"
 import { getPlaylist } from "@/lib/deezer"
 import PlaylistClient from "./PlaylistClient"
 import Skeleton, { SkeletonTrackRow } from "@/components/Skeleton"
+import LazyImage from "@/components/LazyImage"
 import { trackPageView } from "@/lib/recently-viewed"
 
 interface Props {
@@ -102,7 +103,7 @@ export default function PlaylistPage({ params }: Props) {
         <div className="flex flex-col md:flex-row items-center md:items-end gap-6 relative z-10">
           <div className="w-48 h-48 md:w-56 md:h-56 rounded-xl overflow-hidden shadow-2xl flex-shrink-0">
             {playlist.images?.[0]?.url ? (
-              <img src={playlist.images[0].url} alt={playlist.name} className="w-full h-full object-cover" />
+              <LazyImage src={playlist.images[0].url} alt={playlist.name} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-[var(--bg-hover)] flex items-center justify-center">
                 <svg className="w-20 h-20 text-[var(--text-muted)]" fill="currentColor" viewBox="0 0 24 24">

@@ -6,6 +6,7 @@ import { formatArtists, getImage, formatDuration } from "@/lib/utils"
 import { getChart } from "@/lib/deezer"
 import type { PlayerTrack } from "@/lib/types"
 import Link from "next/link"
+import LazyImage from "@/components/LazyImage"
 import Skeleton, { SkeletonTrackRow, SkeletonCardGrid } from "@/components/Skeleton"
 
 export default function TopClient() {
@@ -118,11 +119,10 @@ export default function TopClient() {
                 <div className="relative mb-3">
                   <div className="w-full aspect-square rounded-full overflow-hidden bg-[var(--bg-hover)] shadow-sm mx-auto">
                     {artist.images?.[0]?.url ? (
-                      <img
+                      <LazyImage
                         src={artist.images[0].url}
                         alt={artist.name}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        loading="lazy"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
@@ -185,7 +185,7 @@ export default function TopClient() {
                 <div className="flex items-center gap-3 min-w-0">
                   {track.album?.images && (
                     <div className="w-10 h-10 rounded bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden hidden sm:block">
-                      <img src={getImage(track.album.images, "sm")} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      <LazyImage src={getImage(track.album.images, "sm")} alt="" className="w-full h-full object-cover" />
                     </div>
                   )}
                   <div className="min-w-0">

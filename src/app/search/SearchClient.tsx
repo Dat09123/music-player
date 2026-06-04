@@ -6,6 +6,7 @@ import { getImage, formatArtists, formatDuration, getGenreIcon } from "@/lib/uti
 import { usePlayer } from "@/components/Player"
 import { searchAll, getGenres, getSearchSuggestions } from "@/lib/deezer"
 import { getRecentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } from "@/lib/recent-searches"
+import LazyImage from "@/components/LazyImage"
 import type { PlayerTrack } from "@/components/Player"
 import type { SpotifySearchResult, SpotifyTrack } from "@/lib/types"
 import Skeleton from "@/components/Skeleton"
@@ -339,7 +340,7 @@ export default function SearchClient() {
                     onClick={() => playTrackFromSearch(track)}
                   >                      <div className="w-12 h-12 rounded bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden">
                       {track.album?.images ? (
-                        <img src={getImage(track.album.images, "sm")} alt="" className="w-full h-full object-cover" />
+                        <LazyImage src={getImage(track.album.images, "sm")} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">
                           <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
@@ -381,7 +382,7 @@ export default function SearchClient() {
                 {albums.slice(0, 5).map((album) => (
                   <Link key={album.id} href={`/album/${album.id}`} className="group bg-[var(--bg-secondary)]/50 backdrop-blur-sm hover:bg-[var(--bg-hover)]/70 rounded-xl p-4 transition-all border border-[var(--border)] hover:shadow-lg hover:-translate-y-0.5 hover:border-[var(--accent)]/20">
                     <div className="w-full aspect-square rounded-lg overflow-hidden bg-[var(--bg-hover)] mb-3 shadow-sm">
-                      <img src={getImage(album.images)} alt={album.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                      <LazyImage src={getImage(album.images)} alt={album.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     </div>
                     <p className="font-semibold text-sm text-[var(--text-primary)] truncate">{album.name}</p>
                     <p className="text-xs text-[var(--text-secondary)] truncate mt-1">{album.artists?.map(a => a.name).join(", ")}</p>
@@ -399,7 +400,7 @@ export default function SearchClient() {
                 {artists.slice(0, 5).map((artist) => (
                   <Link key={artist.id} href={`/artist/${artist.id}`} className="group bg-[var(--bg-secondary)]/50 backdrop-blur-sm hover:bg-[var(--bg-hover)]/70 rounded-xl p-4 transition-all text-center border border-[var(--border)] hover:shadow-lg hover:-translate-y-0.5 hover:border-[var(--accent)]/20">
                     <div className="w-full aspect-square rounded-full overflow-hidden bg-[var(--bg-hover)] mb-3 mx-auto shadow-sm">
-                      <img src={getImage(artist.images)} alt={artist.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                      <LazyImage src={getImage(artist.images)} alt={artist.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     </div>
                     <p className="font-semibold text-sm text-[var(--text-primary)] truncate">{artist.name}</p>
                     <p className="text-xs text-[var(--text-secondary)] mt-1">Artist</p>
@@ -417,7 +418,7 @@ export default function SearchClient() {
                 {playlists.slice(0, 5).map((playlist) => (
                   <Link key={playlist.id} href={`/playlist/${playlist.id}`} className="group bg-[var(--bg-secondary)]/50 backdrop-blur-sm hover:bg-[var(--bg-hover)]/70 rounded-xl p-4 transition-all border border-[var(--border)] hover:shadow-lg hover:-translate-y-0.5 hover:border-[var(--accent)]/20">
                     <div className="w-full aspect-square rounded-lg overflow-hidden bg-[var(--bg-hover)] mb-3 shadow-sm">
-                      <img src={getImage(playlist.images)} alt={playlist.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                      <LazyImage src={getImage(playlist.images)} alt={playlist.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     </div>
                     <p className="font-semibold text-sm text-[var(--text-primary)] truncate">{playlist.name}</p>
                     <p className="text-xs text-[var(--text-secondary)] line-clamp-2 mt-1">{playlist.description || `${playlist.tracks?.total || 0} tracks`}</p>
@@ -452,11 +453,10 @@ export default function SearchClient() {
                     className="group relative overflow-hidden rounded-xl aspect-[3/2] glass-subtle hover:from-[var(--accent-light)] hover:to-[var(--accent)]/20 transition-all duration-300 p-4 flex items-end border border-[var(--border)] hover:border-[var(--accent)]/30 hover:shadow-lg"
                   >
                     {genre.picture && (
-                      <img
+                      <LazyImage
                         src={genre.picture}
                         alt=""
                         className="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-300"
-                        loading="lazy"
                       />
                     )}
                     <div className="relative z-10 flex items-center gap-2">

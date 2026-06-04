@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useState, useEffect } from "react"
 import { getPlaylist, deletePlaylist, renamePlaylist, removeTrackFromPlaylist, reorderTrack } from "@/lib/playlists"
 import { usePlayer } from "@/components/Player"
+import LazyImage from "@/components/LazyImage"
 import { formatDuration } from "@/lib/utils"
 import type { LocalPlaylist, PlayerTrack } from "@/lib/types"
 
@@ -225,7 +226,7 @@ export default function LocalPlaylistPage() {
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-8 h-8 rounded bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden hidden sm:block">
                       {track.albumImage ? (
-                        <img src={track.albumImage} alt="" className="w-full h-full object-cover" loading="lazy" />
+                        <LazyImage src={track.albumImage} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">
                           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>

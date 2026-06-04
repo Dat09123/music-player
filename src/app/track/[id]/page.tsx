@@ -5,6 +5,7 @@ import { getImage, formatDuration, formatArtists, formatNumber } from "@/lib/uti
 import { getTrack } from "@/lib/deezer"
 import TrackClient from "./TrackClient"
 import Skeleton, { SkeletonTrackRow } from "@/components/Skeleton"
+import LazyImage from "@/components/LazyImage"
 import { trackPageView } from "@/lib/recently-viewed"
 
 interface Props {
@@ -115,7 +116,7 @@ export default function TrackPage({ params }: Props) {
           <div className="flex flex-col md:flex-row items-center md:items-end gap-8">
             <div className="w-48 h-48 md:w-60 md:h-60 rounded-xl overflow-hidden shadow-2xl ring-4 ring-white/10 flex-shrink-0">
               {track.album?.images?.[0]?.url ? (
-                <img
+                <LazyImage
                   src={track.album.images[0].url}
                   alt={track.album.name}
                   className="w-full h-full object-cover"

@@ -5,6 +5,7 @@ import { usePlayer } from "@/components/Player"
 import { getRecentlyPlayed, clearRecentlyPlayed, type RecentTrack } from "@/lib/recently-played"
 import { formatDuration, getTimeAgo } from "@/lib/utils"
 import Link from "next/link"
+import LazyImage from "@/components/LazyImage"
 
 export default function RecentClient() {
   const { playAll, currentTrack, isPlaying } = usePlayer()
@@ -88,7 +89,7 @@ export default function RecentClient() {
               {/* Album image */}
               <div className="w-10 h-10 rounded-lg bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden shadow-sm">
                 {track.albumImage ? (
-                  <img src={track.albumImage} alt="" className="w-full h-full object-cover" />
+                  <LazyImage src={track.albumImage} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>

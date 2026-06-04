@@ -8,6 +8,7 @@ import { getPlaylists, addTrackToPlaylist, createPlaylist } from "@/lib/playlist
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { useToast } from "./Toast"
+import LazyImage from "./LazyImage"
 
 interface TrackListProps {
   tracks: SpotifyTrack[] | SpotifyPlaylistTrack[]
@@ -147,7 +148,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
             <div className="flex items-center gap-2.5 min-w-0">
               {showImage && track.album?.images && (
                 <div className="w-8 h-8 rounded bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden hidden sm:block">
-                  <img src={getImage(track.album.images, "sm")} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  <LazyImage src={getImage(track.album.images, "sm")} alt="" className="w-full h-full object-cover" />
                 </div>
               )}
               <div className="min-w-0">

@@ -6,6 +6,7 @@ import { getArtist, getRelatedArtists } from "@/lib/deezer"
 import ArtistClient from "./ArtistClient"
 import Skeleton, { SkeletonHero, SkeletonTrackRow, SkeletonCardGrid } from "@/components/Skeleton"
 import { trackPageView } from "@/lib/recently-viewed"
+import LazyImage from "@/components/LazyImage"
 
 interface Props {
   params: Promise<{ id: string }>
@@ -137,7 +138,7 @@ export default function ArtistPage({ params }: Props) {
           <div className="flex flex-col md:flex-row items-center md:items-end gap-8">
             <div className="w-48 h-48 md:w-60 md:h-60 rounded-full overflow-hidden shadow-2xl ring-4 ring-white/10 flex-shrink-0">
               {artist.images?.[0]?.url ? (
-                <img
+                <LazyImage
                   src={artist.images[0].url}
                   alt={artist.name}
                   className="w-full h-full object-cover"

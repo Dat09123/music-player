@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import LazyImage from "./LazyImage"
 
 interface CardProps {
   id: string
@@ -18,7 +19,7 @@ export default function Card({ name, description, imageUrl, type, href, subtext 
       <div className="relative mb-3">
         <div className={`w-full aspect-square overflow-hidden bg-[var(--bg-hover)] shadow-sm ${type === "artist" ? "rounded-full" : "rounded-lg"}`}>
           {imageUrl && !imageUrl.endsWith('/placeholder.svg') ? (
-            <img src={imageUrl} alt={name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+            <LazyImage src={imageUrl} alt={name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[var(--bg-hover)] to-[var(--border)]">
               <svg className="w-10 h-10 text-[var(--text-muted)]" fill="currentColor" viewBox="0 0 24 24">

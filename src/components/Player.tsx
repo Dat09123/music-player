@@ -5,6 +5,7 @@ import { formatDuration } from "@/lib/utils"
 import type { PlayerTrack, RepeatMode } from "@/lib/types"
 import ErrorBoundary from "./ErrorBoundary"
 import QueuePanel from "./QueuePanel"
+import LazyImage from "./LazyImage"
 import { addToRecentlyPlayed } from "@/lib/recently-played"
 
 export type { PlayerTrack }
@@ -283,7 +284,7 @@ function PlayerBar() {
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="w-10 h-10 rounded-lg bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden">
             {currentTrack.albumImage ? (
-              <img src={currentTrack.albumImage} alt={currentTrack.album} className="w-full h-full object-cover" />
+              <LazyImage src={currentTrack.albumImage} alt={currentTrack.album} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-400">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>

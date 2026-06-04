@@ -5,6 +5,7 @@ import { getImage, formatDate } from "@/lib/utils"
 import { getAlbum } from "@/lib/deezer"
 import AlbumClient from "./AlbumClient"
 import Skeleton, { SkeletonTrackRow } from "@/components/Skeleton"
+import LazyImage from "@/components/LazyImage"
 import { trackPageView } from "@/lib/recently-viewed"
 
 interface Props {
@@ -97,7 +98,7 @@ export default function AlbumPage({ params }: Props) {
         <div className="flex flex-col md:flex-row items-center md:items-end gap-6 relative z-10">
           <div className="w-48 h-48 md:w-56 md:h-56 rounded-xl overflow-hidden shadow-2xl flex-shrink-0">
             {album.images?.[0]?.url ? (
-              <img src={album.images[0].url} alt={album.name} className="w-full h-full object-cover" />
+              <LazyImage src={album.images[0].url} alt={album.name} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-[var(--bg-hover)] flex items-center justify-center">
                 <svg className="w-20 h-20 text-[var(--text-muted)]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>

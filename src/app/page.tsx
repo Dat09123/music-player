@@ -6,6 +6,7 @@ import { getChart } from "@/lib/deezer"
 import Card from "@/components/Card"
 import Link from "next/link"
 import Skeleton from "@/components/Skeleton"
+import LazyImage from "@/components/LazyImage"
 import { usePlayer } from "@/components/Player"
 import { getRecentlyPlayed } from "@/lib/recently-played"
 import { getRecentlyViewed } from "@/lib/recently-viewed"
@@ -122,7 +123,7 @@ export default function HomePage() {
             <div className="flex items-center gap-4 min-w-0 flex-1 w-full sm:w-auto">
               <div className="w-14 h-14 rounded-lg overflow-hidden bg-[var(--bg-hover)] flex-shrink-0 shadow-sm">
                 {lastPlayed.albumImage ? (
-                  <img src={lastPlayed.albumImage} alt={lastPlayed.album} className="w-full h-full object-cover" />
+                  <LazyImage src={lastPlayed.albumImage} alt={lastPlayed.album} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">
                     <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
@@ -170,7 +171,7 @@ export default function HomePage() {
               >
                 <div className="w-full aspect-square rounded-lg overflow-hidden bg-[var(--bg-hover)] mb-2 shadow-sm">
                   {track.albumImage ? (
-                    <img src={track.albumImage} alt={track.album} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                    <LazyImage src={track.albumImage} alt={track.album} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">
                       <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
@@ -207,7 +208,7 @@ export default function HomePage() {
               >
                 <div className={`w-full aspect-square overflow-hidden bg-[var(--bg-hover)] mb-2 shadow-sm ${item.type === "artist" ? "rounded-full" : "rounded-lg"}`}>
                   {item.imageUrl && !item.imageUrl.endsWith("/placeholder.svg") ? (
-                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                    <LazyImage src={item.imageUrl} alt={item.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">
                       {item.type === "artist" ? (
