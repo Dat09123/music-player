@@ -10,12 +10,29 @@ const API = "/api/deezer"
 // ─── Raw fetch ───────────────────────────────────────────
 
 async function fetchDeezer<T>(path: string): Promise<T> {
-  const res = await fetch(`${API}${path}`)
-  if (!res.ok) {
-    const text = await res.text()
-    throw new Error(`Deezer API error (${res.status}): ${text.slice(0, 200)}`)
+  const url = `${API}${path}`
+  const start = performance.now()
+
+  try {
+    const res = await fetch(url)
+    const duration = Math.round(performance.now() - start)
+    console.debug(`[Deezer] ➡ GET ${url} → ${res.status} (${duration}ms)`)
+
+    if (!res.ok) {
+      const text = await res.text()
+      console.error(`[Deezer] ❌ GET ${url} → ${res.status}: ${text.slice(0, 200)}`)
+      throw new Error(`Deezer API error (${res.status}): ${text.slice(0, 200)}`)
+    }
+
+    return res.json()
+  } catch (err) {
+    if (err instanceof Error && err.message.startsWith("Deezer API error")) {
+      // Already logged above
+    } else {
+      console.error(`[Deezer] 💥 GET ${url}:`, err)
+    }
+    throw err
   }
-  return res.json()
 }
 
 // ─── Deezer raw types ────────────────────────────────────
@@ -99,7 +116,9 @@ function transformSearchResults(
 }
 
 function transformTrack(t: DeezerTrack): any {
-  // Safely handle missing artist/album (Deezer sometimes returns partial data)
+  if (!t.artist) console.warn(`[Deezer] ⚠ Track ${t.id} missing artist, using fallback`)
+  if (!t.album) console.warn(`[Deezer] ⚠ Track ${t.id} missing album, using fallback`)
+
   const artist = t.artist || {} as any
   return {
     id: String(t.id),
@@ -121,6 +140,8 @@ function transformTrack(t: DeezerTrack): any {
 }
 
 function transformAlbum(a: DeezerAlbum): any {
+  if (!a.artist) console.warn(`[Deezer] ⚠ Album ${a.id} missing artist, using fallback`)
+
   const artist = a.artist || {} as any
   return {
     id: String(a.id),
@@ -180,7 +201,7 @@ function transformPlaylist(p: DeezerPlaylist) {
 
 /** Search across all types (track, album, artist, playlist) */
 export async function searchAll(query: string) {
-  // Deezer's search returns { data: T[] } for all types, but with different T per type
+  console.debug(`[Deezer] 🔍 searchAll("${query}")`)
   const [tracks, albums, artists, playlists] = await Promise.all([
     fetchDeezer<{ data: DeezerTrack[] }>(`/search/track?q=${encodeURIComponent(query)}&limit=8`),
     fetchDeezer<{ data: DeezerAlbum[] }>(`/search/album?q=${encodeURIComponent(query)}&limit=5`),
@@ -197,19 +218,21 @@ export async function searchAll(query: string) {
 
 /** Search by type (track, album, artist, playlist) */
 export async function searchByType(query: string, type: string, limit = 8) {
+  console.debug(`[Deezer] 🔍 searchByType("${query}", "${type}")`)
   const result = await fetchDeezer<{ data: DeezerTrack[] }>(`/search/${type}?q=${encodeURIComponent(query)}&limit=${limit}`)
   return result.data || []
 }
 
 /** Get a single album with tracks */
 export async function getAlbum(id: string) {
+  console.debug(`[Deezer] 💿 getAlbum(${id})`)
   const data = await fetchDeezer<DeezerAlbum>(`/album/${id}`)
   return transformAlbum(data)
 }
 
 /** Get a single artist */
 export async function getArtist(id: string) {
-  // Use explicit tuple type to break circular type inference (DeezerTrack ↔ DeezerAlbum)
+  console.debug(`[Deezer] 🎤 getArtist(${id})`)
   const [artistData, topTracksData, albumsData]: [any, any, any] = await Promise.all([
     fetchDeezer(`/artist/${id}`),
     fetchDeezer(`/artist/${id}/top?limit=10`),
@@ -230,12 +253,14 @@ export async function getRelatedArtists(_id: string) {
 
 /** Get a single playlist with tracks */
 export async function getPlaylist(id: string) {
+  console.debug(`[Deezer] 📋 getPlaylist(${id})`)
   const data = await fetchDeezer<DeezerPlaylist>(`/playlist/${id}`)
   return transformPlaylist(data)
 }
 
 /** Get chart/featured content (replaces Spotify's featured playlists + new releases) */
 export async function getChart() {
+  console.debug(`[Deezer] 📊 getChart()`)
   const data: any = await fetchDeezer("/chart")
   return {
     playlists: (data.playlists?.data || []).map(transformPlaylist),
@@ -247,6 +272,7 @@ export async function getChart() {
 
 /** Search tracks (for SearchClient) */
 export async function searchTracks(query: string, limit = 8) {
+  console.debug(`[Deezer] 🔍 searchTracks("${query}")`)
   const result = await fetchDeezer<{ data: DeezerTrack[] }>(`/search/track?q=${encodeURIComponent(query)}&limit=${limit}`)
   return (result.data || []).map(transformTrack)
 }
