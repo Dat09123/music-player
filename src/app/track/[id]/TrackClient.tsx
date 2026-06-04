@@ -5,6 +5,7 @@ import { usePlayer } from "@/components/Player"
 import { useToast } from "@/components/Toast"
 import SyncedLyrics from "@/components/SyncedLyrics"
 import CinemaMode from "@/components/CinemaMode"
+import { SkeletonLyrics } from "@/components/Skeleton"
 import Link from "next/link"
 import { formatDuration, getImage } from "@/lib/utils"
 import type { PlayerTrack } from "@/lib/types"
@@ -307,19 +308,7 @@ export default function TrackClient({ track }: Props) {
         <div className="px-4 max-w-2xl mt-6 animate-fade-in">
           <div className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border)] p-6">
             {lyricsLoading ? (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-4">
-                  <span className="flex gap-0.5">
-                    <span className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                  </span>
-                  <span>Loading lyrics...</span>
-                </div>
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className="h-4 skeleton rounded" style={{ width: `${40 + Math.random() * 50}%` }} />
-                ))}
-              </div>
+              <SkeletonLyrics />
             ) : lyricsError ? (
               <div className="flex flex-col items-center py-6 text-center">
                 <svg className="w-8 h-8 text-[var(--text-muted)] mb-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

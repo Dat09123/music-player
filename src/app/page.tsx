@@ -5,6 +5,7 @@ import { getImage, formatNumber } from "@/lib/utils"
 import { getChart } from "@/lib/deezer"
 import Card from "@/components/Card"
 import Link from "next/link"
+import Skeleton from "@/components/Skeleton"
 
 export default function HomePage() {
   const [playlists, setPlaylists] = useState<any[]>([])
@@ -37,18 +38,13 @@ export default function HomePage() {
   if (loading) {
     return (
       <div className="p-5 space-y-8 max-w-7xl mx-auto">
-        <div className="rounded-xl border border-[var(--border)] p-6 md:p-8">
-          <div className="h-8 w-48 skeleton rounded mb-2" />
-          <div className="h-4 w-72 skeleton rounded" />
-        </div>
+        <Skeleton variant="card" className="!p-6 md:!p-8" />
         <div>
-          <div className="h-5 w-40 skeleton rounded mb-4" />
+          <Skeleton width={160} height={20} className="mb-4" />
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i}>
-                <div className="aspect-square skeleton rounded-lg mb-2" />
-                <div className="h-4 w-24 skeleton rounded mb-1" />
-                <div className="h-3 w-16 skeleton rounded" />
+                <Skeleton variant="card" />
               </div>
             ))}
           </div>

@@ -164,14 +164,40 @@ input[type="range"]:hover::-webkit-slider-thumb {
 
 /* Skeleton */
 .skeleton {
-  background: linear-gradient(90deg, var(--skeleton-from) 25%, var(--skeleton-to) 50%, var(--skeleton-from) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+  background: linear-gradient(110deg, 
+    var(--skeleton-from) 20%, 
+    var(--skeleton-to) 40%, 
+    var(--skeleton-from) 60%
+  );
+  background-size: 300% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* Skeleton variant with accent shimmer */
+.skeleton-accent {
+  background: linear-gradient(110deg,
+    var(--skeleton-from) 20%,
+    color-mix(in srgb, var(--accent) 8%, var(--skeleton-to)) 45%,
+    var(--skeleton-from) 70%
+  );
+  background-size: 300% 100%;
+  animation: shimmer 2.5s ease-in-out infinite;
+}
+
+/* Pulse skeleton for hero elements */
+.skeleton-pulse {
+  animation: skeletonPulse 2s ease-in-out infinite;
+  background: var(--skeleton-from);
 }
 
 @keyframes shimmer {
-  0% { background-position: -200px 0; }
-  100% { background-position: calc(200px + 100%) 0; }
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 
 /* Fade-in animations */

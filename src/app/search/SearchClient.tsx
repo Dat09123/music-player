@@ -8,6 +8,7 @@ import { searchAll, getGenres, getSearchSuggestions } from "@/lib/deezer"
 import { getRecentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } from "@/lib/recent-searches"
 import type { PlayerTrack } from "@/components/Player"
 import type { SpotifySearchResult, SpotifyTrack } from "@/lib/types"
+import Skeleton from "@/components/Skeleton"
 
 export default function SearchClient() {
   const [query, setQuery] = useState("")
@@ -289,17 +290,12 @@ export default function SearchClient() {
             </span>
             <span>Searching...</span>
           </div>
-          {[
-            { title: "75%", artist: "50%" },
-            { title: "60%", artist: "40%" },
-            { title: "85%", artist: "55%" },
-            { title: "55%", artist: "35%" },
-            { title: "70%", artist: "45%" },            ].map((w, i) => (
+          {[...Array(5)].map((_, i) => (
             <div key={i} className="flex items-center gap-4 p-3">
-              <div className="w-12 h-12 rounded skeleton" />
+              <Skeleton variant="circle" width={48} height={48} />
               <div className="flex-1 space-y-2">
-                <div className="h-4 skeleton rounded" style={{ width: w.title }} />
-                <div className="h-3 skeleton rounded" style={{ width: w.artist }} />
+                <Skeleton width={`${55 + Math.random() * 30}%`} height={16} />
+                <Skeleton width={`${35 + Math.random() * 25}%`} height={12} />
               </div>
             </div>
           ))}

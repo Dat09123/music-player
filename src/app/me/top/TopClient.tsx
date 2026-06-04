@@ -6,6 +6,7 @@ import { formatArtists, getImage, formatDuration } from "@/lib/utils"
 import { getChart } from "@/lib/deezer"
 import type { PlayerTrack } from "@/lib/types"
 import Link from "next/link"
+import Skeleton, { SkeletonTrackRow, SkeletonCardGrid } from "@/components/Skeleton"
 
 export default function TopClient() {
   const [tracks, setTracks] = useState<any[]>([])
@@ -64,25 +65,14 @@ export default function TopClient() {
   if (loading) {
     return (
       <div className="p-6 space-y-8 pb-20">
-        <div className="h-10 w-48 bg-gray-200 rounded-lg skeleton" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="space-y-3">
-              <div className="w-full aspect-square rounded-full bg-gray-100 skeleton" />
-              <div className="h-4 w-20 bg-gray-100 rounded skeleton mx-auto" />
-            </div>
-          ))}
+        <Skeleton width={200} height={40} />
+        <div>
+          <Skeleton width={120} height={24} className="mb-5" />
+          <SkeletonCardGrid count={6} aspect="circle" />
         </div>
-        <div className="space-y-2">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center gap-4 p-3">
-              <div className="w-10 h-10 bg-gray-100 rounded skeleton" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 w-48 bg-gray-100 rounded skeleton" />
-                <div className="h-3 w-32 bg-gray-100 rounded skeleton" />
-              </div>
-            </div>
-          ))}
+        <div>
+          <Skeleton width={120} height={24} className="mb-5" />
+          <SkeletonTrackRow count={5} />
         </div>
       </div>
     )
