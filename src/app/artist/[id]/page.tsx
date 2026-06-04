@@ -25,17 +25,13 @@ export default function ArtistPage({ params }: Props) {
 
     async function loadData() {
       try {
-        const token = await getToken()
-        if (!token || cancelled) {
-          if (!cancelled) setLoading(false)
-          return
-        }
+        if (cancelled) return
 
         const [artistData, topTracksData, albumsData, relatedData] = await Promise.all([
-          spotifyFetch(`artists/${id}`, token),
-          spotifyFetch(`artists/${id}/top-tracks`, token),
-          spotifyFetch(`artists/${id}/albums?include_groups=album,single&limit=10`, token),
-          spotifyFetch(`artists/${id}/related-artists`, token),
+          spotifyFetch(`artists/${id}`, getToken),
+          spotifyFetch(`artists/${id}/top-tracks`, getToken),
+          spotifyFetch(`artists/${id}/albums?include_groups=album,single&limit=10`, getToken),
+          spotifyFetch(`artists/${id}/related-artists`, getToken),
         ])
 
         if (!cancelled) {

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/AuthContext"
 import { usePlayer } from "@/components/Player"
 import { formatArtists, getImage, formatDuration } from "@/lib/utils"
+import { spotifyFetchDirect } from "@/lib/api-client"
 import type { PlayerTrack } from "@/lib/types"
 import type { SpotifyTrack, SpotifyArtist } from "@/lib/types"
 import Link from "next/link"
@@ -39,24 +40,19 @@ export default function TopClient() {
 
     async function fetchTopItems() {
       try {
-        const token = await getToken()
-        if (!token || cancelled) return
-
-        const [tracksRes, artistsRes] = await Promise.all([
-          fetch(`https://api.spotify.com/v1/me/top/tracks?limit=20&time_range=${timeRange}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`https://api.spotify.com/v1/me/top/artists?limit=12&time_range=${timeRange}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ])
-
-        if (!tracksRes.ok) throw new Error("Failed to fetch top tracks")
-        if (!artistsRes.ok) throw new Error("Failed to fetch top artists")
+        if (cancelled) return
 
         const [tracksData, artistsData] = await Promise.all([
-          tracksRes.json(),
-          artistsRes.json(),
+          spotifyFetchDirect<{ items: SpotifyTrack[] }>(
+            `https://api.spotify.com/v1/me/top/tracks?limit=20&time_range=${timeRange}`,
+            {},
+            getToken
+          ),
+          spotifyFetchDirect<{ items: SpotifyArtist[] }>(
+            `https://api.spotify.com/v1/me/top/artists?limit=12&time_range=${timeRange}`,
+            {},
+            getToken
+          ),
         ])
 
         if (!cancelled) {

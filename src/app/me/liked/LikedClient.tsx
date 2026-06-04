@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/AuthContext"
 import { usePlayer } from "@/components/Player"
 import TrackList from "@/components/TrackList"
 import { formatArtists, getImage } from "@/lib/utils"
+import { spotifyFetchDirect } from "@/lib/api-client"
 import type { PlayerTrack } from "@/lib/types"
 import type { SpotifyTrack } from "@/lib/types"
 
@@ -34,16 +35,13 @@ export default function LikedClient() {
 
     async function fetchLikedTracks() {
       try {
-        const token = await getToken()
-        if (!token || cancelled) return
+        if (cancelled) return
 
-        const res = await fetch(
+        const data = await spotifyFetchDirect<{ items: SavedTrack[]; total: number }>(
           "https://api.spotify.com/v1/me/tracks?limit=50&offset=0",
-          { headers: { Authorization: `Bearer ${token}` } }
+          {},
+          getToken
         )
-
-        if (!res.ok) throw new Error("Failed to fetch liked songs")
-        const data = await res.json()
 
         if (!cancelled) {
           setTracks(data.items || [])

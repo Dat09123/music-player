@@ -22,13 +22,9 @@ export default function PlaylistPage({ params }: Props) {
 
     async function loadData() {
       try {
-        const token = await getToken()
-        if (!token || cancelled) {
-          if (!cancelled) setLoading(false)
-          return
-        }
+        if (cancelled) return
 
-        const data = await spotifyFetch(`playlists/${id}`, token)
+        const data = await spotifyFetch(`playlists/${id}`, getToken)
         if (!cancelled) {
           setPlaylist(data)
           setError(null)

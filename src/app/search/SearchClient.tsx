@@ -31,18 +31,23 @@ export default function SearchClient() {
     setLoading(true)
     setError(null)
 
+    let token: string | null = null
+    let types = ""
+
     try {
-      const token = await getToken()
+      token = await getToken()
       if (!token) throw new Error("AUTH_REQUIRED")
 
-      const types = cat === "all"
+      types = cat === "all"
         ? "track,album,artist,playlist"
         : cat === "track" ? "track"
         : cat === "album" ? "album"
         : cat === "artist" ? "artist"
         : "playlist"
 
-      const res = await fetch(`/api/spotify/search?q=${encodeURIComponent(q)}&type=${types}&limit=8`, {
+      const url = `/api/spotify/search?q=${encodeURIComponent(q)}&type=${types}&limit=8`
+
+      const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) {
@@ -53,7 +58,22 @@ export default function SearchClient() {
       setResults(data)
     } catch (e: any) {
       if (e?.message === "AUTH_REQUIRED") {
-        setError("AUTH_REQUIRED")
+        // Auto-retry with fresh token
+        const freshToken = await getToken()
+        if (freshToken && freshToken !== token) {
+          // Retry with new token
+          try {
+            const retryRes = await fetch(`/api/spotify/search?q=${encodeURIComponent(q)}&type=${types}&limit=8`, {
+              headers: { Authorization: `Bearer ${freshToken}` },
+            })
+            if (retryRes.ok) {
+              const data = await retryRes.json()
+              setResults(data)
+              return
+            }
+          } catch {}
+        }
+        setError("Session expired. Please refresh the page and log in again.")
       } else {
         setError("Search failed. Please try again.")
       }
@@ -209,7 +229,7 @@ export default function SearchClient() {
       )}
 
       {/* Error state */}
-      {error && !loading && !results && error !== "AUTH_REQUIRED" && (
+      {error && !loading && !results && (
         <div className="flex flex-col items-center py-16 text-[var(--text-muted)]">
           <svg className="w-12 h-12 mb-4 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />

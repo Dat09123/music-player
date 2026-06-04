@@ -20,15 +20,11 @@ export default function HomePage() {
 
     async function loadData() {
       try {
-        const token = await getToken()
-        if (!token || cancelled) {
-          if (!cancelled) setLoading(false)
-          return
-        }
+        if (cancelled) return
 
         const [featuredData, newReleasesData] = await Promise.all([
-          spotifyFetch("browse/featured-playlists", token).catch(() => ({ playlists: { items: [] } })),
-          spotifyFetch("browse/new-releases", token).catch(() => ({ albums: { items: [] } })),
+          spotifyFetch("browse/featured-playlists", getToken).catch(() => ({ playlists: { items: [] } })),
+          spotifyFetch("browse/new-releases", getToken).catch(() => ({ albums: { items: [] } })),
         ])
 
         if (!cancelled) {

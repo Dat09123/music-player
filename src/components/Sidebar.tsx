@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/AuthContext"
+import { spotifyFetchDirect } from "@/lib/api-client"
 
 const navItems = [
   { href: "/", label: "Home", icon: HomeIcon },
@@ -41,13 +42,12 @@ export default function Sidebar() {
     setPlaylistsLoading(true)
     async function fetchPlaylists() {
       try {
-        const token = await getToken()
-        if (!token || cancelled) return
-        const res = await fetch("https://api.spotify.com/v1/me/playlists?limit=20", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        if (!res.ok) throw new Error("Failed")
-        const data = await res.json()
+        if (cancelled) return
+        const data = await spotifyFetchDirect<{ items: UserPlaylist[] }>(
+          "https://api.spotify.com/v1/me/playlists?limit=20",
+          {},
+          getToken
+        )
         if (!cancelled) setUserPlaylists(data.items || [])
       } catch { /* ignore */ }
       finally { if (!cancelled) setPlaylistsLoading(false) }
@@ -117,8 +117,13 @@ export default function Sidebar() {
 
         <nav className="flex-1 px-2 overflow-y-auto">
           {playlistsLoading ? (
-            <div className="space-y-1 px-3 py-2">
-              {[...Array(5)].map((_, i) => <div key={i} className="h-7 bg-gray-100 rounded-lg skeleton" />)}
+            <div className="space-y-2 px-3 py-2">
+              {["65%", "80%", "55%", "72%", "60%", "85%"].map((w, i) => (
+                <div key={i} className="flex items-center gap-2 py-1">
+                  <div className="h-5 w-5 rounded bg-gray-200 skeleton flex-shrink-0" />
+                  <div className="h-3.5 bg-gray-200 rounded skeleton" style={{ width: w }} />
+                </div>
+              ))}
             </div>
           ) : (
             <ul className="space-y-0.5">
