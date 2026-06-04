@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
-import { getImage, formatArtists, formatDuration } from "@/lib/utils"
+import { getImage, formatArtists, formatDuration, getGenreIcon } from "@/lib/utils"
 import { usePlayer } from "@/components/Player"
-import { searchAll } from "@/lib/deezer"
+import { searchAll, getGenres, getSearchSuggestions } from "@/lib/deezer"
+import { getRecentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } from "@/lib/recent-searches"
 import type { PlayerTrack } from "@/components/Player"
 import type { SpotifySearchResult, SpotifyTrack } from "@/lib/types"
 
@@ -13,9 +14,40 @@ export default function SearchClient() {
   const [results, setResults] = useState<SpotifySearchResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [genres, setGenres] = useState<{ id: number; name: string; picture: string }[]>([])
+  const [suggestions, setSuggestions] = useState<{ tracks: any[]; albums: any[]; artists: any[] } | null>(null)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [recentSearches, setRecentSearches] = useState<string[]>([])
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
+  const suggestRef = useRef<NodeJS.Timeout | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const suggestPanelRef = useRef<HTMLDivElement>(null)
   const { playTrack, playAll } = usePlayer()
+
+  // Load genres on mount
+  useEffect(() => {
+    async function loadGenres() {
+      try {
+        const data = await getGenres()
+        setGenres(data)
+      } catch {}
+    }
+    loadGenres()
+    setRecentSearches(getRecentSearches())
+  }, [])
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    if (!showSuggestions) return
+    function handleClick(e: MouseEvent) {
+      if (suggestPanelRef.current && !suggestPanelRef.current.contains(e.target as Node) &&
+          inputRef.current && !inputRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [showSuggestions])
 
   const doSearch = useCallback(async (q: string) => {
     if (!q.trim()) {
@@ -24,6 +56,9 @@ export default function SearchClient() {
     }
     setLoading(true)
     setError(null)
+    setShowSuggestions(false)
+    addRecentSearch(q)
+    setRecentSearches(getRecentSearches())
 
     try {
       const data = await searchAll(q)
@@ -36,15 +71,42 @@ export default function SearchClient() {
     }
   }, [])
 
+  // Fetch suggestions while typing (debounced)
+  useEffect(() => {
+    if (suggestRef.current) clearTimeout(suggestRef.current)
+    if (!query.trim() || loading) {
+      setSuggestions(null)
+      return
+    }
+    suggestRef.current = setTimeout(async () => {
+      try {
+        const data = await getSearchSuggestions(query)
+        setSuggestions(data)
+        setShowSuggestions(true)
+      } catch {}
+    }, 200)
+    return () => { if (suggestRef.current) clearTimeout(suggestRef.current) }
+  }, [query, loading])
+
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => doSearch(query), 400)
+    debounceRef.current = setTimeout(() => doSearch(query), 500)
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [query, doSearch])
 
   useEffect(() => {
     inputRef.current?.focus()
   }, [])
+
+  function handleSearch(q: string) {
+    setQuery(q)
+    doSearch(q)
+  }
+
+  function handleGenreClick(genreId: number, genreName: string) {
+    setQuery(genreName)
+    doSearch(genreName)
+  }
 
   const tracks = results?.tracks?.items || []
   const albums = results?.albums?.items || []
@@ -97,18 +159,121 @@ export default function SearchClient() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => { if (suggestions || recentSearches.length > 0) setShowSuggestions(true) }}
+          onKeyDown={(e) => { if (e.key === 'Enter') { setShowSuggestions(false); doSearch(query) } if (e.key === 'Escape') setShowSuggestions(false) }}
           placeholder="What do you want to listen to?"
-          className="w-full pl-12 pr-4 py-3.5 bg-[var(--bg-secondary)] text-[var(--text-primary)] rounded-xl border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/10 text-lg placeholder-[var(--text-muted)] transition-all shadow-sm"
+          className="w-full pl-12 pr-8 py-3.5 bg-[var(--bg-secondary)] text-[var(--text-primary)] rounded-xl border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/10 text-lg placeholder-[var(--text-muted)] transition-all shadow-sm"
         />
         {query && (
           <button
-            onClick={() => { setQuery(""); setResults(null) }}
+            onClick={() => { setQuery(""); setResults(null); setSuggestions(null); setShowSuggestions(false) }}
             className="absolute inset-y-0 right-4 flex items-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+        )}
+
+        {/* Autocomplete dropdown */}
+        {showSuggestions && (query.trim() ? suggestions : recentSearches.length > 0) && (
+          <div
+            ref={suggestPanelRef}
+            className="absolute top-full left-0 right-0 mt-2 bg-[var(--bg-secondary)] rounded-xl shadow-xl border border-[var(--border)] z-50 overflow-hidden animate-scale-in"
+          >
+            {query.trim() && suggestions ? (
+              <div className="py-1 max-h-80 overflow-y-auto">
+                {suggestions.tracks.length > 0 && (
+                  <>
+                    <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">Tracks</p>
+                    {suggestions.tracks.slice(0, 3).map((t: any) => (
+                      <button
+                        key={t.id}
+                        onClick={() => handleSearch(t.name)}
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-left text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-all"
+                      >
+                        <svg className="w-3.5 h-3.5 flex-shrink-0 text-[var(--text-muted)]" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                        <span className="truncate">{t.name}</span>
+                      </button>
+                    ))}
+                  </>
+                )}
+                {suggestions.artists.length > 0 && (
+                  <>
+                    <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">Artists</p>
+                    {suggestions.artists.slice(0, 3).map((a: any) => (
+                      <Link
+                        key={a.id}
+                        href={`/artist/${a.id}`}
+                        onClick={() => setShowSuggestions(false)}
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-left text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-all"
+                      >
+                        <svg className="w-3.5 h-3.5 flex-shrink-0 text-[var(--text-muted)]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
+                        <span className="truncate">{a.name}</span>
+                      </Link>
+                    ))}
+                  </>
+                )}
+                {suggestions.albums.length > 0 && (
+                  <>
+                    <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">Albums</p>
+                    {suggestions.albums.slice(0, 3).map((al: any) => (
+                      <Link
+                        key={al.id}
+                        href={`/album/${al.id}`}
+                        onClick={() => setShowSuggestions(false)}
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-left text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-all"
+                      >
+                        <svg className="w-3.5 h-3.5 flex-shrink-0 text-[var(--text-muted)]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
+                        <span className="truncate">{al.name}</span>
+                      </Link>
+                    ))}
+                  </>
+                )}
+                <div className="border-t border-[var(--border)] px-4 py-2">
+                  <button
+                    onClick={() => { setShowSuggestions(false); doSearch(query) }}
+                    className="w-full text-xs text-center text-[var(--accent)] hover:underline font-medium"
+                  >
+                    See all results for "{query}"
+                  </button>
+                </div>
+              </div>
+            ) : recentSearches.length > 0 && !query.trim() ? (
+              <div className="py-1">
+                <div className="flex items-center justify-between px-4 py-1.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">Recent Searches</p>
+                  <button
+                    onClick={() => { clearRecentSearches(); setRecentSearches([]) }}
+                    className="text-[10px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all"
+                  >
+                    Clear
+                  </button>
+                </div>
+                {recentSearches.slice(0, 6).map((s) => (
+                  <div key={s} className="flex items-center gap-1 px-4 pr-2">
+                    <button
+                      onClick={() => handleSearch(s)}
+                      className="flex items-center gap-3 flex-1 py-2 text-sm text-left text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
+                    >
+                      <svg className="w-3.5 h-3.5 flex-shrink-0 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="truncate">{s}</span>
+                    </button>
+                    <button
+                      onClick={() => { removeRecentSearch(s); setRecentSearches(getRecentSearches()) }}
+                      className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
         )}
       </div>
 
@@ -255,15 +420,46 @@ export default function SearchClient() {
         </div>
       )}
 
-      {/* Initial state */}
+      {/* Initial state - Genre cards */}
       {!loading && !query && !results && (
-        <div className="flex flex-col items-center py-20 text-[var(--text-muted)]">
-          <svg className="w-24 h-24 mb-6 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <p className="text-xl font-medium text-[var(--text-primary)] mb-2">Search millions of songs</p>
-          <p className="text-sm">Find your favorite music, artists, and playlists</p>
-        </div>
+        <>
+          <div className="flex flex-col items-center py-8 text-[var(--text-muted)]">
+            <svg className="w-20 h-20 mb-4 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-18 0 7 7 0 0118 0z" />
+            </svg>
+            <p className="text-xl font-medium text-[var(--text-primary)] mb-1">Search millions of songs</p>
+            <p className="text-sm">Find your favorite music, artists, and playlists</p>
+          </div>
+
+          {/* Genre quick browse */}
+          {genres.length > 0 && (
+            <section>
+              <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4">Browse by Genre</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {genres.slice(0, 15).map((genre) => (
+                  <button
+                    key={genre.id}
+                    onClick={() => handleGenreClick(genre.id, genre.name)}
+                    className="group relative overflow-hidden rounded-xl aspect-[3/2] bg-gradient-to-br from-[var(--bg-hover)] to-[var(--border)] hover:from-[var(--accent-light)] hover:to-[var(--accent)]/20 transition-all duration-300 p-4 flex items-end border border-[var(--border)] hover:border-[var(--accent)]/30"
+                  >
+                    {genre.picture && (
+                      <img
+                        src={genre.picture}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-300"
+                        loading="lazy"
+                      />
+                    )}
+                    <div className="relative z-10 flex items-center gap-2">
+                      <span className="text-xl">{getGenreIcon(genre.name)}</span>
+                      <span className="text-sm font-semibold text-[var(--text-primary)]">{genre.name}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+        </>
       )}
     </div>
   )

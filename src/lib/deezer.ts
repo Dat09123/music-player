@@ -276,3 +276,34 @@ export async function searchTracks(query: string, limit = 8) {
   const result = await fetchDeezer<{ data: DeezerTrack[] }>(`/search/track?q=${encodeURIComponent(query)}&limit=${limit}`)
   return (result.data || []).map(transformTrack)
 }
+
+/** Get all music genres */
+export async function getGenres() {
+  console.debug(`[Deezer] 🏷️ getGenres()`)
+  const data = await fetchDeezer<{ data: { id: number; name: string; picture: string }[] }>("/genre")
+  return (data.data || []).filter((g) => g.id !== 0) // Remove "All" genre
+}
+
+/** Search by genre ID (returns top tracks for a genre) */
+export async function searchByGenre(genreId: number, limit = 8) {
+  console.debug(`[Deezer] 🏷️ searchByGenre(${genreId})`)
+  // Deezer doesn't have a direct genre search, use the genre's artist endpoint or radio
+  const data = await fetchDeezer<{ data: DeezerTrack[] }>(`/radio/genre/${genreId}/tracks?limit=${limit}`)
+  return (data.data || []).map(transformTrack)
+}
+
+/** Search autocomplete suggestions (uses a quick search) */
+export async function getSearchSuggestions(query: string) {
+  if (!query.trim()) return { tracks: [], albums: [], artists: [] }
+  const q = encodeURIComponent(query)
+  const [tracks, albums, artists] = await Promise.all([
+    fetchDeezer<{ data: DeezerTrack[] }>(`/search/track?q=${q}&limit=3`),
+    fetchDeezer<{ data: DeezerAlbum[] }>(`/search/album?q=${q}&limit=3`),
+    fetchDeezer<{ data: DeezerArtist[] }>(`/search/artist?q=${q}&limit=3`),
+  ])
+  return {
+    tracks: (tracks.data || []).map(transformTrack),
+    albums: (albums.data || []).map(transformAlbum),
+    artists: (artists.data || []).map(transformArtist),
+  }
+}
