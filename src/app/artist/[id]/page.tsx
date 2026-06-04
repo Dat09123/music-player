@@ -206,6 +206,7 @@ export default function ArtistPage({ params }: Props) {
         albums={albums}
         relatedArtists={relatedArtists}
         artistName={artist.name}
+        artistId={artist.id}
         bio={bio}
         nbAlbum={nbAlbum}
       />

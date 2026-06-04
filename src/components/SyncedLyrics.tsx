@@ -10,6 +10,7 @@ interface TimedLine {
 
 interface Props {
   syncedLyrics: string
+  cinemaMode?: boolean
 }
 
 function parseLRC(lrc: string): TimedLine[] {
@@ -38,7 +39,7 @@ function parseLRC(lrc: string): TimedLine[] {
   return result.sort((a, b) => a.time - b.time)
 }
 
-export default function SyncedLyrics({ syncedLyrics }: Props) {
+export default function SyncedLyrics({ syncedLyrics, cinemaMode }: Props) {
   const { progress, isPlaying } = usePlayer()
   const containerRef = useRef<HTMLDivElement>(null)
   const lineRefs = useRef<(HTMLParagraphElement | null)[]>([])
