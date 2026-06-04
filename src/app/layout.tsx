@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/lib/ThemeContext"
 import ErrorBoundary from "@/components/ErrorBoundary"
 import ErrorFallback from "@/components/ErrorFallback"
 import { ToastProvider } from "@/components/Toast"
+import KeyboardShortcuts from "@/components/KeyboardShortcuts"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -36,6 +37,7 @@ export default function RootLayout({
         <AuthProvider>
         <ToastProvider>
           <PlayerProvider>
+            <KeyboardShortcuts />
             <div className="flex h-full">
               <ErrorBoundary label="Sidebar">
                 <Sidebar />
