@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { usePlayer } from "@/components/Player"
 import { useToast } from "@/components/Toast"
+import SyncedLyrics from "@/components/SyncedLyrics"
 import Link from "next/link"
 import { formatDuration, getImage } from "@/lib/utils"
 import type { PlayerTrack } from "@/lib/types"
@@ -15,6 +16,8 @@ export default function TrackClient({ track }: Props) {
   const { playAll, playNext, addToQueue } = usePlayer()
   const { showToast } = useToast()
   const [lyrics, setLyrics] = useState<string | null>(null)
+  const [syncedLyrics, setSyncedLyrics] = useState<string | null>(null)
+  const [lyricsMode, setLyricsMode] = useState<"plain" | "synced">("plain")
   const [lyricsLoading, setLyricsLoading] = useState(false)
   const [lyricsError, setLyricsError] = useState<string | null>(null)
   const [lyricsOpen, setLyricsOpen] = useState(false)
@@ -23,6 +26,7 @@ export default function TrackClient({ track }: Props) {
     if (lyrics !== null || lyricsLoading) return
     setLyricsLoading(true)
     setLyricsError(null)
+    setLyricsMode("plain") // Reset mode; will switch to synced if available
 
     const artistName = track.artists?.[0]?.name || ""
     const trackName = track.name || ""
@@ -32,8 +36,12 @@ export default function TrackClient({ track }: Props) {
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       if (data.results && data.results.length > 0) {
-        setLyrics(data.results[0].plainLyrics)
-        if (!data.results[0].plainLyrics) {
+        const result = data.results[0]
+        setLyrics(result.plainLyrics)
+        setSyncedLyrics(result.syncedLyrics)
+        // Auto-select synced mode if available
+        if (result.syncedLyrics) setLyricsMode("synced")
+        if (!result.plainLyrics && !result.syncedLyrics) {
           setLyricsError("No lyrics available for this track")
         }
       } else {
@@ -42,7 +50,10 @@ export default function TrackClient({ track }: Props) {
         if (fallbackRes.ok) {
           const fallbackData = await fallbackRes.json()
           if (fallbackData.results && fallbackData.results.length > 0) {
-            setLyrics(fallbackData.results[0].plainLyrics)
+            const fb = fallbackData.results[0]
+            setLyrics(fb.plainLyrics)
+            setSyncedLyrics(fb.syncedLyrics)
+            if (fb.syncedLyrics) setLyricsMode("synced")
             return
           }
         }
@@ -287,19 +298,48 @@ export default function TrackClient({ track }: Props) {
               </div>
             ) : (
               <>
+                {/* Header with mode toggle */}
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-semibold text-[var(--text-primary)]">Lyrics</h3>
-                  <svg className="w-4 h-4 text-[var(--text-muted)]" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M6 18l8.5-6L6 6v12zM16 6v2h2v12h-2V6z" />
-                  </svg>
+                  <div className="flex items-center gap-2">
+                    {syncedLyrics && (
+                      <div className="flex bg-[var(--bg-hover)] rounded-lg p-0.5 text-xs">
+                        <button
+                          onClick={() => setLyricsMode("synced")}
+                          className={`px-2.5 py-1 rounded-md transition-all font-medium ${lyricsMode === "synced" ? "bg-[var(--accent)] text-white shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}
+                        >
+                          Karaoke
+                        </button>
+                        <button
+                          onClick={() => setLyricsMode("plain")}
+                          className={`px-2.5 py-1 rounded-md transition-all font-medium ${lyricsMode === "plain" ? "bg-[var(--accent)] text-white shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}
+                        >
+                          Text
+                        </button>
+                      </div>
+                    )}
+                    <svg className="w-4 h-4 text-[var(--text-muted)]" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M6 18l8.5-6L6 6v12zM16 6v2h2v12h-2V6z" />
+                    </svg>
+                  </div>
                 </div>
-                <div className="text-sm text-[var(--text-primary)] leading-relaxed whitespace-pre-line space-y-2">
-                  {lyrics?.split("\n").map((line, i) => (
-                    <p key={i} className={line.trim() === "" ? "h-3" : "hover:text-[var(--accent)] transition-colors"}>
-                      {line || "\u00A0"}
-                    </p>
-                  ))}
-                </div>
+
+                {lyricsMode === "synced" && syncedLyrics ? (
+                  <SyncedLyrics syncedLyrics={syncedLyrics} />
+                ) : lyrics ? (
+                  <div className="text-sm text-[var(--text-primary)] leading-relaxed whitespace-pre-line space-y-2">
+                    {lyrics.split("\n").map((line, i) => (
+                      <p key={i} className={line.trim() === "" ? "h-3" : "hover:text-[var(--accent)] transition-colors"}>
+                        {line || "\u00A0"}
+                      </p>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center py-6 text-center">
+                    <p className="text-sm text-[var(--text-muted)]">No lyrics available</p>
+                  </div>
+                )}
+
                 <p className="mt-6 text-[10px] text-[var(--text-muted)] text-center">
                   Lyrics provided by LRCLIB
                 </p>

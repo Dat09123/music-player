@@ -42,9 +42,13 @@ export async function GET(request: NextRequest) {
 
     const data = await res.json()
     // data is an array of matching tracks with plainLyrics, syncedLyrics, etc.
-    // Filter results to only include those with plainLyrics
+    // Filter to items that have either plainLyrics or syncedLyrics
     const results = (Array.isArray(data) ? data : [])
-      .filter((item: any) => item.plainLyrics)
+      .filter((item: any) => item.plainLyrics || item.syncedLyrics)
+      .map((item: any) => ({
+        plainLyrics: item.plainLyrics || null,
+        syncedLyrics: item.syncedLyrics || null,
+      }))
 
     return NextResponse.json({ results })
   } catch (error) {

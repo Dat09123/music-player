@@ -168,4 +168,9 @@ input[type="range"]:hover::-webkit-slider-thumb {
 .stagger-11 { animation-delay: 500ms; }
 .stagger-12 { animation-delay: 550ms; }
 
+/* Firefox scrollbar hide */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+
 /* Scrollbar */
