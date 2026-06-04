@@ -209,10 +209,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error("Crypto API not available. Make sure you're using HTTPS or localhost.")
       }
       const authUrl = await getSpotifyAuthUrl(CLIENT_ID, REDIRECT_URI)
+      // Debug: log the auth URL and redirect URI for troubleshooting
+      console.log("[Spotify Auth] Redirect URI:", REDIRECT_URI)
+      console.log("[Spotify Auth] Auth URL:", authUrl.toString())
       window.location.href = authUrl.toString()
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to start login"
-      console.error("Failed to start login:", msg)
+      console.error("[Spotify Auth] Failed to start login:", msg)
       setAuthError(msg)
     }
   }, [])
