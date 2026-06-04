@@ -122,7 +122,7 @@ function transformTrack(t: DeezerTrack): any {
   const artist = t.artist || {} as any
   return {
     id: String(t.id),
-    name: t.title,
+    name: t.title || "Unknown Track",
     artists: [{ id: String(artist.id ?? ""), name: artist.name || "Unknown Artist", type: "artist" as const, uri: "", images: [toImage(artist.picture_medium || "")], genres: [], followers: { href: null, total: 0 }, popularity: 0, external_urls: { spotify: "" } }],
     album: t.album ? transformAlbum(t.album) : {
       id: "", name: "Unknown Album", type: "album" as const, album_type: "album" as const,
@@ -145,7 +145,7 @@ function transformAlbum(a: DeezerAlbum): any {
   const artist = a.artist || {} as any
   return {
     id: String(a.id),
-    name: a.title,
+    name: a.title || "Unknown Album",
     type: "album" as const,
     album_type: "album" as const,
     artists: [{ id: String(artist.id ?? ""), name: artist.name || "Unknown Artist", type: "artist" as const, uri: "", images: [toImage(artist.picture_medium || "")], genres: [], followers: { href: null, total: 0 }, popularity: 0, external_urls: { spotify: "" } }],
@@ -180,7 +180,7 @@ function transformArtist(a: DeezerArtist) {
 function transformPlaylist(p: DeezerPlaylist) {
   return {
     id: String(p.id),
-    name: p.title,
+    name: p.title || "Unknown Playlist",
     description: p.description || "",
     images: [toImage(p.picture_xl || p.picture_big || p.picture_medium), toImage(p.picture_big || p.picture_medium), toImage(p.picture_medium)],
     owner: { id: String(p.creator?.id || ""), display_name: p.creator?.name || "Deezer" },
