@@ -80,49 +80,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })
         .catch(async () => {
           if (cancelled) return
-          // Token expired - try refresh
-          if (!rt) {
-            // No refresh token available, clear session
-            localStorage.removeItem("spotify_session")
-            if (!cancelled) {
-              setAccessToken(null)
-              setRefreshToken(null)
-              setUser(null)
-              setIsLoading(false)
-            }
-            return
-          }
+          
+          // Don't clear session - first try to silently refresh the token
+          if (rt) {
+            try {
+              const refreshed = await refreshAccessToken(rt, CLIENT_ID)
+              if (cancelled) return
+              setAccessToken(refreshed.accessToken)
 
-          try {
-            const refreshed = await refreshAccessToken(rt, CLIENT_ID)
-            if (cancelled) return
-            setAccessToken(refreshed.accessToken)
+              // Update stored session
+              const updatedSession = {
+                ...session,
+                accessToken: refreshed.accessToken,
+                expiresAt: Date.now() + refreshed.expiresIn * 1000,
+              }
+              localStorage.setItem("spotify_session", JSON.stringify(updatedSession))
 
-            // Update stored session
-            const updatedSession = {
-              ...session,
-              accessToken: refreshed.accessToken,
-              expiresAt: Date.now() + refreshed.expiresIn * 1000,
-            }
-            localStorage.setItem("spotify_session", JSON.stringify(updatedSession))
-
-            // Fetch user with new token
-            const res = await fetch("https://api.spotify.com/v1/me", {
-              headers: { Authorization: `Bearer ${refreshed.accessToken}` },
-            })
-            if (res.ok && !cancelled) {
-              const userData = await res.json()
-              setUser(userData)
-            }
-          } catch {
-            // Refresh failed, clear everything
-            localStorage.removeItem("spotify_session")
-            if (!cancelled) {
-              setAccessToken(null)
-              setRefreshToken(null)
-              setUser(null)
+              // Fetch user with new token
+              const res = await fetch("https://api.spotify.com/v1/me", {
+                headers: { Authorization: `Bearer ${refreshed.accessToken}` },
+              })
+              if (res.ok && !cancelled) {
+                const userData = await res.json()
+                setUser(userData)
+              }
+            } catch {
+              console.warn("Token refresh failed on session restore")
             }
           }
+          // Keep the stored token regardless, so user stays authenticated
+          // API calls will handle 401 if token is truly expired
         })
         .finally(() => {
           if (!cancelled) setIsLoading(false)
