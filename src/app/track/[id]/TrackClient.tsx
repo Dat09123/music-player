@@ -89,6 +89,16 @@ export default function TrackClient({ track }: Props) {
     showToast(`Added "${track.name}" to queue`)
   }
 
+  async function handleShare() {
+    const url = `${window.location.origin}/track/${track.id}`
+    try {
+      await navigator.clipboard.writeText(url)
+      showToast(`Link copied: "${track.name}"`)
+    } catch {
+      showToast("Failed to copy link")
+    }
+  }
+
   const artistList = track.artists || []
   const albumImage = getImage(track.album?.images, "lg")
 
@@ -120,6 +130,15 @@ export default function TrackClient({ track }: Props) {
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+        <button
+          onClick={handleShare}
+          className="w-10 h-10 rounded-full border border-[var(--border)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all"
+          title="Copy track link"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>
         </button>
         <div className="ml-auto">
