@@ -5,6 +5,7 @@ import { getImage, formatNumber } from "@/lib/utils"
 import { getPlaylist } from "@/lib/deezer"
 import PlaylistClient from "./PlaylistClient"
 import Skeleton, { SkeletonTrackRow } from "@/components/Skeleton"
+import { trackPageView } from "@/lib/recently-viewed"
 
 interface Props {
   params: Promise<{ id: string }>
@@ -75,6 +76,19 @@ export default function PlaylistPage({ params }: Props) {
       </div>
     )
   }
+
+  // Track page view
+  useEffect(() => {
+    if (!playlist) return
+    trackPageView({
+      id: playlist.id,
+      type: "playlist",
+      name: playlist.name,
+      imageUrl: getImage(playlist.images),
+      subtext: playlist.tracks?.total ? `${playlist.tracks.total} tracks` : undefined,
+      href: `/playlist/${playlist.id}`,
+    })
+  }, [playlist?.id])
 
   return (
     <div>

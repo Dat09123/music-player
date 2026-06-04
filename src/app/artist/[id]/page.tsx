@@ -5,6 +5,7 @@ import { getImage, formatNumber } from "@/lib/utils"
 import { getArtist, getRelatedArtists } from "@/lib/deezer"
 import ArtistClient from "./ArtistClient"
 import Skeleton, { SkeletonHero, SkeletonTrackRow, SkeletonCardGrid } from "@/components/Skeleton"
+import { trackPageView } from "@/lib/recently-viewed"
 
 interface Props {
   params: Promise<{ id: string }>
@@ -53,6 +54,19 @@ export default function ArtistPage({ params }: Props) {
     loadData()
     return () => { cancelled = true }
   }, [id])
+
+  // Track page view after artist loads
+  useEffect(() => {
+    if (!artist) return
+    trackPageView({
+      id: artist.id,
+      type: "artist",
+      name: artist.name,
+      imageUrl: getImage(artist.images),
+      subtext: artist.followers?.total ? `${formatNumber(artist.followers.total)} followers` : undefined,
+      href: `/artist/${artist.id}`,
+    })
+  }, [artist?.id])
 
   // Fetch artist bio asynchronously (non-blocking)
   useEffect(() => {

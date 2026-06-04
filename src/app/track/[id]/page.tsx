@@ -5,6 +5,7 @@ import { getImage, formatDuration, formatArtists, formatNumber } from "@/lib/uti
 import { getTrack } from "@/lib/deezer"
 import TrackClient from "./TrackClient"
 import Skeleton, { SkeletonTrackRow } from "@/components/Skeleton"
+import { trackPageView } from "@/lib/recently-viewed"
 
 interface Props {
   params: Promise<{ id: string }>
@@ -72,6 +73,19 @@ export default function TrackPage({ params }: Props) {
       </div>
     )
   }
+
+  // Track page view
+  useEffect(() => {
+    if (!track) return
+    trackPageView({
+      id: track.id,
+      type: "track",
+      name: track.name,
+      imageUrl: getImage(track.album?.images),
+      subtext: track.artists?.map((a: any) => a.name).join(", "),
+      href: `/track/${track.id}`,
+    })
+  }, [track?.id])
 
   if (error || !track) {
     return (

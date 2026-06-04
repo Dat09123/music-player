@@ -1,20 +1,31 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getImage, formatNumber } from "@/lib/utils"
+import { getImage, formatNumber, getTimeAgo } from "@/lib/utils"
 import { getChart } from "@/lib/deezer"
 import Card from "@/components/Card"
 import Link from "next/link"
 import Skeleton from "@/components/Skeleton"
+import { usePlayer } from "@/components/Player"
+import { getRecentlyPlayed } from "@/lib/recently-played"
+import { getRecentlyViewed } from "@/lib/recently-viewed"
+import type { PlayerTrack } from "@/lib/types"
+import type { RecentlyViewedItem } from "@/lib/recently-viewed"
 
 export default function HomePage() {
+  const { playTrack } = usePlayer()
   const [playlists, setPlaylists] = useState<any[]>([])
   const [albums, setAlbums] = useState<any[]>([])
+  const [recentTracks, setRecentTracks] = useState<any[]>([])
+  const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
+
+    setRecentlyViewed(getRecentlyViewed())
+    setRecentTracks(getRecentlyPlayed())
 
     async function loadData() {
       try {
@@ -34,6 +45,18 @@ export default function HomePage() {
     loadData()
     return () => { cancelled = true }
   }, [])
+
+  // Refresh recently played when the page gains focus
+  useEffect(() => {
+    function refresh() {
+      setRecentTracks(getRecentlyPlayed())
+      setRecentlyViewed(getRecentlyViewed())
+    }
+    window.addEventListener("focus", refresh)
+    return () => window.removeEventListener("focus", refresh)
+  }, [])
+
+  const lastPlayed = recentTracks.length > 0 ? recentTracks[0] : null
 
   if (loading) {
     return (
@@ -82,6 +105,126 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Continue Listening — Last played track */}
+      {lastPlayed && (
+        <section>
+          <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4">
+            <span className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Continue Listening
+            </span>
+          </h2>
+          <div className="glass rounded-xl border border-[var(--border)] p-4 md:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex items-center gap-4 min-w-0 flex-1 w-full sm:w-auto">
+              <div className="w-14 h-14 rounded-lg overflow-hidden bg-[var(--bg-hover)] flex-shrink-0 shadow-sm">
+                {lastPlayed.albumImage ? (
+                  <img src={lastPlayed.albumImage} alt={lastPlayed.album} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-[var(--text-primary)] truncate">{lastPlayed.name}</p>
+                <p className="text-xs text-[var(--text-secondary)] truncate">{lastPlayed.artists} • {lastPlayed.album}</p>
+                <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{getTimeAgo(lastPlayed.playedAt)}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={() => playTrack(lastPlayed as PlayerTrack)}
+                className="flex items-center gap-1.5 px-4 py-2 bg-[var(--accent)] text-white text-sm font-medium rounded-lg hover:opacity-90 transition-all shadow-sm whitespace-nowrap"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                Play Again
+              </button>
+              <Link
+                href={`/track/${lastPlayed.id}`}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all whitespace-nowrap"
+              >
+                View Track
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Recently Played Tracks */}
+      {recentTracks.length > 1 && (
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-[var(--text-primary)]">Recently Played</h2>
+            <Link href="/me/recently" className="text-xs font-medium text-[var(--accent)] hover:underline">See all</Link>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory -mx-5 px-5">
+            {recentTracks.slice(1, 8).map((track) => (
+              <Link
+                key={`${track.id}-${track.playedAt}`}
+                href={`/track/${track.id}`}
+                className="flex-shrink-0 w-36 sm:w-40 group bg-[var(--bg-secondary)]/50 backdrop-blur-sm rounded-xl border border-[var(--border)] p-3 transition-all hover:shadow-lg hover:-translate-y-0.5 hover:border-[var(--accent)]/20 snap-start"
+              >
+                <div className="w-full aspect-square rounded-lg overflow-hidden bg-[var(--bg-hover)] mb-2 shadow-sm">
+                  {track.albumImage ? (
+                    <img src={track.albumImage} alt={track.album} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">
+                      <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs font-semibold text-[var(--text-primary)] truncate">{track.name}</p>
+                <p className="text-[10px] text-[var(--text-muted)] truncate mt-0.5">{track.artists}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Recently Viewed Pages */}
+      {recentlyViewed.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-[var(--text-primary)]">
+              <span className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Recently Viewed
+              </span>
+            </h2>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory -mx-5 px-5">
+            {recentlyViewed.slice(0, 10).map((item) => (
+              <Link
+                key={`${item.type}-${item.id}`}
+                href={item.href}
+                className="flex-shrink-0 w-36 sm:w-40 group bg-[var(--bg-secondary)]/50 backdrop-blur-sm rounded-xl border border-[var(--border)] p-3 transition-all hover:shadow-lg hover:-translate-y-0.5 hover:border-[var(--accent)]/20 snap-start"
+              >
+                <div className={`w-full aspect-square overflow-hidden bg-[var(--bg-hover)] mb-2 shadow-sm ${item.type === "artist" ? "rounded-full" : "rounded-lg"}`}>
+                  {item.imageUrl && !item.imageUrl.endsWith("/placeholder.svg") ? (
+                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">
+                      {item.type === "artist" ? (
+                        <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
+                      ) : (
+                        <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs font-semibold text-[var(--text-primary)] truncate">{item.name}</p>
+                <p className="text-[10px] text-[var(--text-muted)] truncate mt-0.5 capitalize">{item.type}{item.subtext ? ` • ${item.subtext}` : ""}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Popular Playlists */}
       {playlists.length > 0 && (
