@@ -164,7 +164,7 @@ export default function Sidebar() {
       </aside>
 
       {/* Mobile sidebar (overlay drawer) */}
-      <aside className={`fixed inset-y-0 left-0 z-50 flex md:hidden w-72 bg-[var(--bg-secondary)] text-[var(--text-primary)] flex-col transition-all duration-300 h-full border-r border-[var(--border)] shadow-2xl ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 flex md:hidden w-72 max-w-[85vw] bg-[var(--bg-secondary)] text-[var(--text-primary)] flex-col transition-all duration-300 h-full border-r border-[var(--border)] shadow-2xl overflow-y-auto ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex items-center justify-between p-5 pb-3">
           <Link href="/" className="w-8 h-8 bg-[var(--accent)] rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
             <svg className="w-4 h-4 text-white" viewBox="0 0 20 20" fill="currentColor">

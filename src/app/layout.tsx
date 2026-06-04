@@ -50,7 +50,7 @@ export default function RootLayout({
                   <Header />
                 </ErrorBoundary>
                 <ErrorBoundary label="Page Content" fallback={<ErrorFallback />}>
-                  <main className="flex-1 overflow-y-auto pb-20 md:pb-20">
+                  <main className="flex-1 overflow-y-auto pb-32 md:pb-20">
                     {children}
                   </main>
                 </ErrorBoundary>

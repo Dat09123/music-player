@@ -150,7 +150,7 @@ function PlayerBar() {
   const progressPercent = duration > 0 ? (isSeeking ? seekValue : (progress / duration) * 100) : 0
 
   return (
-    <div className="fixed bottom-20 md:bottom-4 left-4 right-4 max-w-4xl mx-auto bg-[var(--bg-secondary)] rounded-2xl shadow-lg border border-[var(--border)] backdrop-blur-xl z-50 px-4 py-3">
+    <div className="fixed bottom-16 md:bottom-4 left-4 right-4 max-w-4xl mx-auto bg-[var(--bg-secondary)] rounded-2xl shadow-lg border border-[var(--border)] backdrop-blur-xl z-50 px-4 py-3">
       <div className="flex items-center gap-4">
         {/* Track Info */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
