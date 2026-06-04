@@ -5,6 +5,7 @@ import { formatDuration } from "@/lib/utils"
 import type { PlayerTrack, RepeatMode } from "@/lib/types"
 import ErrorBoundary from "./ErrorBoundary"
 import QueuePanel from "./QueuePanel"
+import { addToRecentlyPlayed } from "@/lib/recently-played"
 
 export type { PlayerTrack }
 
@@ -105,6 +106,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     const audio = audioRef.current
     if (!audio) return
     setCurrentTrack(track)
+    addToRecentlyPlayed(track)
     if (track.previewUrl) { audio.src = track.previewUrl; audio.play().catch(() => setIsPlaying(false)) }
     else setIsPlaying(false)
   }

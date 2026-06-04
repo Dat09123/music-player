@@ -10,6 +10,7 @@ import { useSidebar } from "./SidebarContext"
 const navItems = [
   { href: "/", label: "Home", icon: HomeIcon },
   { href: "/search", label: "Search", icon: SearchIcon },
+  { href: "/me/recently", label: "Recently Played", icon: HistoryIcon },
   { href: "/me/top", label: "Top Charts", icon: TopChartIcon },
   { href: "/me/liked", label: "Trending Now", icon: TrendingIcon },
 ]
@@ -221,4 +222,8 @@ function TopChartIcon({ className }: { className?: string }) {
 
 function TrendingIcon({ className }: { className?: string }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+}
+
+function HistoryIcon({ className }: { className?: string }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
 }
