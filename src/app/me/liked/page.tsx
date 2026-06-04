@@ -1,8 +1,8 @@
 import LikedClient from "./LikedClient"
 
 export const metadata = {
-  title: "Trending Now - Muse",
-  description: "Top trending tracks on Deezer",
+  title: "Liked Songs - Muse",
+  description: "Your liked songs",
 }
 
 export default function LikedPage() {

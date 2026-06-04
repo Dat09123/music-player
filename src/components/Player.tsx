@@ -10,14 +10,28 @@ import { addToRecentlyPlayed } from "@/lib/recently-played"
 
 export type { PlayerTrack }
 
-// Liked tracks stored in localStorage
 const LIKED_KEY = "muse-liked-tracks"
+const LIKED_DATA_KEY = "muse-liked-data"
 function getLiked(): Set<string> {
   if (typeof window === "undefined") return new Set()
   try { return new Set(JSON.parse(localStorage.getItem(LIKED_KEY) || "[]")) } catch { return new Set() }
 }
 function saveLiked(ids: Set<string>) {
   localStorage.setItem(LIKED_KEY, JSON.stringify([...ids]))
+}
+function getLikedData(): PlayerTrack[] {
+  if (typeof window === "undefined") return []
+  try { return JSON.parse(localStorage.getItem(LIKED_DATA_KEY) || "[]") } catch { return [] }
+}
+function saveLikedData(ids: Set<string>, track: PlayerTrack, add: boolean) {
+  const data = getLikedData()
+  if (add) {
+    if (!data.find(t => t.id === track.id)) data.unshift(track)
+  } else {
+    const idx = data.findIndex(t => t.id === track.id)
+    if (idx !== -1) data.splice(idx, 1)
+  }
+  localStorage.setItem(LIKED_DATA_KEY, JSON.stringify(data))
 }
 
 interface PlayerContextType {
@@ -71,11 +85,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [queue, setQueue] = useState<PlayerTrack[]>([])
   const [queueIndex, setQueueIndex] = useState(-1)
-  const [volume, setVolumeState] = useState(0.7)
+  const [volume, setVolumeState] = useState(() => typeof window !== 'undefined' ? parseFloat(localStorage.getItem('muse-volume') || '0.7') : 0.7)
   const [progress, setProgress] = useState(0)
   const [duration, setDuration] = useState(0)
-  const [repeatMode, setRepeatMode] = useState<RepeatMode>("off")
-  const [shuffle, setShuffle] = useState(false)
+  const [repeatMode, setRepeatMode] = useState<RepeatMode>(() => typeof window !== 'undefined' ? (localStorage.getItem('muse-repeat') as RepeatMode) || 'off' : 'off')
+  const [shuffle, setShuffle] = useState(() => typeof window !== 'undefined' ? localStorage.getItem('muse-shuffle') === 'true' : false)
   const [queuePanelOpen, setQueuePanelOpen] = useState(false)
   const [shuffleOrder, setShuffleOrder] = useState<number[]>([])
   const [shuffleIndex, setShuffleIndex] = useState(0)
@@ -145,6 +159,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }, [currentTrack])
 
   useEffect(() => { if (audioRef.current) audioRef.current.volume = volume }, [volume])
+  useEffect(() => { localStorage.setItem("muse-volume", String(volume)) }, [volume])
+  useEffect(() => { localStorage.setItem("muse-repeat", repeatMode) }, [repeatMode])
+  useEffect(() => { localStorage.setItem("muse-shuffle", String(shuffle)) }, [shuffle])
 
   // Sleep timer
   useEffect(() => {
@@ -317,10 +334,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   function setSleepTimer(minutes: number | null) { setSleepTimerState(minutes) }
   function setCrossfade(seconds: number) { setCrossfadeState(seconds) }
   function toggleLike(id: string) {
+    const track = queue.find(t => t.id === id) || (currentTrack?.id === id ? currentTrack : null)
     setLikedTracks(prev => {
       const next = new Set(prev)
-      if (next.has(id)) next.delete(id); else next.add(id)
+      const adding = !next.has(id)
+      if (adding) next.add(id); else next.delete(id)
       saveLiked(next)
+      if (track) saveLikedData(next, track, adding)
       return next
     })
   }

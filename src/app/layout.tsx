@@ -13,6 +13,8 @@ import KeyboardShortcuts from "@/components/KeyboardShortcuts"
 import { SidebarProvider } from "@/components/SidebarContext"
 import MobileNav from "@/components/MobileNav"
 import PageTransition from "@/components/PageTransition"
+import DynamicTitle from "@/components/DynamicTitle"
+import PWARegister from "@/components/PWARegister"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -23,6 +25,7 @@ export const metadata: Metadata = {
   title: "Muse - Listen to music",
   description: "Listen to your favorite tracks from Deezer.",
   icons: { icon: [{ url: "/favicon.ico" }] },
+  manifest: "/manifest.json",
 }
 
 export default function RootLayout({
@@ -34,6 +37,10 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem("muse-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.classList.toggle("dark",t==="dark")}catch(e){}})()` }} />
+        <meta name="theme-color" content="#6366f1" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <link rel="apple-touch-icon" href="/favicon.ico" />
       </head>
       <body className="h-full bg-[var(--bg-primary)] text-[var(--text-primary)]">
         <ThemeProvider>
@@ -41,6 +48,8 @@ export default function RootLayout({
         <ToastProvider>
         <SidebarProvider>
           <PlayerProvider>
+            <PWARegister />
+            <DynamicTitle />
             <KeyboardShortcuts />
             <div className="flex h-full">
               <ErrorBoundary label="Sidebar">
