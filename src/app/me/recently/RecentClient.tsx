@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { usePlayer } from "@/components/Player"
-import { getRecentlyPlayed, type RecentTrack } from "@/lib/recently-played"
+import { getRecentlyPlayed, clearRecentlyPlayed, type RecentTrack } from "@/lib/recently-played"
 import { formatDuration } from "@/lib/utils"
 import Link from "next/link"
 
@@ -44,10 +44,20 @@ export default function RecentClient() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <div>
+        <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-extrabold text-[var(--text-primary)]">Recently Played</h1>
           <p className="text-sm text-[var(--text-muted)] mt-0.5">{tracks.length} track{tracks.length !== 1 ? "s" : ""}</p>
         </div>
+        <button
+          onClick={() => { clearRecentlyPlayed(); setTracks([]) }}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[var(--text-muted)] hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all flex-shrink-0"
+          title="Clear all history"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          <span className="hidden sm:inline">Clear All</span>
+        </button>
       </div>
 
       {/* Track list */}

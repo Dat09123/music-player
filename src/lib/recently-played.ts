@@ -41,3 +41,8 @@ export function addToRecentlyPlayed(track: PlayerTrack): void {
   // Trim to max
   saveAll(filtered.slice(0, MAX_ITEMS))
 }
+
+/** Clear all recently played history */
+export function clearRecentlyPlayed(): void {
+  saveAll([])
+}
