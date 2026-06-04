@@ -99,11 +99,16 @@ function transformSearchResults(
 }
 
 function transformTrack(t: DeezerTrack): any {
+  // Safely handle missing artist/album (Deezer sometimes returns partial data)
+  const artist = t.artist || {} as any
   return {
     id: String(t.id),
     name: t.title,
-    artists: [{ id: String(t.artist.id), name: t.artist.name, type: "artist" as const, uri: "", images: [toImage(t.artist.picture_medium)], genres: [], followers: { href: null, total: 0 }, popularity: 0, external_urls: { spotify: "" } }],
-    album: transformAlbum(t.album),
+    artists: [{ id: String(artist.id ?? ""), name: artist.name || "Unknown Artist", type: "artist" as const, uri: "", images: [toImage(artist.picture_medium || "")], genres: [], followers: { href: null, total: 0 }, popularity: 0, external_urls: { spotify: "" } }],
+    album: t.album ? transformAlbum(t.album) : {
+      id: "", name: "Unknown Album", type: "album" as const, album_type: "album" as const,
+      artists: [], images: [], release_date: "", total_tracks: 0, uri: "", external_urls: { spotify: "" },
+    },
     duration_ms: (t.duration || 0) * 1000,
     explicit: t.explicit_lyrics || false,
     popularity: 0,
@@ -116,12 +121,13 @@ function transformTrack(t: DeezerTrack): any {
 }
 
 function transformAlbum(a: DeezerAlbum): any {
+  const artist = a.artist || {} as any
   return {
     id: String(a.id),
     name: a.title,
     type: "album" as const,
     album_type: "album" as const,
-    artists: [{ id: String(a.artist.id), name: a.artist.name, type: "artist" as const, uri: "", images: [toImage(a.artist.picture_medium)], genres: [], followers: { href: null, total: 0 }, popularity: 0, external_urls: { spotify: "" } }],
+    artists: [{ id: String(artist.id ?? ""), name: artist.name || "Unknown Artist", type: "artist" as const, uri: "", images: [toImage(artist.picture_medium || "")], genres: [], followers: { href: null, total: 0 }, popularity: 0, external_urls: { spotify: "" } }],
     images: [
       toImage(a.cover_xl || a.cover_big || a.cover_medium || a.cover || ""),
       toImage(a.cover_big || a.cover_medium || a.cover || ""),
