@@ -1,7 +1,5 @@
 "use client"
 
-"use client"
-
 import { useState, useEffect, use } from "react"
 import { getImage, formatNumber } from "@/lib/utils"
 import { getPlaylist } from "@/lib/deezer"
@@ -40,13 +38,37 @@ export default function PlaylistPage({ params }: Props) {
 
   if (loading) {
     return (
-      <div className="animate-pulse px-6 pt-12 pb-8 md:pt-20 md:pb-10">
-        <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
-          <div className="w-48 h-48 md:w-56 md:h-56 rounded-xl bg-gray-200 flex-shrink-0" />
-          <div className="text-center md:text-left flex-1">
-            <div className="h-4 w-16 bg-gray-200 rounded mb-2" />
-            <div className="h-10 w-64 bg-gray-200 rounded mb-3" />
-            <div className="h-4 w-48 bg-gray-200 rounded" />
+      <div className="animate-pulse">
+        {/* Hero skeleton */}
+        <div className="px-6 pt-12 pb-8 md:pt-20 md:pb-10" style={{ background: "linear-gradient(135deg, #e5e7eb, var(--bg-primary))" }}>
+          <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
+            <div className="w-48 h-48 md:w-56 md:h-56 rounded-xl flex-shrink-0 shadow-2xl skeleton" />
+            <div className="text-center md:text-left flex-1">
+              <div className="h-4 w-16 skeleton rounded mb-2" />
+              <div className="h-10 w-64 skeleton rounded mb-3" />
+              <div className="h-4 w-48 skeleton rounded" />
+            </div>
+          </div>
+        </div>
+        {/* Track list skeleton */}
+        <div className="bg-white/50 px-3 py-4">
+          <div className="flex items-center gap-4 px-4 py-2 mb-4">
+            <div className="w-14 h-14 rounded-full skeleton" />
+            <div className="w-10 h-10 rounded-full skeleton" />
+            <div className="w-10 h-10 rounded-full skeleton" />
+          </div>
+          <div className="space-y-2 px-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4 py-2">
+                <div className="w-5 h-5 skeleton rounded" />
+                <div className="w-10 h-10 rounded flex-shrink-0 skeleton" />
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <div className="h-3.5 w-48 skeleton rounded" />
+                  <div className="h-3 w-32 skeleton rounded" />
+                </div>
+                <div className="h-3 w-10 skeleton rounded" />
+              </div>
+            ))}
           </div>
         </div>
       </div>

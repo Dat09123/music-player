@@ -1,7 +1,5 @@
 "use client"
 
-"use client"
-
 import { useState, useEffect, use } from "react"
 import { getImage, formatDate } from "@/lib/utils"
 import { getAlbum } from "@/lib/deezer"
@@ -40,13 +38,34 @@ export default function AlbumPage({ params }: Props) {
 
   if (loading) {
     return (
-      <div className="animate-pulse px-6 pt-12 pb-8 md:pt-20 md:pb-10">
-        <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
-          <div className="w-48 h-48 md:w-56 md:h-56 rounded-xl bg-gray-200 flex-shrink-0" />
-          <div className="text-center md:text-left flex-1">
-            <div className="h-4 w-16 bg-gray-200 rounded mb-2" />
-            <div className="h-10 w-64 bg-gray-200 rounded mb-3" />
-            <div className="h-4 w-48 bg-gray-200 rounded" />
+      <div className="animate-pulse">
+        {/* Hero skeleton */}
+        <div className="px-6 pt-12 pb-8 md:pt-20 md:pb-10 bg-gradient-to-b from-gray-100 to-[var(--bg-primary)]">
+          <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
+            <div className="w-48 h-48 md:w-56 md:h-56 rounded-xl flex-shrink-0 shadow-2xl skeleton" />
+            <div className="text-center md:text-left flex-1">
+              <div className="h-4 w-16 skeleton rounded mb-2" />
+              <div className="h-10 w-64 skeleton rounded mb-3" />
+              <div className="h-4 w-64 skeleton rounded" />
+            </div>
+          </div>
+        </div>
+        {/* Track list skeleton */}
+        <div className="bg-white/50 px-3 py-4">
+          <div className="flex items-center gap-4 px-4 py-2 mb-4">
+            <div className="w-14 h-14 rounded-full skeleton" />
+          </div>
+          <div className="space-y-2 px-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4 py-2">
+                <div className="w-5 h-5 skeleton rounded" />
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <div className="h-3.5 w-48 skeleton rounded" />
+                  <div className="h-3 w-32 skeleton rounded" />
+                </div>
+                <div className="h-3 w-10 skeleton rounded" />
+              </div>
+            ))}
           </div>
         </div>
       </div>

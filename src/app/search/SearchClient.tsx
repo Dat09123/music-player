@@ -114,13 +114,27 @@ export default function SearchClient() {
 
       {/* Loading state */}
       {loading && (
-        <div className="space-y-2">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center gap-4 p-3 animate-pulse">
-              <div className="w-12 h-12 rounded bg-gray-100" />
+        <div className="space-y-1">
+          {/* Animated search indicator */}
+          <div className="flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-muted)]">
+            <span className="flex gap-0.5">
+              <span className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+            </span>
+            <span>Searching...</span>
+          </div>
+          {[
+            { title: "75%", artist: "50%" },
+            { title: "60%", artist: "40%" },
+            { title: "85%", artist: "55%" },
+            { title: "55%", artist: "35%" },
+            { title: "70%", artist: "45%" },            ].map((w, i) => (
+            <div key={i} className="flex items-center gap-4 p-3">
+              <div className="w-12 h-12 rounded skeleton" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 w-48 bg-gray-100 rounded" />
-                <div className="h-3 w-32 bg-gray-100 rounded" />
+                <div className="h-4 skeleton rounded" style={{ width: w.title }} />
+                <div className="h-3 skeleton rounded" style={{ width: w.artist }} />
               </div>
             </div>
           ))}
