@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { getPlaylists, createPlaylist } from "@/lib/playlists"
 import type { LocalPlaylist } from "@/lib/types"
 import { useSidebar } from "./SidebarContext"
@@ -116,7 +116,7 @@ export default function Sidebar() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [playlistName, setPlaylistName] = useState("")
   const [localPlaylists, setLocalPlaylists] = useState<LocalPlaylist[]>([])
-  const [inputRef, setInputRef] = useState<HTMLInputElement | null>(null)
+  const inputRef = useRef<HTMLInputElement | null>(null)
 
   function refreshPlaylists() {
     setLocalPlaylists(getPlaylists())
@@ -125,10 +125,10 @@ export default function Sidebar() {
   useEffect(() => { refreshPlaylists() }, [])
 
   useEffect(() => {
-    if (showCreateModal && inputRef) {
-      setTimeout(() => inputRef.focus(), 100)
+    if (showCreateModal && inputRef.current) {
+      setTimeout(() => inputRef.current?.focus(), 100)
     }
-  }, [showCreateModal, inputRef])
+  }, [showCreateModal])
 
   function handleCreate() {
     if (!playlistName.trim()) return
@@ -199,7 +199,7 @@ export default function Sidebar() {
           <div className="bg-[var(--bg-secondary)] rounded-2xl shadow-xl border border-[var(--border)] w-80 p-6 animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-base font-bold text-[var(--text-primary)] mb-4">Create Playlist</h3>
             <input
-              ref={(el) => setInputRef(el)}
+              ref={inputRef}
               type="text"
               value={playlistName}
               onChange={(e) => setPlaylistName(e.target.value)}
