@@ -9,30 +9,69 @@ const API = "/api/deezer"
 
 // ─── Raw fetch ───────────────────────────────────────────
 
-async function fetchDeezer<T>(path: string): Promise<T> {
+/** Retry delay with exponential backoff (ms) */
+function retryDelay(attempt: number): number {
+  return Math.min(100 * Math.pow(2, attempt), 2000)
+}
+
+async function fetchDeezer<T>(path: string, retries = 2): Promise<T> {
   const url = `${API}${path}`
-  const start = performance.now()
 
-  try {
-    const res = await fetch(url)
-    const duration = Math.round(performance.now() - start)
-    console.debug(`[Deezer] ➡ GET ${url} → ${res.status} (${duration}ms)`)
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const start = performance.now()
 
-    if (!res.ok) {
-      const text = await res.text()
-      console.error(`[Deezer] ❌ GET ${url} → ${res.status}: ${text.slice(0, 200)}`)
-      throw new Error(`Deezer API error (${res.status}): ${text.slice(0, 200)}`)
+    try {
+      const res = await fetch(url, {
+        // Add a signal so the request can be aborted on cleanup
+        signal: typeof AbortSignal !== "undefined" && "timeout" in AbortSignal
+          ? AbortSignal.timeout(15000)
+          : undefined, // 15s timeout
+      })
+      const duration = Math.round(performance.now() - start)
+      console.debug(`[Deezer] ➡ GET ${url} → ${res.status} (${duration}ms)`)
+
+      if (!res.ok) {
+        const text = await res.text()
+        console.error(`[Deezer] ❌ GET ${url} → ${res.status}: ${text.slice(0, 200)}`)
+        throw new Error(`Deezer API error (${res.status}): ${text.slice(0, 200)}`)
+      }
+
+      return res.json()
+    } catch (err) {
+      const isLastAttempt = attempt === retries
+      const isNetworkError = err instanceof TypeError && err.message === "NetworkError when attempting to fetch resource"
+      const isTimeout = err instanceof DOMException && err.name === "TimeoutError"
+      const isAbort = err instanceof DOMException && err.name === "AbortError"
+
+      // Don't retry on abort (component unmount), rethrow immediately
+      if (isAbort) throw err
+
+      if (isNetworkError || isTimeout) {
+        console.warn(`[Deezer] ⚠ Network issue GET ${url} (attempt ${attempt + 1}/${retries + 1}): ${err instanceof Error ? err.message : err}`)
+
+        if (!isLastAttempt) {
+          const delay = retryDelay(attempt)
+          console.debug(`[Deezer] ⏳ Retrying in ${delay}ms...`)
+          await new Promise((resolve) => setTimeout(resolve, delay))
+          continue
+        }
+
+        console.error(`[Deezer] 💥 GET ${url} failed after ${retries + 1} attempts`)
+        throw new Error("Could not load data. Please check your internet connection and try again.")
+      }
+
+      // For HTTP errors (4xx/5xx) and other errors, rethrow directly
+      if (err instanceof Error && err.message.startsWith("Deezer API error")) {
+        // Already logged above
+      } else {
+        console.error(`[Deezer] 💥 GET ${url}:`, err)
+      }
+      throw err
     }
-
-    return res.json()
-  } catch (err) {
-    if (err instanceof Error && err.message.startsWith("Deezer API error")) {
-      // Already logged above
-    } else {
-      console.error(`[Deezer] 💥 GET ${url}:`, err)
-    }
-    throw err
   }
+
+  // Unreachable, but TypeScript wants a return
+  throw new Error("Unexpected error")
 }
 
 // ─── Deezer raw types ────────────────────────────────────
