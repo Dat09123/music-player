@@ -1,14 +1,37 @@
 "use client"
 
 import { useState } from "react"
+import dynamic from "next/dynamic"
 import { usePlayer } from "@/components/Player"
 import LazyImage from "@/components/LazyImage"
-import TrackList from "@/components/TrackList"
 import { useToast } from "@/components/Toast"
 import Link from "next/link"
 import { getImage, formatArtists } from "@/lib/utils"
 import type { PlayerTrack } from "@/components/Player"
 import type { SpotifyTrack, SpotifyAlbum, SpotifyArtist } from "@/lib/types"
+
+const TrackList = dynamic(() => import("@/components/TrackList"), {
+  loading: () => <TrackListSkeleton />
+})
+
+function TrackListSkeleton() {
+  return (
+    <div className="animate-pulse space-y-2 px-4">
+      <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-16 mb-4" />
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 py-2">
+          <div className="w-7 h-3 bg-gray-200 dark:bg-gray-800 rounded" />
+          <div className="w-8 h-8 bg-gray-200 dark:bg-gray-800 rounded flex-shrink-0" />
+          <div className="flex-1 space-y-1.5">
+            <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-3/5" />
+            <div className="h-2.5 bg-gray-200 dark:bg-gray-800 rounded w-2/5" />
+          </div>
+          <div className="w-8 h-3 bg-gray-200 dark:bg-gray-800 rounded" />
+        </div>
+      ))}
+    </div>
+  )
+}
 
 interface Props {
   topTracks: SpotifyTrack[]
