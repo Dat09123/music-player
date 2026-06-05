@@ -11,7 +11,7 @@ import { useTheme, ACCENT_COLORS } from "@/lib/ThemeContext"
 import {
   HomeIcon, SearchIcon, ClockIcon, PersonIcon, MusicNoteIcon,
   ChartIcon, PlusIcon, MusicNoteStrokeIcon, CollapseIcon,
-  XIcon, MoonIcon, SunIcon,
+  XIcon, MoonIcon, SunIcon, PlayCircleIcon,
 } from "@/components/Icons"
 
 const CreatePlaylistModal = dynamic(() => import("./CreatePlaylistModal"), { ssr: false })
@@ -19,6 +19,7 @@ const CreatePlaylistModal = dynamic(() => import("./CreatePlaylistModal"), { ssr
 const navItems = [
   { href: "/", label: "Home", icon: HomeIcon },
   { href: "/search", label: "Search", icon: SearchIcon },
+  { href: "/now-playing", label: "Now Playing", icon: PlayCircleIcon },
   { href: "/me/recently", label: "Recently Played", icon: ClockIcon },
   { href: "/me/artist-history", label: "Artist History", icon: PersonIcon },
   { href: "/me/album-history", label: "Album History", icon: MusicNoteIcon },
