@@ -51,7 +51,7 @@ export default function NowPlayingPage() {
     <div className="relative h-full w-full bg-black flex flex-col animate-fade-in overflow-hidden">
       {/* Full-screen background visualizer */}
       <div className="absolute inset-0 opacity-20 pointer-events-none">
-        <Visualizer barCount={64} variant="full" className="h-full" />
+        <Visualizer barCount={64} variant="full" mode="bars" className="h-full" />
       </div>
 
       {/* Content */}

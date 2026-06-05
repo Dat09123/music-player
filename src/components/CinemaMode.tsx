@@ -34,7 +34,7 @@ export default function CinemaMode({ track, syncedLyrics, lyrics, lyricsMode, on
     <div className="fixed inset-0 z-[100] bg-black flex flex-col animate-fade-in overflow-hidden">
       {/* Animated background visualizer */}
       <div className="absolute inset-0 opacity-30 pointer-events-none">
-        <Visualizer barCount={48} variant="full" className="h-full" />
+        <Visualizer barCount={48} variant="full" mode="bars" className="h-full" />
       </div>
 
       {/* Top bar */}

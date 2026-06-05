@@ -448,7 +448,7 @@ function PlayerBar() {
               <p className="text-xs text-[var(--text-muted)] truncate">{currentTrack.artists}</p>
               {/* Animated visualizer bar below track info */}
               <div className="mt-1 max-w-[120px]">
-                <Visualizer barCount={12} variant="mini" />
+                <Visualizer barCount={12} variant="mini" mode="bars" />
               </div>
             </div>
           </div>
