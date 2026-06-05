@@ -64,6 +64,9 @@ interface PlayerContextType {
   // Liked
   likedTracks: Set<string>
   toggleLike: (id: string) => void
+  // Visualizer
+  showVisualizer: boolean
+  setShowVisualizer: (show: boolean) => void
 }
 
 const PlayerContext = createContext<PlayerContextType | null>(null)
@@ -91,6 +94,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [sleepRemaining, setSleepRemaining] = useState<number | null>(null)
   const [crossfade, setCrossfadeState] = useState(0)
   const [likedTracks, setLikedTracks] = useState<Set<string>>(new Set())
+  const [showVisualizer, setShowVisualizer] = useState(() =>
+    typeof window !== 'undefined' ? localStorage.getItem('muse-visualizer') !== 'false' : true
+  )
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const sleepTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const crossfadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -160,6 +166,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   useEffect(() => { localStorage.setItem("muse-volume", String(volume)) }, [volume])
   useEffect(() => { localStorage.setItem("muse-repeat", repeatMode) }, [repeatMode])
   useEffect(() => { localStorage.setItem("muse-shuffle", String(shuffle)) }, [shuffle])
+  useEffect(() => { localStorage.setItem("muse-visualizer", String(showVisualizer)) }, [showVisualizer])
 
   // Sleep timer
   useEffect(() => {
@@ -365,7 +372,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       repeatMode, toggleRepeat, shuffle, toggleShuffle, addToQueue, playNext,
       removeFromQueue, moveInQueue, clearQueue, queuePanelOpen, setQueuePanelOpen,
       sleepTimer, setSleepTimer, sleepRemaining, crossfade, setCrossfade,
-      likedTracks, toggleLike,
+      likedTracks, toggleLike, showVisualizer, setShowVisualizer,
     }}>
       {children}
       <ErrorBoundary label="Player Bar">
@@ -384,6 +391,7 @@ function PlayerBar() {
     sleepTimer, setSleepTimer, sleepRemaining,
     crossfade, setCrossfade,
     likedTracks, toggleLike,
+    showVisualizer, setShowVisualizer,
   } = usePlayer()
 
   const [isSeeking, setIsSeeking] = useState(false)
@@ -447,9 +455,11 @@ function PlayerBar() {
               <p className="text-sm font-medium text-[var(--text-primary)] truncate">{currentTrack.name}</p>
               <p className="text-xs text-[var(--text-muted)] truncate">{currentTrack.artists}</p>
               {/* Animated visualizer bar below track info */}
-              <div className="mt-1 max-w-[120px]">
-                <Visualizer barCount={12} variant="mini" mode="bars" />
-              </div>
+              {showVisualizer && (
+                <div className="mt-1 max-w-[120px]">
+                  <Visualizer barCount={12} variant="mini" mode="bars" />
+                </div>
+              )}
             </div>
           </div>
 
@@ -583,6 +593,31 @@ function PlayerBar() {
                   Off
                 </button>
               )}
+            </div>
+          </div>
+
+          {/* Visualizer toggle */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                </svg>
+                Visualizer
+              </p>
+              <button
+                onClick={() => setShowVisualizer(!showVisualizer)}
+                className={`relative w-9 h-5 rounded-full transition-all duration-200 ${
+                  showVisualizer ? "bg-[var(--accent)]" : "bg-[var(--bg-hover)]"
+                }`}
+                aria-label={showVisualizer ? "Hide visualizer" : "Show visualizer"}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-200 ${
+                    showVisualizer ? "translate-x-4" : "translate-x-0"
+                  }`}
+                />
+              </button>
             </div>
           </div>
 
