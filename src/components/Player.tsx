@@ -1,12 +1,14 @@
 "use client"
 
 import { useState, useRef, useEffect, createContext, useContext, type ReactNode } from "react"
+import dynamic from "next/dynamic"
 import { formatDuration } from "@/lib/utils"
 import type { PlayerTrack, RepeatMode } from "@/lib/types"
 import ErrorBoundary from "./ErrorBoundary"
-import QueuePanel from "./QueuePanel"
 import LazyImage from "./LazyImage"
 import { addToRecentlyPlayed } from "@/lib/recently-played"
+
+const QueuePanel = dynamic(() => import("./QueuePanel"), { ssr: false })
 
 export type { PlayerTrack }
 

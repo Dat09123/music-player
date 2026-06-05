@@ -1,15 +1,17 @@
 "use client"
 
 import { useState } from "react"
+import dynamic from "next/dynamic"
 import { usePlayer } from "@/components/Player"
 import { useToast } from "@/components/Toast"
-import SyncedLyrics from "@/components/SyncedLyrics"
-import CinemaMode from "@/components/CinemaMode"
 import { SkeletonLyrics } from "@/components/Skeleton"
 import LazyImage from "@/components/LazyImage"
 import Link from "next/link"
 import { formatDuration, getImage } from "@/lib/utils"
 import type { PlayerTrack } from "@/lib/types"
+
+const SyncedLyrics = dynamic(() => import("@/components/SyncedLyrics"), { ssr: false })
+const CinemaMode = dynamic(() => import("@/components/CinemaMode"), { ssr: false })
 
 interface Props {
   track: any // Transformed SpotifyTrack-like object

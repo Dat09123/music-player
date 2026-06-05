@@ -2,11 +2,14 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState, useEffect, useRef, memo } from "react"
-import { getPlaylists, createPlaylist } from "@/lib/playlists"
+import { useState, useEffect, memo } from "react"
+import dynamic from "next/dynamic"
+import { getPlaylists } from "@/lib/playlists"
 import type { LocalPlaylist } from "@/lib/types"
 import { useSidebar } from "./SidebarContext"
 import { useTheme, ACCENT_COLORS } from "@/lib/ThemeContext"
+
+const CreatePlaylistModal = dynamic(() => import("./CreatePlaylistModal"), { ssr: false })
 
 // ── SVG Icon components (memoized – must be before navItems since const is not hoisted) ──
 
@@ -144,29 +147,13 @@ export default function Sidebar() {
   const { mobileOpen, setMobileOpen } = useSidebar()
   const [collapsed, setCollapsed] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [playlistName, setPlaylistName] = useState("")
   const [localPlaylists, setLocalPlaylists] = useState<LocalPlaylist[]>([])
-  const inputRef = useRef<HTMLInputElement | null>(null)
 
   function refreshPlaylists() {
     setLocalPlaylists(getPlaylists())
   }
 
   useEffect(() => { refreshPlaylists() }, [])
-
-  useEffect(() => {
-    if (showCreateModal && inputRef.current) {
-      setTimeout(() => inputRef.current?.focus(), 100)
-    }
-  }, [showCreateModal])
-
-  function handleCreate() {
-    if (!playlistName.trim()) return
-    createPlaylist({ name: playlistName.trim() })
-    setPlaylistName("")
-    setShowCreateModal(false)
-    refreshPlaylists()
-  }
 
   // Close mobile sidebar on navigation
   useEffect(() => { setMobileOpen(false) }, [pathname, setMobileOpen])
@@ -225,27 +212,12 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      {/* Create Playlist Modal */}
+      {/* Create Playlist Modal (lazy loaded) */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => { setShowCreateModal(false); setPlaylistName("") }}>
-          <div className="bg-[var(--bg-secondary)] rounded-2xl shadow-xl border border-[var(--border)] w-80 p-6 animate-scale-in" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-base font-bold text-[var(--text-primary)] mb-4">Create Playlist</h3>
-            <input
-              ref={inputRef}
-              type="text"
-              value={playlistName}
-              onChange={(e) => setPlaylistName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") { setShowCreateModal(false); setPlaylistName("") } }}
-              placeholder="My Awesome Playlist"
-              className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition-all"
-              maxLength={100}
-            />
-            <div className="flex items-center justify-end gap-2 mt-4">
-              <button onClick={() => { setShowCreateModal(false); setPlaylistName("") }} className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all">Cancel</button>
-              <button onClick={handleCreate} disabled={!playlistName.trim()} className="px-4 py-2 text-sm font-medium text-white bg-[var(--accent)] hover:opacity-90 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">Create</button>
-            </div>
-          </div>
-        </div>
+        <CreatePlaylistModal
+          onClose={() => setShowCreateModal(false)}
+          onCreated={() => { setShowCreateModal(false); refreshPlaylists() }}
+        />
       )}
     </>
   )
