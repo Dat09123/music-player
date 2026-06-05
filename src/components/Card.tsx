@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import LazyImage from "./LazyImage"
+import { memo } from "react"
 
 interface CardProps {
   id: string
@@ -13,7 +14,7 @@ interface CardProps {
   subtext?: string
 }
 
-export default function Card({ name, description, imageUrl, type, href, subtext }: CardProps) {
+const Card = memo(function Card({ name, description, imageUrl, type, href, subtext }: CardProps) {
   return (
     <Link href={href} className="group bg-[var(--bg-secondary)]/50 backdrop-blur-sm rounded-xl border border-[var(--border)] p-3 transition-all duration-200 hover:shadow-lg hover:shadow-[var(--accent)]/5 hover:-translate-y-1 hover:border-[var(--accent)]/20">
       <div className="relative mb-3">
@@ -41,4 +42,6 @@ export default function Card({ name, description, imageUrl, type, href, subtext 
       {subtext && <p className="text-xs text-[var(--text-muted)] mt-0.5">{subtext}</p>}
     </Link>
   )
-}
+})
+
+export default Card
