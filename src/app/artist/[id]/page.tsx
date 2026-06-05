@@ -1,12 +1,21 @@
 "use client"
 
 import { useState, useEffect, use } from "react"
+import dynamic from "next/dynamic"
 import { getImage, formatNumber } from "@/lib/utils"
 import { getArtist, getRelatedArtists } from "@/lib/deezer"
-import ArtistClient from "./ArtistClient"
 import Skeleton, { SkeletonHero, SkeletonTrackRow, SkeletonCardGrid } from "@/components/Skeleton"
 import { trackPageView } from "@/lib/recently-viewed"
 import LazyImage from "@/components/LazyImage"
+
+const ArtistContent = dynamic(() => import("./ArtistClient"), {
+  loading: () => (
+    <div className="px-3 py-4 space-y-10 pb-20 animate-fade-in">
+      <section><Skeleton width={80} height={20} className="mb-4 ml-4" /><SkeletonTrackRow count={5} /></section>
+      <section><Skeleton width={80} height={20} className="mb-4 ml-4" /><SkeletonCardGrid count={6} /></section>
+    </div>
+  ),
+})
 
 interface Props {
   params: Promise<{ id: string }>
@@ -181,8 +190,8 @@ export default function ArtistPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Content */}
-      <ArtistClient
+      {/* Content (lazy loaded) */}
+      <ArtistContent
         topTracks={topTracks}
         albums={albums}
         relatedArtists={relatedArtists}

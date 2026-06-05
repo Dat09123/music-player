@@ -1,12 +1,21 @@
 "use client"
 
 import { useState, useEffect, use } from "react"
+import dynamic from "next/dynamic"
 import { getImage, formatDate } from "@/lib/utils"
 import { getAlbum } from "@/lib/deezer"
-import AlbumClient from "./AlbumClient"
 import Skeleton, { SkeletonTrackRow } from "@/components/Skeleton"
 import LazyImage from "@/components/LazyImage"
 import { trackPageView } from "@/lib/recently-viewed"
+
+const AlbumContent = dynamic(() => import("./AlbumClient"), {
+  loading: () => (
+    <div className="px-3 py-4 animate-fade-in">
+      <div className="flex items-center gap-4 px-4 py-2 mb-4"><Skeleton variant="circle" width={56} height={56} /></div>
+      <SkeletonTrackRow count={8} showImage={false} />
+    </div>
+  ),
+})
 
 interface Props {
   params: Promise<{ id: string }>
@@ -123,7 +132,7 @@ export default function AlbumPage({ params }: Props) {
           </div>
         </div>
       </div>
-      <AlbumClient album={album} />
+      <AlbumContent album={album} />
     </div>
   )
 }

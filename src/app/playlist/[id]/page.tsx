@@ -1,12 +1,23 @@
 "use client"
 
 import { useState, useEffect, use } from "react"
+import dynamic from "next/dynamic"
 import { getImage, formatNumber } from "@/lib/utils"
 import { getPlaylist } from "@/lib/deezer"
-import PlaylistClient from "./PlaylistClient"
 import Skeleton, { SkeletonTrackRow } from "@/components/Skeleton"
 import LazyImage from "@/components/LazyImage"
 import { trackPageView } from "@/lib/recently-viewed"
+
+const PlaylistContent = dynamic(() => import("./PlaylistClient"), {
+  loading: () => (
+    <div className="px-3 py-4 animate-fade-in">
+      <div className="flex items-center gap-4 px-4 py-2 mb-4">
+        <Skeleton variant="circle" width={56} height={56} />
+      </div>
+      <SkeletonTrackRow count={8} />
+    </div>
+  ),
+})
 
 interface Props {
   params: Promise<{ id: string }>
@@ -133,7 +144,7 @@ export default function PlaylistPage({ params }: Props) {
         </div>
       </div>
 
-      <PlaylistClient tracks={playlist.tracks?.items || []} playlistName={playlist.name || "Imported Playlist"} playlistUri={playlist.uri} playlistId={id} />
+      <PlaylistContent tracks={playlist.tracks?.items || []} playlistName={playlist.name || "Imported Playlist"} playlistUri={playlist.uri} playlistId={id} />
     </div>
   )
 }

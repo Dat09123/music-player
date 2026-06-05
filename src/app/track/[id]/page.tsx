@@ -1,12 +1,21 @@
 "use client"
 
 import { useState, useEffect, use } from "react"
+import dynamic from "next/dynamic"
 import { getImage, formatDuration, formatArtists, formatNumber } from "@/lib/utils"
 import { getTrack } from "@/lib/deezer"
-import TrackClient from "./TrackClient"
 import Skeleton, { SkeletonTrackRow } from "@/components/Skeleton"
 import LazyImage from "@/components/LazyImage"
 import { trackPageView } from "@/lib/recently-viewed"
+
+const TrackContent = dynamic(() => import("./TrackClient"), {
+  loading: () => (
+    <div className="px-3 py-4 space-y-6 pb-20 animate-fade-in">
+      <div className="flex items-center gap-4 px-4"><Skeleton variant="circle" width={56} height={56} /></div>
+      <section className="px-4"><Skeleton width={96} height={20} className="mb-4" /><SkeletonTrackRow count={5} /></section>
+    </div>
+  ),
+})
 
 interface Props {
   params: Promise<{ id: string }>
@@ -157,8 +166,8 @@ export default function TrackPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Content */}
-      <TrackClient track={track} />
+      {/* Content (lazy loaded) */}
+      <TrackContent track={track} />
     </div>
   )
 }
