@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { usePlayer } from "./Player"
+import { XIcon } from "@/components/Icons"
 
 const SHORTCUTS = [
   { key: "Space", desc: "Play / Pause" },
@@ -66,7 +67,7 @@ export default function KeyboardShortcuts() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-bold text-[var(--text-primary)]">Keyboard Shortcuts</h2>
           <button onClick={() => setShowModal(false)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            <XIcon className="w-4 h-4" />
           </button>
         </div>
         <div className="space-y-2">

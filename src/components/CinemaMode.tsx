@@ -5,6 +5,7 @@ import { usePlayer } from "./Player"
 import SyncedLyrics from "./SyncedLyrics"
 import LazyImage from "./LazyImage"
 import { formatDuration } from "@/lib/utils"
+import { PlayIcon, PauseIcon, SkipPrevIcon, SkipNextIcon, ChevronLeftIcon, MusicNoteIcon } from "@/components/Icons"
 
 interface Props {
   track: any
@@ -36,9 +37,7 @@ export default function CinemaMode({ track, syncedLyrics, lyrics, lyricsMode, on
           onClick={onClose}
           className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
+          <ChevronLeftIcon className="w-5 h-5" />
           <span className="hidden sm:inline">Exit Cinema</span>
         </button>
         <div className="flex items-center gap-3">
@@ -61,9 +60,7 @@ export default function CinemaMode({ track, syncedLyrics, lyrics, lyricsMode, on
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center">
-                <svg className="w-20 h-20 text-zinc-600" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-                </svg>
+              <MusicNoteIcon className="w-20 h-20 text-zinc-600" />
               </div>
             )}
           </div>
@@ -100,20 +97,20 @@ export default function CinemaMode({ track, syncedLyrics, lyrics, lyricsMode, on
       {/* Bottom controls */}
       <div className="flex items-center justify-center gap-6 px-6 py-4">
         <button onClick={prevTrack} className="text-white/50 hover:text-white transition-colors">
-          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" /></svg>
+          <SkipPrevIcon className="w-6 h-6" />
         </button>
         <button
           onClick={togglePlay}
           className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
         >
           {isPlaying ? (
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
+            <PauseIcon className="w-5 h-5" />
           ) : (
-            <svg className="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+            <PlayIcon className="w-5 h-5 ml-0.5" />
           )}
         </button>
         <button onClick={nextTrack} className="text-white/50 hover:text-white transition-colors">
-          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" /></svg>
+          <SkipNextIcon className="w-6 h-6" />
         </button>
       </div>
 

@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useCallback, useRef, useEffect, type ReactNode } from "react"
+import { CheckIcon, XIcon, InfoIcon } from "@/components/Icons"
 
 type ToastType = "success" | "error" | "info"
 
@@ -121,17 +122,11 @@ function ToastItem({ toast, index, onDismiss }: { toast: Toast; index: number; o
         isSuccess ? "bg-green-500/20" : isError ? "bg-red-500/20" : "bg-[var(--accent)]/20"
       }`}>
         {isSuccess ? (
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
+          <CheckIcon className="w-3 h-3" strokeWidth={3} />
         ) : isError ? (
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <XIcon className="w-3 h-3" strokeWidth={3} />
         ) : (
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <InfoIcon className="w-3 h-3" strokeWidth={3} />
         )}
       </div>
 
@@ -144,9 +139,7 @@ function ToastItem({ toast, index, onDismiss }: { toast: Toast; index: number; o
         className="flex-shrink-0 p-0.5 rounded-md opacity-50 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-all"
         aria-label="Dismiss"
       >
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
+        <XIcon className="w-3.5 h-3.5" strokeWidth={2.5} />
       </button>
 
       {/* Progress bar */}

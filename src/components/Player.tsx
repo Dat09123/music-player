@@ -7,6 +7,7 @@ import type { PlayerTrack, RepeatMode } from "@/lib/types"
 import ErrorBoundary from "./ErrorBoundary"
 import LazyImage from "./LazyImage"
 import { addToRecentlyPlayed } from "@/lib/recently-played"
+import { MusicNoteIcon, PlayIcon, PauseIcon, SkipPrevIcon, SkipNextIcon, HeartIcon, ShuffleIcon, RepeatIcon, VolumeIcon, QueueListIcon, SettingsIcon, MoonIcon, XIcon, PlusIcon } from "@/components/Icons"
 
 const QueuePanel = dynamic(() => import("./QueuePanel"), { ssr: false })
 
@@ -426,7 +427,7 @@ function PlayerBar() {
                 <LazyImage src={currentTrack.albumImage} alt={currentTrack.album} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
+                  <MusicNoteIcon className="w-5 h-5" />
                 </div>
               )}
             </div>
@@ -442,25 +443,23 @@ function PlayerBar() {
             className={`flex-shrink-0 transition-all ${isLiked ? "text-red-500 scale-110" : "text-[var(--text-muted)] hover:text-red-400"}`}
             aria-label={isLiked ? "Unlike" : "Like"}
           >
-            <svg className="w-4 h-4" fill={isLiked ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
+            <HeartIcon className={`w-4 h-4 ${isLiked ? "text-red-500" : ""}`} fill={isLiked ? "currentColor" : "none"} />
           </button>
 
           {/* Controls */}
           <div className="flex items-center gap-3">
             <button onClick={prevTrack} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" aria-label="Previous track">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" /></svg>
+              <SkipPrevIcon className="w-4 h-4" />
             </button>
             <button onClick={togglePlay} className="w-9 h-9 rounded-full bg-[var(--accent)] text-white flex items-center justify-center hover:opacity-90 hover:shadow-glow transition-all shadow-md" aria-label={isPlaying ? "Pause" : "Play"}>
               {isPlaying ? (
-                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
+                <PauseIcon className="w-3.5 h-3.5" />
               ) : (
-                <svg className="w-3.5 h-3.5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                <PlayIcon className="w-3.5 h-3.5 ml-0.5" />
               )}
             </button>
             <button onClick={nextTrack} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors" aria-label="Next track">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" /></svg>
+              <SkipNextIcon className="w-4 h-4" />
             </button>
           </div>
 
@@ -482,9 +481,7 @@ function PlayerBar() {
             className={`relative flex-shrink-0 transition-all ${queuePanelOpen ? "text-[var(--accent)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}
             aria-label="Queue"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-            </svg>
+            <QueueListIcon className="w-4 h-4" />
             {queue.length > 1 && (
               <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-[var(--accent)] text-white text-[8px] font-bold rounded-full flex items-center justify-center">
                 {queue.length - 1}
@@ -495,22 +492,15 @@ function PlayerBar() {
           {/* Volume & extras */}
           <div className="hidden lg:flex items-center gap-2">
             <button onClick={toggleShuffle} className={`text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all ${shuffle ? "text-[var(--accent)]" : ""}`} aria-label={shuffle ? "Disable shuffle" : "Enable shuffle"}>
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 17h16l-4-4m0 8l4-4M4 7h16l-4 4m0-8l4 4" />
-              </svg>
+              <ShuffleIcon className="w-3.5 h-3.5" />
             </button>
             <button onClick={toggleRepeat} className={`relative text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all ${repeatMode !== "off" ? "text-[var(--accent)]" : ""}`} aria-label={repeatMode === "off" ? "Enable repeat" : repeatMode === "all" ? "Repeat one" : "Disable repeat"}>
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
+              <RepeatIcon className="w-3.5 h-3.5" />
               {repeatMode === "one" && <span className="absolute -top-1 -right-1 text-[8px] font-bold">1</span>}
             </button>
             <div className="flex items-center gap-1.5">
               <button onClick={() => setVolume(volume === 0 ? 0.7 : 0)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]" aria-label={volume === 0 ? "Unmute" : "Mute"}>
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                  {volume > 0 && <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072" />}
-                </svg>
+                <VolumeIcon className="w-3.5 h-3.5" />
               </button>
               <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} className="w-16 h-1 bg-[var(--border)] rounded-full appearance-none cursor-pointer accent-[var(--accent)] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--accent)]" />
             </div>
@@ -521,10 +511,7 @@ function PlayerBar() {
               className={`text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all relative ${sleepTimer !== null ? "text-amber-400" : ""}`}
               aria-label="Player settings"
             >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+              <SettingsIcon className="w-3.5 h-3.5" />
               {sleepTimer !== null && sleepRemaining !== null && (
                 <span className="absolute -top-2 -right-2 text-[7px] font-bold bg-amber-400 text-black rounded-full px-0.5 leading-tight">
                   {Math.ceil(sleepRemaining / 60)}m
@@ -555,14 +542,14 @@ function PlayerBar() {
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-[var(--text-primary)]">Player Settings</h3>
             <button onClick={() => setShowSettings(false)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              <XIcon className="w-4 h-4" />
             </button>
           </div>
 
           {/* Sleep Timer */}
           <div className="mb-4">
             <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+              <MoonIcon className="w-3 h-3" />
               Sleep Timer {sleepRemaining !== null && <span className="text-amber-400 normal-case font-normal">({Math.floor(sleepRemaining / 60)}:{String(sleepRemaining % 60).padStart(2, "0")} left)</span>}
             </p>
             <div className="flex flex-wrap gap-1.5">

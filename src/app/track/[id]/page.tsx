@@ -7,6 +7,7 @@ import { getTrack } from "@/lib/deezer"
 import Skeleton, { SkeletonTrackRow } from "@/components/Skeleton"
 import LazyImage from "@/components/LazyImage"
 import { trackPageView } from "@/lib/recently-viewed"
+import { WarningIcon, MusicNoteIcon } from "@/components/Icons"
 
 const TrackContent = dynamic(() => import("./TrackClient"), {
   loading: () => (
@@ -99,9 +100,7 @@ export default function TrackPage({ params }: Props) {
   if (error || !track) {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-        <svg className="w-16 h-16 text-red-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-        </svg>
+        <WarningIcon className="w-16 h-16 text-red-300 mb-4" strokeWidth={1.5} />
         <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Track not found</h2>
         <p className="text-sm text-[var(--text-muted)]">{error || "This track could not be loaded."}</p>
       </div>
@@ -131,9 +130,7 @@ export default function TrackPage({ params }: Props) {
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center">
-                  <svg className="w-24 h-24 text-zinc-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-                  </svg>
+                  <MusicNoteIcon className="w-24 h-24 text-zinc-600" />
                 </div>
               )}
             </div>

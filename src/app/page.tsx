@@ -12,6 +12,7 @@ import { getRecentlyPlayed } from "@/lib/recently-played"
 import { getRecentlyViewed } from "@/lib/recently-viewed"
 import type { PlayerTrack } from "@/lib/types"
 import type { RecentlyViewedItem } from "@/lib/recently-viewed"
+import { SearchIcon, ContinueListeningIcon, MusicNoteIcon, PlayIcon, ClockIcon, PersonIcon, WarningIcon, EmptyMusicIcon } from "@/components/Icons"
 
 export default function HomePage() {
   const { playTrack } = usePlayer()
@@ -81,9 +82,7 @@ export default function HomePage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
         <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mb-5">
-          <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-          </svg>
+          <WarningIcon className="w-8 h-8 text-red-400" strokeWidth={1.5} />
         </div>
         <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Could not load data</h2>
         <p className="text-sm text-[var(--text-muted)] max-w-sm mb-6">{error}</p>
@@ -100,7 +99,7 @@ export default function HomePage() {
           <p className="text-sm text-[var(--text-secondary)] max-w-lg">Explore popular playlists, albums, and more from Deezer.</p>
           <div className="flex gap-2 mt-4">
             <Link href="/search" className="inline-flex items-center gap-1.5 bg-[var(--accent)] text-white text-sm font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-all">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              <SearchIcon className="w-3.5 h-3.5" />
               Search Music
             </Link>
           </div>
@@ -112,10 +111,7 @@ export default function HomePage() {
         <section>
           <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4">
             <span className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <ContinueListeningIcon className="w-5 h-5 text-[var(--accent)]" />
               Continue Listening
             </span>
           </h2>
@@ -126,7 +122,7 @@ export default function HomePage() {
                   <LazyImage src={lastPlayed.albumImage} alt={lastPlayed.album} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
+                    <MusicNoteIcon className="w-6 h-6" />
                   </div>
                 )}
               </div>
@@ -141,7 +137,7 @@ export default function HomePage() {
                 onClick={() => playTrack(lastPlayed as PlayerTrack)}
                 className="flex items-center gap-1.5 px-4 py-2 bg-[var(--accent)] text-white text-sm font-medium rounded-lg hover:opacity-90 transition-all shadow-sm whitespace-nowrap"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                <PlayIcon className="w-4 h-4" />
                 Play Again
               </button>
               <Link
@@ -174,7 +170,7 @@ export default function HomePage() {
                     <LazyImage src={track.albumImage} alt={track.album} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">
-                      <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
+                      <MusicNoteIcon className="w-8 h-8" />
                     </div>
                   )}
                 </div>
@@ -192,9 +188,7 @@ export default function HomePage() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-[var(--text-primary)]">
               <span className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <ClockIcon className="w-5 h-5 text-[var(--text-muted)]" />
                 Recently Viewed
               </span>
             </h2>
@@ -212,9 +206,9 @@ export default function HomePage() {
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">
                       {item.type === "artist" ? (
-                        <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
+                        <PersonIcon className="w-8 h-8" />
                       ) : (
-                        <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
+                        <MusicNoteIcon className="w-8 h-8" />
                       )}
                     </div>
                   )}
@@ -262,7 +256,7 @@ export default function HomePage() {
 
       {playlists.length === 0 && albums.length === 0 && !loading && (
         <div className="flex flex-col items-center justify-center py-16 text-[var(--text-muted)]">
-          <svg className="w-12 h-12 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>
+          <EmptyMusicIcon className="w-12 h-12 mb-3 opacity-40" strokeWidth={1} />
           <p className="text-sm font-medium">No data available</p>
           <p className="text-xs mt-1">Try refreshing the page</p>
         </div>

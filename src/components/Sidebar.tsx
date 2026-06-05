@@ -8,47 +8,22 @@ import { getPlaylists } from "@/lib/playlists"
 import type { LocalPlaylist } from "@/lib/types"
 import { useSidebar } from "./SidebarContext"
 import { useTheme, ACCENT_COLORS } from "@/lib/ThemeContext"
+import {
+  HomeIcon, SearchIcon, ClockIcon, PersonIcon, MusicNoteIcon,
+  ChartIcon, PlusIcon, MusicNoteStrokeIcon, CollapseIcon,
+  XIcon, MoonIcon, SunIcon,
+} from "@/components/Icons"
 
 const CreatePlaylistModal = dynamic(() => import("./CreatePlaylistModal"), { ssr: false })
-
-// ── SVG Icon components (memoized – must be before navItems since const is not hoisted) ──
-
-const HomeIcon = memo(function HomeIcon({ className }: { className?: string }) {
-  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-})
-
-const SearchIcon = memo(function SearchIcon({ className }: { className?: string }) {
-  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-})
-
-const TopChartIcon = memo(function TopChartIcon({ className }: { className?: string }) {
-  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-})
-
-const TrendingIcon = memo(function TrendingIcon({ className }: { className?: string }) {
-  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-})
-
-const HistoryIcon = memo(function HistoryIcon({ className }: { className?: string }) {
-  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-})
-
-const ArtistIcon = memo(function ArtistIcon({ className }: { className?: string }) {
-  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-})
-
-const AlbumIcon = memo(function AlbumIcon({ className }: { className?: string }) {
-  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
-})
 
 const navItems = [
   { href: "/", label: "Home", icon: HomeIcon },
   { href: "/search", label: "Search", icon: SearchIcon },
-  { href: "/me/recently", label: "Recently Played", icon: HistoryIcon },
-  { href: "/me/artist-history", label: "Artist History", icon: ArtistIcon },
-  { href: "/me/album-history", label: "Album History", icon: AlbumIcon },
-  { href: "/me/top", label: "Top Charts", icon: TopChartIcon },
-  { href: "/me/liked", label: "Trending Now", icon: TrendingIcon },
+  { href: "/me/recently", label: "Recently Played", icon: ClockIcon },
+  { href: "/me/artist-history", label: "Artist History", icon: PersonIcon },
+  { href: "/me/album-history", label: "Album History", icon: MusicNoteIcon },
+  { href: "/me/top", label: "Top Charts", icon: ChartIcon },
+  { href: "/me/liked", label: "Trending Now", icon: ChartIcon },
 ]
 
 const deezerPlaylists = [
@@ -108,7 +83,7 @@ function SidebarContent({
                   {localPlaylists.map((pl) => (
                     <li key={pl.id}>
                       <Link href={`/playlist/local/${pl.id}`} onClick={onClose} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm truncate transition-all ${isLocalPlaylistActive(pl.id) ? "bg-[var(--accent-light)] text-[var(--accent)] font-medium" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"}`}>
-                        <svg className="w-3.5 h-3.5 flex-shrink-0 opacity-60" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" /></svg>
+                        <MusicNoteStrokeIcon className="w-3.5 h-3.5 flex-shrink-0 opacity-60" />
                         <span className="truncate">{pl.name}</span>
                       </Link>
                     </li>
@@ -132,7 +107,7 @@ function SidebarContent({
 
           <div className="px-2 py-2 border-t border-[var(--border)]">
             <button onClick={onCreatePlaylist} className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--accent-light)] transition-all" aria-label="Create new playlist">
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+              <PlusIcon className="w-4 h-4 flex-shrink-0" />
               <span>New Playlist</span>
             </button>
           </div>
@@ -175,9 +150,7 @@ export default function Sidebar() {
           </Link>
           {!collapsed && <span className="font-bold text-lg tracking-tight">Muse</span>}
           <button onClick={() => setCollapsed(!collapsed)} className="ml-auto p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all hidden md:block cursor-pointer" title={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
-            <svg className={`w-4 h-4 transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-            </svg>
+            <CollapseIcon className={`w-4 h-4 transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`} />
           </button>
         </div>
         <SidebarContent localPlaylists={localPlaylists} collapsed={collapsed} onCreatePlaylist={() => setShowCreateModal(true)} />
@@ -199,9 +172,7 @@ export default function Sidebar() {
           </Link>
           <span className="font-bold text-lg tracking-tight mr-auto ml-3">Muse</span>
           <button onClick={() => setMobileOpen(false)} className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <XIcon className="w-5 h-5" />
           </button>
         </div>
         <SidebarContent localPlaylists={localPlaylists} collapsed={false} onClose={() => setMobileOpen(false)} onCreatePlaylist={() => { setShowCreateModal(true); setMobileOpen(false) }} />
@@ -231,15 +202,7 @@ function ThemeToggle({ collapsed, onClose }: { collapsed?: boolean; onClose?: ()
       className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all"
       title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
     >
-      {theme === "dark" ? (
-        <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-      ) : (
-        <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-        </svg>
-      )}
+      {theme === "dark" ? <SunIcon className="w-4 h-4 flex-shrink-0" /> : <MoonIcon className="w-4 h-4 flex-shrink-0" />}
       {!collapsed && <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
     </button>
   )
