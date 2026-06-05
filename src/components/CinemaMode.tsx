@@ -6,6 +6,7 @@ import SyncedLyrics from "./SyncedLyrics"
 import LazyImage from "./LazyImage"
 import { formatDuration } from "@/lib/utils"
 import { PlayIcon, PauseIcon, SkipPrevIcon, SkipNextIcon, ChevronLeftIcon, MusicNoteIcon } from "@/components/Icons"
+import Visualizer from "./Visualizer"
 
 interface Props {
   track: any
@@ -30,7 +31,12 @@ export default function CinemaMode({ track, syncedLyrics, lyrics, lyricsMode, on
   const albumImage = track.album?.images?.[0]?.url || track.album?.images?.[1]?.url || ""
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black flex flex-col animate-fade-in">
+    <div className="fixed inset-0 z-[100] bg-black flex flex-col animate-fade-in overflow-hidden">
+      {/* Animated background visualizer */}
+      <div className="absolute inset-0 opacity-30 pointer-events-none">
+        <Visualizer barCount={48} variant="full" className="h-full" />
+      </div>
+
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-4 z-10">
         <button

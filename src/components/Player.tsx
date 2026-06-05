@@ -8,6 +8,7 @@ import ErrorBoundary from "./ErrorBoundary"
 import LazyImage from "./LazyImage"
 import { addToRecentlyPlayed } from "@/lib/recently-played"
 import { MusicNoteIcon, PlayIcon, PauseIcon, SkipPrevIcon, SkipNextIcon, HeartIcon, ShuffleIcon, RepeatIcon, VolumeIcon, QueueListIcon, SettingsIcon, MoonIcon, XIcon, PlusIcon } from "@/components/Icons"
+import Visualizer from "./Visualizer"
 
 const QueuePanel = dynamic(() => import("./QueuePanel"), { ssr: false })
 
@@ -422,7 +423,7 @@ function PlayerBar() {
         <div className="flex items-center gap-4">
           {/* Track Info */}
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="w-10 h-10 rounded-lg bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden">
+            <div className="w-10 h-10 rounded-lg bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden relative">
               {currentTrack.albumImage ? (
                 <LazyImage src={currentTrack.albumImage} alt={currentTrack.album} className="w-full h-full object-cover" />
               ) : (
@@ -430,10 +431,25 @@ function PlayerBar() {
                   <MusicNoteIcon className="w-5 h-5" />
                 </div>
               )}
+              {/* Visualizer overlay on album art when playing */}
+              {isPlaying && (
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent flex items-end justify-center pb-0.5">
+                  <div className="flex items-end gap-[1.5px] h-3">
+                    <span className="w-[2px] bg-white rounded-full animate-bounce" style={{ animationDelay: "0ms", height: "40%" }} />
+                    <span className="w-[2px] bg-white rounded-full animate-bounce" style={{ animationDelay: "80ms", height: "80%" }} />
+                    <span className="w-[2px] bg-white rounded-full animate-bounce" style={{ animationDelay: "160ms", height: "60%" }} />
+                    <span className="w-[2px] bg-white rounded-full animate-bounce" style={{ animationDelay: "240ms", height: "100%" }} />
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-[var(--text-primary)] truncate">{currentTrack.name}</p>
               <p className="text-xs text-[var(--text-muted)] truncate">{currentTrack.artists}</p>
+              {/* Animated visualizer bar below track info */}
+              <div className="mt-1 max-w-[120px]">
+                <Visualizer barCount={12} variant="mini" />
+              </div>
             </div>
           </div>
 
