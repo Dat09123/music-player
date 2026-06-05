@@ -350,6 +350,20 @@ export async function searchByGenre(genreId: number, limit = 8) {
   return (data.data || []).map(transformTrack)
 }
 
+/** Get full genre radio station data: genre info + tracks */
+export async function getGenreRadio(genreId: number, limit = 20) {
+  console.debug(`[Deezer] 📻 getGenreRadio(${genreId})`)
+  const [genres, tracksData] = await Promise.all([
+    getGenres(),
+    fetchDeezer<{ data: DeezerTrack[] }>(`/radio/genre/${genreId}/tracks?limit=${limit}`),
+  ])
+  const genre = genres.find((g) => g.id === genreId) || { id: genreId, name: "Unknown", picture: "" }
+  return {
+    genre,
+    tracks: (tracksData.data || []).map(transformTrack),
+  }
+}
+
 /** Search autocomplete suggestions (uses a quick search) */
 export async function getSearchSuggestions(query: string) {
   if (!query.trim()) return { tracks: [], albums: [], artists: [] }

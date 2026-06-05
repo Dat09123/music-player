@@ -20,6 +20,7 @@ const navItems = [
   { href: "/", label: "Home", icon: HomeIcon },
   { href: "/search", label: "Search", icon: SearchIcon },
   { href: "/now-playing", label: "Now Playing", icon: PlayCircleIcon },
+  { href: "/stations", label: "Stations", icon: MusicNoteIcon },
   { href: "/me/recently", label: "Recently Played", icon: ClockIcon },
   { href: "/me/artist-history", label: "Artist History", icon: PersonIcon },
   { href: "/me/album-history", label: "Album History", icon: MusicNoteIcon },
