@@ -2,35 +2,16 @@
 
 import dynamic from "next/dynamic"
 import { usePlayer } from "@/components/Player"
-import { formatArtists, getImage } from "@/lib/utils"
+import { toPlayerTrack } from "@/lib/utils"
 import { importTracksAsPlaylist } from "@/lib/playlists"
 import { useToast } from "@/components/Toast"
-import type { PlayerTrack } from "@/components/Player"
 import type { SpotifyPlaylistTrack } from "@/lib/types"
 import { useState } from "react"
+import { TrackListSkeleton } from "@/components/Skeleton"
 
 const TrackList = dynamic(() => import("@/components/TrackList"), {
   loading: () => <TrackListSkeleton />
 })
-
-function TrackListSkeleton() {
-  return (
-    <div className="animate-pulse space-y-2 px-4">
-      <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-16 mb-4" />
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 py-2">
-          <div className="w-7 h-3 bg-gray-200 dark:bg-gray-800 rounded" />
-          <div className="w-8 h-8 bg-gray-200 dark:bg-gray-800 rounded flex-shrink-0" />
-          <div className="flex-1 space-y-1.5">
-            <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-3/5" />
-            <div className="h-2.5 bg-gray-200 dark:bg-gray-800 rounded w-2/5" />
-          </div>
-          <div className="w-8 h-3 bg-gray-200 dark:bg-gray-800 rounded" />
-        </div>
-      ))}
-    </div>
-  )
-}
 
 interface Props {
   tracks: SpotifyPlaylistTrack[]
@@ -40,24 +21,11 @@ interface Props {
 }
 
 export default function PlaylistClient({ tracks, playlistName, playlistUri, playlistId }: Props) {
-  const { playAll, isPlaying } = usePlayer()
+  const { playAll } = usePlayer()
   const { showToast } = useToast()
   const [imported, setImported] = useState(false)
 
-  const playerTracks: PlayerTrack[] = tracks
-    .filter((item) => item?.track?.id)
-    .map((item) => ({
-      id: item.track.id,
-      name: item.track.name,
-      artists: formatArtists(item.track.artists || []),
-      artistIds: (item.track.artists || []).map((a) => a.id),
-      album: item.track.album?.name || "",
-      albumId: item.track.album?.id || "",
-      albumImage: getImage(item.track.album?.images, "sm"),
-      duration: item.track.duration_ms || 0,
-      previewUrl: item.track.preview_url,
-      uri: item.track.uri,
-    }))
+  const playerTracks = tracks.filter((t) => t?.track?.id).map((t) => toPlayerTrack(t.track))
 
   function handlePlayAll() {
     if (playerTracks.length > 0) playAll(playerTracks, 0)

@@ -20,10 +20,22 @@ export default function Header() {
     "/me/top": "Top Charts",
   }
 
-  const currentPage = pageNames[pathname] || (pathname.startsWith("/playlist") ? "Playlist" : pathname.startsWith("/album") ? "Album" : pathname.startsWith("/artist") ? "Artist" : "")
+  const currentPage = pageNames[pathname] || (
+    pathname.startsWith("/playlist") ? "Playlist" :
+    pathname.startsWith("/album") ? "Album" :
+    pathname.startsWith("/artist") ? "Artist" :
+    pathname.startsWith("/stations") ? "Stations" :
+    pathname.startsWith("/track") ? "Track" :
+    pathname.startsWith("/now-playing") ? "Now Playing" :
+    pathname.startsWith("/debug") ? "Debug" :
+    pathname.startsWith("/me/recently") ? "Recently Played" :
+    pathname.startsWith("/me/artist-history") ? "Artist History" :
+    pathname.startsWith("/me/album-history") ? "Album History" :
+    ""
+  )
 
   return (
-    <header className="sticky top-0 z-40 glass-subtle border-b border-[var(--border)]">
+    <header className="sticky top-0 z-40 glass-subtle border-b border-[var(--border)]" role="banner">
       {/* Auth error banner */}
       {authError && (
         <div className="px-5 py-2.5 bg-red-50 dark:bg-red-950/30 border-b border-red-100 dark:border-red-900/50">
@@ -38,11 +50,20 @@ export default function Header() {
 
       <div className="flex items-center justify-between px-5 h-14">
         <div className="flex items-center gap-2">
-          <Link href="/" className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors p-1">
+          <Link
+            href="/"
+            className="text-[var(--text-muted)] hover:text-[var(--accent)] transition-all p-1 rounded-lg hover:bg-[var(--accent)]/10 active:scale-95"
+            aria-label="Go to Home"
+            title="Go to Home"
+          >
             <HomeIcon className="w-5 h-5" />
           </Link>
-          <span className="text-[var(--text-muted)] text-sm">/</span>
-          <span className="text-sm font-semibold text-[var(--text-primary)]">{currentPage}</span>
+          <span className="text-[var(--text-muted)] text-sm select-none">/</span>
+          {currentPage && (
+            <span className="text-sm font-semibold text-[var(--text-primary)] animate-fade-in" key={currentPage}>
+              {currentPage}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -50,17 +71,23 @@ export default function Header() {
           {/* Theme toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] hover:shadow-sm transition-all"
+            className="p-2 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] hover:shadow-sm active:scale-90 transition-all duration-200"
             aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
           >
-            {theme === "dark" ? (
-              <SunIcon className="w-5 h-5" />
-            ) : (
-              <MoonIcon className="w-5 h-5" />
-            )}
+            <span className="block transition-transform duration-500" style={{ transform: theme === "dark" ? "rotate(0deg)" : "rotate(360deg)" }}>
+              {theme === "dark" ? (
+                <SunIcon className="w-5 h-5" />
+              ) : (
+                <MoonIcon className="w-5 h-5" />
+              )}
+            </span>
           </button>
-          <button onClick={toggleMobile} className="md:hidden text-[var(--text-muted)] hover:text-[var(--text-primary)] p-1" aria-label={mobileOpen ? "Close menu" : "Open menu"}>
+          <button
+            onClick={toggleMobile}
+            className="md:hidden p-2 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--accent)] hover:border-[var(--accent)] active:scale-90 transition-all duration-200"
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          >
             {mobileOpen ? <XIcon className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
           </button>
         </div>

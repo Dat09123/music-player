@@ -7,7 +7,9 @@ interface LazyImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>,
   alt: string
   rootMargin?: string
   threshold?: number
+  className?: string
   placeholderClassName?: string
+  lowResSrc?: string
 }
 
 export default function LazyImage({
@@ -17,6 +19,7 @@ export default function LazyImage({
   threshold = 0.01,
   className = "",
   placeholderClassName,
+  lowResSrc,
   ...props
 }: LazyImageProps) {
   const imgRef = useRef<HTMLDivElement>(null)
@@ -43,11 +46,28 @@ export default function LazyImage({
 
   return (
     <div ref={imgRef} className={`relative overflow-hidden ${className}`} {...(props as any)}>
-      {!loaded && !error && <div className="absolute inset-0 skeleton" />}
+      {/* Blur placeholder — shows skeleton shimmer while loading */}
+      {!loaded && !error && (
+        <div className="absolute inset-0 blur-placeholder" />
+      )}
+
+      {/* Low-res blur preview (if provided) */}
+      {!loaded && !error && lowResSrc && (
+        <img
+          src={lowResSrc}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover opacity-40 blur-xl scale-110"
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Full-res image */}
       <img
         src={src}
         alt={alt}
-        className={`w-full h-full object-cover transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+        className={`w-full h-full object-cover transition-all duration-700 ${
+          loaded ? "opacity-100 animate-blur-in" : "opacity-0"
+        }`}
         onLoad={() => setLoaded(true)}
         onError={() => { setError(true); setLoaded(true) }}
         loading="lazy"

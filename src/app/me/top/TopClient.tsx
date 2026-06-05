@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { usePlayer } from "@/components/Player"
-import { formatArtists, getImage, formatDuration } from "@/lib/utils"
+import { getImage, formatDuration, toPlayerTrack } from "@/lib/utils"
 import { getChart } from "@/lib/deezer"
-import type { PlayerTrack } from "@/lib/types"
 import Link from "next/link"
 import LazyImage from "@/components/LazyImage"
 import Skeleton, { SkeletonTrackRow, SkeletonCardGrid } from "@/components/Skeleton"
@@ -44,20 +43,7 @@ export default function TopClient() {
   }, [retryCount])
 
   // Build player tracks
-  const playerTracks: PlayerTrack[] = tracks
-    .filter((t) => t?.id)
-    .map((track) => ({
-      id: track.id,
-      name: track.name,
-      artists: formatArtists(track.artists || []),
-      artistIds: (track.artists || []).map((a: any) => a.id),
-      album: track.album?.name || "",
-      albumId: track.album?.id || "",
-      albumImage: getImage(track.album?.images, "sm"),
-      duration: track.duration_ms || 0,
-      previewUrl: track.preview_url,
-      uri: track.uri,
-    }))
+  const playerTracks = tracks.filter((t: any) => t?.id).map((t: any) => toPlayerTrack(t))
 
   function playAllTracks() {
     if (playerTracks.length > 0) playAll(playerTracks, 0)

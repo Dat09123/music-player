@@ -5,11 +5,89 @@ import type { PlayerTrack } from "@/lib/types"
 import { formatDuration, formatArtists, getImage } from "@/lib/utils"
 import type { SpotifyTrack, SpotifyPlaylistTrack } from "@/lib/types"
 import { getPlaylists, addTrackToPlaylist, createPlaylist } from "@/lib/playlists"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo, useCallback, memo } from "react"
 import Link from "next/link"
 import { useToast } from "./Toast"
 import LazyImage from "./LazyImage"
 import { PlayIcon, ClockIcon, PlusIcon, LinkIcon, MusicNoteStrokeIcon, PersonIcon, SettingsIcon, EmptyMusicIcon } from "@/components/Icons"
+
+interface TrackRowProps {
+  track: SpotifyTrack
+  pt?: PlayerTrack
+  index: number
+  isCurrent: boolean
+  isPlaying: boolean
+  showImage: boolean
+  showAlbum: boolean
+  onPlay: (index: number) => void
+  onOpenMenu: (track: PlayerTrack, e: React.MouseEvent) => void
+}
+
+const TrackRow = memo(function TrackRow({ track, pt, index, isCurrent, isPlaying, showImage, showAlbum, onPlay, onOpenMenu }: TrackRowProps) {
+  return (
+    <div
+      className={`grid grid-cols-[32px_1fr_64px_28px] gap-3 px-4 py-2 rounded-xl group cursor-pointer transition-all duration-200 hover:bg-[var(--bg-hover)]/70 hover:shadow-sm active:scale-[0.99] ${isCurrent ? "text-[var(--accent)] bg-[var(--accent)]/8" : "text-[var(--text-secondary)]"}`}
+      onClick={() => onPlay(index)}
+      role="row"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onPlay(index) } }}
+      aria-label={`Play ${track.name} by ${formatArtists(track.artists || [])}`}
+    >
+      <div className="flex items-center justify-center">
+        {isCurrent && isPlaying ? (
+          <div className="flex items-end gap-[2px] h-3">
+            <span className="w-[2px] bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: "0ms", height: "60%" }} />
+            <span className="w-[2px] bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: "100ms", height: "100%" }} />
+            <span className="w-[2px] bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: "200ms", height: "40%" }} />
+          </div>
+        ) : (
+          <>              <span className="group-hover:hidden text-xs tabular-nums text-[var(--text-muted)]">{index + 1}</span><PlayIcon className="hidden group-hover:block w-3.5 h-3.5 text-[var(--accent)]" /></>
+        )}
+      </div>
+      <div className="flex items-center gap-2.5 min-w-0">
+        {showImage && track.album?.images && (
+          <div className="w-8 h-8 rounded bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden hidden sm:block">
+            <LazyImage src={getImage(track.album.images, "sm")} alt="" className="w-full h-full object-cover" />
+          </div>
+        )}
+        <div className="min-w-0">
+          <p className={`text-xs font-medium truncate ${isCurrent ? "text-[var(--accent)]" : "text-[var(--text-primary)]"}`}>{track.name}</p>
+          <p className="text-xs truncate text-[var(--text-muted)]">
+            {(track.artists || []).map((artist, i) => (
+              <span key={artist.id}>
+                <Link
+                  href={`/artist/${artist.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="hover:text-[var(--accent)] hover:underline transition-colors"
+                >
+                  {artist.name}
+                </Link>
+                {i < (track.artists?.length || 0) - 1 && <span className="mx-0.5">, </span>}
+              </span>
+            ))}
+            {showAlbum && track.album?.name && <span className="hidden md:inline"><span className="mx-0.5">•</span><Link href={`/album/${track.album.id}`} onClick={(e) => e.stopPropagation()} className="hover:text-[var(--accent)] hover:underline transition-colors">{track.album.name}</Link></span>}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center justify-end gap-1.5">
+        {track.explicit && <span className="text-[9px] bg-[var(--bg-hover)] text-[var(--text-muted)] font-bold px-1 py-0.5 rounded uppercase leading-none">E</span>}
+        <span className="text-xs tabular-nums text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors duration-200">{formatDuration(track.duration_ms || 0)}</span>
+      </div>
+      <div className="flex items-center justify-end">
+        {pt && (
+          <button
+            onClick={(e) => onOpenMenu(pt, e)}
+            className="opacity-0 group-hover:opacity-100 text-[var(--text-muted)] hover:text-[var(--accent)] transition-all p-0.5"
+            aria-label={`More options for ${pt.name}`}
+            title="More options"
+          >
+            <PlusIcon className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+    </div>
+  )
+})
 
 interface TrackListProps {
   tracks: SpotifyTrack[] | SpotifyPlaylistTrack[]
@@ -49,25 +127,31 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
     if (showNewPlaylistInput) setTimeout(() => newInputRef.current?.focus(), 50)
   }, [showNewPlaylistInput])
 
-  const validTracks: { track: SpotifyTrack; index: number }[] = tracks
-    .map((t, i) => ({
-      track: "track" in t ? (t as SpotifyPlaylistTrack).track : (t as SpotifyTrack),
-      index: startIndex + i,
-    }))
-    .filter(({ track }) => track?.id)
+  const validTracks: { track: SpotifyTrack; index: number }[] = useMemo(
+    () => tracks
+      .map((t, i) => ({
+        track: "track" in t ? (t as SpotifyPlaylistTrack).track : (t as SpotifyTrack),
+        index: startIndex + i,
+      }))
+      .filter(({ track }) => track?.id),
+    [tracks, startIndex]
+  )
 
-  const playerTracks: PlayerTrack[] = validTracks.map(({ track }) => ({
-    id: track.id, name: track.name, artists: formatArtists(track.artists || []),
-    artistIds: (track.artists || []).map((a) => a.id), album: track.album?.name || "",
-    albumId: track.album?.id || "", albumImage: getImage(track.album?.images, "sm"),
-    duration: track.duration_ms || 0, previewUrl: track.preview_url, uri: track.uri,
-  }))
+  const playerTracks: PlayerTrack[] = useMemo(
+    () => validTracks.map(({ track }) => ({
+      id: track.id, name: track.name, artists: formatArtists(track.artists || []),
+      artistIds: (track.artists || []).map((a) => a.id), album: track.album?.name || "",
+      albumId: track.album?.id || "", albumImage: getImage(track.album?.images, "sm"),
+      duration: track.duration_ms || 0, previewUrl: track.preview_url, uri: track.uri,
+    })),
+    [validTracks]
+  )
 
-  function handlePlay(trackIndex: number) {
+  const handlePlay = useCallback((trackIndex: number) => {
     if (trackIndex < playerTracks.length) playAll(playerTracks, trackIndex)
-  }
+  }, [playerTracks, playAll])
 
-  function openMenu(track: PlayerTrack, e: React.MouseEvent) {
+  const openMenu = useCallback((track: PlayerTrack, e: React.MouseEvent) => {
     e.stopPropagation()
     setMenuTrack(track)
     const x = Math.min(e.clientX, window.innerWidth - 280)
@@ -77,7 +161,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
     setMenuOpen(true)
     setShowNewPlaylistInput(false)
     setNewPlaylistName("")
-  }
+  }, [])
 
   function handleAddToPlaylist(playlistId: string, playlistName?: string) {
     if (!menuTrack) return
@@ -99,21 +183,6 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
     showToast(`Created "${pl.name}" and added "${menuTrack.name}"`)
   }
 
-  function formatArtistLinks(artists: { id: string; name: string }[]) {
-    return artists.map((artist, i) => (
-      <span key={artist.id}>
-        <Link
-          href={`/artist/${artist.id}`}
-          onClick={(e) => e.stopPropagation()}
-          className="hover:text-[var(--accent)] hover:underline transition-colors"
-        >
-          {artist.name}
-        </Link>
-        {i < artists.length - 1 && <span className="mx-0.5">, </span>}
-      </span>
-    ))
-  }
-
   if (tracks.length === 0) {
     return <div className="flex flex-col items-center justify-center py-16 text-[var(--text-muted)]">
       <EmptyMusicIcon className="w-12 h-12 mb-3 opacity-50" strokeWidth={1} />
@@ -126,58 +195,27 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
       <div className="grid grid-cols-[32px_1fr_64px_28px] gap-3 px-4 py-1.5 text-[11px] text-[var(--text-muted)] font-medium border-b border-[var(--border)]/50">
         <span className="text-center">#</span>
         <span>Title</span>
-        <span className="text-right">
+        <span className="text-right flex items-center justify-end gap-1">
           <ClockIcon className="w-3.5 h-3.5 inline" />
         </span>
         <span></span>
       </div>
 
       {validTracks.map(({ track, index }, i) => {
-        const isCurrentTrack = currentTrack?.id === track.id
         const pt = playerTracks[i]
         return (
-          <div key={`${track.id}-${i}`} className={`grid grid-cols-[32px_1fr_64px_28px] gap-3 px-4 py-2 rounded-xl group cursor-pointer transition-all hover:bg-[var(--bg-hover)]/70 ${isCurrentTrack ? "text-[var(--accent)] bg-[var(--accent)]/8" : "text-[var(--text-secondary)]"}`} onClick={() => handlePlay(index)}>
-            <div className="flex items-center justify-center">
-              {isCurrentTrack && isPlaying ? (
-                <div className="flex items-end gap-[2px] h-3">
-                  <span className="w-[2px] bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: "0ms", height: "60%" }} />
-                  <span className="w-[2px] bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: "100ms", height: "100%" }} />
-                  <span className="w-[2px] bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: "200ms", height: "40%" }} />
-                </div>
-              ) : (
-                <>              <span className="group-hover:hidden text-xs tabular-nums text-[var(--text-muted)]">{index + 1}</span><PlayIcon className="hidden group-hover:block w-3.5 h-3.5 text-[var(--accent)]" /></>
-              )}
-            </div>
-            <div className="flex items-center gap-2.5 min-w-0">
-              {showImage && track.album?.images && (
-                <div className="w-8 h-8 rounded bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden hidden sm:block">
-                  <LazyImage src={getImage(track.album.images, "sm")} alt="" className="w-full h-full object-cover" />
-                </div>
-              )}
-              <div className="min-w-0">
-                <p className={`text-xs font-medium truncate ${isCurrentTrack ? "text-[var(--accent)]" : "text-[var(--text-primary)]"}`}>{track.name}</p>
-                <p className="text-xs truncate text-[var(--text-muted)]">
-                  {formatArtistLinks(track.artists || [])}
-                  {showAlbum && track.album?.name && <span className="hidden md:inline"><span className="mx-0.5">•</span><Link href={`/album/${track.album.id}`} onClick={(e) => e.stopPropagation()} className="hover:text-[var(--accent)] hover:underline transition-colors">{track.album.name}</Link></span>}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center justify-end gap-1.5">
-              {track.explicit && <span className="text-[9px] bg-[var(--bg-hover)] text-[var(--text-muted)] font-bold px-1 py-0.5 rounded uppercase leading-none">E</span>}
-              <span className="text-xs tabular-nums">{formatDuration(track.duration_ms || 0)}</span>
-            </div>
-            <div className="flex items-center justify-end">
-              {pt && (
-                <button
-                  onClick={(e) => openMenu(pt, e)}
-                  className="opacity-0 group-hover:opacity-100 text-[var(--text-muted)] hover:text-[var(--accent)] transition-all p-0.5"
-                  title="Add to playlist"
-                >
-                  <PlusIcon className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-          </div>
+          <TrackRow
+            key={`${track.id}-${i}`}
+            track={track}
+            pt={pt}
+            index={index}
+            isCurrent={currentTrack?.id === track.id}
+            isPlaying={isPlaying}
+            showImage={showImage}
+            showAlbum={showAlbum}
+            onPlay={handlePlay}
+            onOpenMenu={openMenu}
+          />
         )
       })}
 
@@ -187,6 +225,9 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
           ref={menuRef}
           className="fixed z-50 bg-[var(--bg-secondary)] rounded-xl shadow-xl border border-[var(--border)] py-1.5 min-w-[200px] max-w-[260px] animate-scale-in"
           style={{ left: menuPos.adjustedX, top: menuPos.adjustedY }}
+          role="menu"
+          aria-label={`Options for ${menuTrack.name}`}
+          onKeyDown={(e) => { if (e.key === "Escape") setMenuOpen(false) }}
         >
           <div className="px-3 py-2 text-xs font-medium text-[var(--text-muted)] border-b border-[var(--border)] truncate">
             Add “{menuTrack.name}” to…
@@ -198,6 +239,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
               {playlists.map((pl) => (
                 <button
                   key={pl.id}
+                  role="menuitem"
                   onClick={() => handleAddToPlaylist(pl.id, pl.name)}
                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all"
                 >
@@ -212,6 +254,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
           {/* Play Next & Add to Queue */}
           <div className="border-t border-[var(--border)] pt-1 mt-1">
             <button
+              role="menuitem"
               onClick={() => { playNext(menuTrack!); setMenuOpen(false); showToast(`"${menuTrack!.name}" will play next`) }}
               className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all"
             >
@@ -219,6 +262,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
               <span>Play Next</span>
             </button>
             <button
+              role="menuitem"
               onClick={() => { addToQueue(menuTrack!); setMenuOpen(false); showToast(`Added "${menuTrack!.name}" to queue`) }}
               className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all"
             >
@@ -230,6 +274,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
           {/* Copy Link */}
           <div className="border-t border-[var(--border)] pt-1 mt-1">
             <button
+              role="menuitem"
               onClick={() => {
                 const url = `${window.location.origin}/track/${menuTrack!.id}`
                 const shareData = { title: menuTrack!.name, text: menuTrack!.name, url }
@@ -252,6 +297,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
           {/* Go to Track & Go to Artist */}
           <div className="border-t border-[var(--border)] pt-1 mt-1">
             <Link
+              role="menuitem"
               href={`/track/${menuTrack!.id}`}
               onClick={() => setMenuOpen(false)}
               className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all"
@@ -260,6 +306,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
               <span>Go to Track</span>
             </Link>
             <Link
+              role="menuitem"
               href={`/artist/${menuTrack!.artistIds?.[0] || ""}`}
               onClick={(e) => { if (!menuTrack!.artistIds?.[0]) e.preventDefault(); setMenuOpen(false) }}
               className={`flex items-center gap-2 w-full px-3 py-2 text-sm text-left transition-all ${menuTrack!.artistIds?.[0] ? "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]" : "text-[var(--text-muted)] cursor-not-allowed"}`}
@@ -286,6 +333,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
               </div>
             ) : (
               <button
+                role="menuitem"
                 onClick={() => setShowNewPlaylistInput(true)}
                 className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--accent-light)] transition-all"
               >
@@ -295,6 +343,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
             )}
           </div>
           <Link
+            role="menuitem"
             href="/"
             onClick={() => setMenuOpen(false)}
             className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all border-t border-[var(--border)]"

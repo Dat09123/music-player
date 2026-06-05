@@ -2,12 +2,11 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
-import { getImage, formatArtists, formatDuration, getGenreIcon } from "@/lib/utils"
+import { getImage, formatDuration, getGenreIcon, toPlayerTrack } from "@/lib/utils"
 import { usePlayer } from "@/components/Player"
 import { searchAll, getGenres, getSearchSuggestions } from "@/lib/deezer"
 import { getRecentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } from "@/lib/recent-searches"
 import LazyImage from "@/components/LazyImage"
-import type { PlayerTrack } from "@/components/Player"
 import type { SpotifySearchResult, SpotifyTrack } from "@/lib/types"
 import Skeleton from "@/components/Skeleton"
 
@@ -51,11 +50,19 @@ export default function SearchClient() {
     return () => document.removeEventListener("mousedown", handleClick)
   }, [showSuggestions])
 
+  const abortRef = useRef<AbortController | null>(null)
+
   const doSearch = useCallback(async (q: string) => {
     if (!q.trim()) {
       setResults(null)
       return
     }
+
+    // Cancel any in-flight search to avoid stale responses
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
     setLoading(true)
     setError(null)
     setShowSuggestions(false)
@@ -63,13 +70,18 @@ export default function SearchClient() {
     setRecentSearches(getRecentSearches())
 
     try {
-      const data = await searchAll(q)
-      setResults(data)
+      const data = await searchAll(q, controller.signal)
+      if (!controller.signal.aborted) {
+        setResults(data)
+      }
     } catch (e: any) {
+      if (e?.name === "AbortError") return
       setError(e?.message || "Search failed. Please try again.")
       setResults(null)
     } finally {
-      setLoading(false)
+      if (!controller.signal.aborted) {
+        setLoading(false)
+      }
     }
   }, [])
 
@@ -118,34 +130,11 @@ export default function SearchClient() {
   const playlists = results?.playlists?.items || []
 
   function playTrackFromSearch(track: SpotifyTrack) {
-    const playerTrack: PlayerTrack = {
-      id: track.id,
-      name: track.name,
-      artists: formatArtists(track.artists || []),
-      artistIds: (track.artists || []).map(a => a.id),
-      album: track.album?.name || "",
-      albumId: track.album?.id || "",
-      albumImage: getImage(track.album?.images, "sm"),
-      duration: track.duration_ms || 0,
-      previewUrl: track.preview_url,
-      uri: track.uri,
-    }
-    playTrack(playerTrack)
+    playTrack(toPlayerTrack(track))
   }
 
   function playAllTracks() {
-    const playerTracks: PlayerTrack[] = tracks.map(track => ({
-      id: track.id,
-      name: track.name,
-      artists: formatArtists(track.artists || []),
-      artistIds: (track.artists || []).map(a => a.id),
-      album: track.album?.name || "",
-      albumId: track.album?.id || "",
-      albumImage: getImage(track.album?.images, "sm"),
-      duration: track.duration_ms || 0,
-      previewUrl: track.preview_url,
-      uri: track.uri,
-    }))
+    const playerTracks = tracks.map(track => toPlayerTrack(track))
     if (playerTracks.length > 0) playAll(playerTracks, 0)
   }
 

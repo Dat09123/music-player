@@ -59,14 +59,14 @@ function SidebarContent({
   return (
     <>
       {/* Nav */}
-      <nav className="px-2 pb-3">
-        <ul className="space-y-0.5">
+      <nav aria-label="Main navigation">
+        <ul className="space-y-0.5 px-2 pb-3">
           {navItems.map((item) => {
             const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
             return (
               <li key={item.href}>
-                <Link href={item.href} onClick={onClose} className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-sm font-medium ${isActive ? "bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]/50"}`}>
-                  <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-[var(--accent)]" : ""}`} />
+                <Link href={item.href} onClick={onClose} className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-sm font-medium ${isActive ? "bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]/50"}`} aria-current={isActive ? "page" : undefined}>
+                  <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-[var(--accent)]" : ""}`} aria-hidden="true" />
                   {!collapsed && <span>{item.label}</span>}
                 </Link>
               </li>
@@ -80,15 +80,15 @@ function SidebarContent({
         <>
           {localPlaylists.length > 0 && (
             <>
-              <div className="px-5 py-2 border-t border-[var(--border)]">
+              <div className="px-5 py-2 border-t border-[var(--border)]" id="sidebar-your-playlists-heading">
                 <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.12em]">Your Playlists</span>
               </div>
-              <nav className="px-2 overflow-y-auto max-h-40">
+              <nav className="px-2 overflow-y-auto max-h-40" aria-label="Your playlists" aria-labelledby="sidebar-your-playlists-heading">
                 <ul className="space-y-0.5">
                   {localPlaylists.map((pl) => (
                     <li key={pl.id}>
-                      <Link href={`/playlist/local/${pl.id}`} onClick={onClose} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm truncate transition-all ${isLocalPlaylistActive(pl.id) ? "bg-[var(--accent-light)] text-[var(--accent)] font-medium" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"}`}>
-                        <MusicNoteStrokeIcon className="w-3.5 h-3.5 flex-shrink-0 opacity-60" />
+                      <Link href={`/playlist/local/${pl.id}`} onClick={onClose} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm truncate transition-all ${isLocalPlaylistActive(pl.id) ? "bg-[var(--accent-light)] text-[var(--accent)] font-medium" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"}`} aria-current={isLocalPlaylistActive(pl.id) ? "page" : undefined}>
+                        <MusicNoteStrokeIcon className="w-3.5 h-3.5 flex-shrink-0 opacity-60" aria-hidden="true" />
                         <span className="truncate">{pl.name}</span>
                       </Link>
                     </li>
@@ -98,13 +98,14 @@ function SidebarContent({
             </>
           )}
 
-          <div className="px-5 py-2 border-t border-[var(--border)]">              <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.12em]">Deezer Charts</span>
+          <div className="px-5 py-2 border-t border-[var(--border)]" id="sidebar-deezer-charts-heading">
+            <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.12em]">Deezer Charts</span>
           </div>
-          <nav className="flex-1 px-2 overflow-y-auto">
+          <nav className="flex-1 px-2 overflow-y-auto" aria-label="Deezer charts" aria-labelledby="sidebar-deezer-charts-heading">
             <ul className="space-y-0.5">
               {deezerPlaylists.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href} onClick={onClose} className={`block px-3 py-1.5 rounded-lg text-sm truncate transition-all ${pathname === item.href ? "bg-[var(--accent-light)] text-[var(--accent)] font-medium" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"}`}>{item.label}</Link>
+                  <Link href={item.href} onClick={onClose} className={`block px-3 py-1.5 rounded-lg text-sm truncate transition-all ${pathname === item.href ? "bg-[var(--accent-light)] text-[var(--accent)] font-medium" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"}`} aria-current={pathname === item.href ? "page" : undefined}>{item.label}</Link>
                 </li>
               ))}
             </ul>
@@ -154,7 +155,7 @@ export default function Sidebar() {
             </svg>
           </Link>
           {!collapsed && <span className="font-bold text-lg tracking-tight">Muse</span>}
-          <button onClick={() => setCollapsed(!collapsed)} className="ml-auto p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all hidden md:block cursor-pointer" title={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
+          <button onClick={() => setCollapsed(!collapsed)} className="ml-auto p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-all hidden md:block cursor-pointer" aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} title={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
             <CollapseIcon className={`w-4 h-4 transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`} />
           </button>
         </div>

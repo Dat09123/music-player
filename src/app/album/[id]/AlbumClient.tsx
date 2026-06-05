@@ -3,32 +3,13 @@
 import dynamic from "next/dynamic"
 import { usePlayer } from "@/components/Player"
 import { useToast } from "@/components/Toast"
-import { formatArtists, getImage } from "@/lib/utils"
-import type { PlayerTrack } from "@/components/Player"
+import { toPlayerTrack } from "@/lib/utils"
 import type { SpotifyAlbum } from "@/lib/types"
+import { TrackListSkeleton } from "@/components/Skeleton"
 
 const TrackList = dynamic(() => import("@/components/TrackList"), {
   loading: () => <TrackListSkeleton />
 })
-
-function TrackListSkeleton() {
-  return (
-    <div className="animate-pulse space-y-2 px-4">
-      <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-16 mb-4" />
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 py-2">
-          <div className="w-7 h-3 bg-gray-200 dark:bg-gray-800 rounded" />
-          <div className="w-8 h-8 bg-gray-200 dark:bg-gray-800 rounded flex-shrink-0" />
-          <div className="flex-1 space-y-1.5">
-            <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-3/5" />
-            <div className="h-2.5 bg-gray-200 dark:bg-gray-800 rounded w-2/5" />
-          </div>
-          <div className="w-8 h-3 bg-gray-200 dark:bg-gray-800 rounded" />
-        </div>
-      ))}
-    </div>
-  )
-}
 
 interface Props {
   album: SpotifyAlbum
@@ -38,25 +19,14 @@ export default function AlbumClient({ album }: Props) {
   const { playAll } = usePlayer()
   const { showToast } = useToast()
 
-  const tracks = (album.tracks?.items || []).map((track: any) => ({
+  const tracks = (album.tracks?.items || []).map((track) => ({
     ...track,
     album: album,
   }))
 
-  const playerTracks: PlayerTrack[] = tracks
+  const playerTracks = tracks
     .filter((track: any) => track?.id)
-    .map((track: any) => ({
-      id: track.id,
-      name: track.name,
-      artists: formatArtists(track.artists || []),
-      artistIds: (track.artists || []).map((a: any) => a.id),
-      album: album.name,
-      albumId: album.id,
-      albumImage: getImage(album.images, "sm"),
-      duration: track.duration_ms || 0,
-      previewUrl: track.preview_url,
-      uri: track.uri,
-    }))
+    .map((track: any) => toPlayerTrack(track, album))
 
   function handlePlayAll() {
     if (playerTracks.length > 0) playAll(playerTracks, 0)

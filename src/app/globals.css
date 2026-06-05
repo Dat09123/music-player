@@ -54,7 +54,7 @@
 /* Smooth theme transition — scoped to layout/surface elements only */
 header, aside, nav, main, footer,
 .glass, .glass-subtle,
-[class*="bg-[var("], [class*="border-[var("], [class*="text-[var("] {
+[class*="bg-["], [class*="border-["], [class*="text-["] {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease;
 }
 
@@ -89,6 +89,8 @@ body {
 .dark .glass-subtle {
   background: rgba(20, 20, 31, 0.4);
 }
+
+/* Remove unused CSS classes - micro-interactions handled via Tailwind inline */
 
 /* Scrollbar */
 ::-webkit-scrollbar {
@@ -141,6 +143,7 @@ input[type="range"]:hover::-webkit-slider-thumb {
   );
   background-size: 300% 100%;
   animation: shimmer 2s ease-in-out infinite;
+  border-radius: 4px;
 }
 
 /* Skeleton variant with accent shimmer */
@@ -152,6 +155,18 @@ input[type="range"]:hover::-webkit-slider-thumb {
   );
   background-size: 300% 100%;
   animation: shimmer 2.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+/* Skeleton variant for images (shimmer with darker base) */
+.skeleton-image {
+  background: linear-gradient(110deg,
+    var(--skeleton-from) 20%,
+    color-mix(in srgb, var(--accent) 5%, var(--skeleton-to)) 45%,
+    var(--skeleton-from) 70%
+  );
+  background-size: 300% 100%;
+  animation: shimmerImage 3s ease-in-out infinite;
 }
 
 /* Pulse skeleton for hero elements */
@@ -163,6 +178,12 @@ input[type="range"]:hover::-webkit-slider-thumb {
 @keyframes shimmer {
   0% { background-position: 100% 0; }
   100% { background-position: -100% 0; }
+}
+
+@keyframes shimmerImage {
+  0% { background-position: 100% 0; opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { background-position: -100% 0; opacity: 0.6; }
 }
 
 @keyframes skeletonPulse {
@@ -228,17 +249,17 @@ input[type="range"]:hover::-webkit-slider-thumb {
 
 /* Page transition animations */
 @keyframes pageEnter {
-  from { opacity: 0; transform: translateY(8px) scale(0.99); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes pageExit {
-  from { opacity: 1; transform: translateY(0) scale(1); }
-  to { opacity: 0; transform: translateY(-8px) scale(0.99); }
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-8px); }
 }
 
 .animate-page-enter {
-  animation: pageEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: pageEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .animate-page-exit {
@@ -248,6 +269,32 @@ input[type="range"]:hover::-webkit-slider-thumb {
 /* Safe area for mobile (notch/home indicator) */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Image blur placeholder loading */
+@keyframes blurIn {
+  from { filter: blur(20px); transform: scale(1.1); }
+  to { filter: blur(0); transform: scale(1); }
+}
+
+.animate-blur-in {
+  animation: blurIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Shimmer for blur placeholder */
+@keyframes shimmerSlow {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.blur-placeholder {
+  background: linear-gradient(110deg,
+    var(--skeleton-from) 20%,
+    var(--skeleton-to) 40%,
+    var(--skeleton-from) 60%
+  );
+  background-size: 300% 100%;
+  animation: shimmerSlow 3s ease-in-out infinite;
 }
 
 /* Stagger delays for grid items */

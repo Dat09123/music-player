@@ -63,6 +63,29 @@ export function getTimeAgo(timestamp: number): string {
 }
 
 /**
+ * Convert spotify-style track array to internal PlayerTrack array.
+ * Handles both flat SpotifyTrack[] and { track: SpotifyTrack }[] (playlist format).
+ */
+export function toPlayerTrack(
+  track: { id: string; name: string; artists?: { id: string; name: string }[]; album?: { name?: string; id?: string; images?: { url: string; height: number | null; width: number | null }[] }; duration_ms?: number; preview_url?: string | null; uri?: string },
+  albumOverride?: { name?: string; id?: string; images?: { url: string; height: number | null; width: number | null }[] }
+) {
+  const album = albumOverride || track.album
+  return {
+    id: track.id,
+    name: track.name,
+    artists: formatArtists(track.artists || []),
+    artistIds: (track.artists || []).map((a) => a.id),
+    album: album?.name || "",
+    albumId: album?.id || "",
+    albumImage: getImage(album?.images, "sm"),
+    duration: track.duration_ms || 0,
+    previewUrl: track.preview_url ?? null,
+    uri: track.uri || "",
+  }
+}
+
+/**
  * Get genre emoji
  */
 export function getGenreIcon(genre: string): string {

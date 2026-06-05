@@ -6,32 +6,13 @@ import { usePlayer } from "@/components/Player"
 import LazyImage from "@/components/LazyImage"
 import { useToast } from "@/components/Toast"
 import Link from "next/link"
-import { getImage, formatArtists } from "@/lib/utils"
-import type { PlayerTrack } from "@/components/Player"
+import { getImage, toPlayerTrack } from "@/lib/utils"
 import type { SpotifyTrack, SpotifyAlbum, SpotifyArtist } from "@/lib/types"
+import { TrackListSkeleton } from "@/components/Skeleton"
 
 const TrackList = dynamic(() => import("@/components/TrackList"), {
   loading: () => <TrackListSkeleton />
 })
-
-function TrackListSkeleton() {
-  return (
-    <div className="animate-pulse space-y-2 px-4">
-      <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-16 mb-4" />
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 py-2">
-          <div className="w-7 h-3 bg-gray-200 dark:bg-gray-800 rounded" />
-          <div className="w-8 h-8 bg-gray-200 dark:bg-gray-800 rounded flex-shrink-0" />
-          <div className="flex-1 space-y-1.5">
-            <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-3/5" />
-            <div className="h-2.5 bg-gray-200 dark:bg-gray-800 rounded w-2/5" />
-          </div>
-          <div className="w-8 h-3 bg-gray-200 dark:bg-gray-800 rounded" />
-        </div>
-      ))}
-    </div>
-  )
-}
 
 interface Props {
   topTracks: SpotifyTrack[]
@@ -50,20 +31,7 @@ export default function ArtistClient({ topTracks, albums, relatedArtists, artist
   const { showToast } = useToast()
   const [showAllAlbums, setShowAllAlbums] = useState(false)
 
-  const playerTracks: PlayerTrack[] = topTracks
-    .filter((t) => t?.id)
-    .map((track) => ({
-      id: track.id,
-      name: track.name,
-      artists: formatArtists(track.artists || []),
-      artistIds: (track.artists || []).map((a) => a.id),
-      album: track.album?.name || "",
-      albumId: track.album?.id || "",
-      albumImage: getImage(track.album?.images, "sm"),
-      duration: track.duration_ms || 0,
-      previewUrl: track.preview_url,
-      uri: track.uri,
-    }))
+  const playerTracks = topTracks.filter((t) => t?.id).map((t) => toPlayerTrack(t))
 
   function handlePlayAll() {
     if (playerTracks.length > 0) playAll(playerTracks, 0)

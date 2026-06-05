@@ -123,11 +123,22 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  // Throttled progress updates — only update state max 4x/sec to reduce re-renders
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
+    let rafId = 0
+    let lastUpdate = 0
+    const THROTTLE_MS = 250 // 4 updates/sec
     const onTimeUpdate = () => {
-      setProgress(audio.currentTime)
+      const now = performance.now()
+      if (now - lastUpdate < THROTTLE_MS) { return }
+      lastUpdate = now
+      if (!audio) return
+      cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(() => {
+        setProgress(audio.currentTime)
+      })
       // Crossfade: start fading out near the end
       const cf = crossfadeRef.current
       if (cf > 0 && audio.duration > 0) {
@@ -159,6 +170,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       audio.removeEventListener("play", onPlay)
       audio.removeEventListener("pause", onPause)
       audio.removeEventListener("error", onError)
+      cancelAnimationFrame(rafId)
     }
   }, [currentTrack])
 
@@ -492,10 +504,22 @@ function PlayerBar() {
           {/* Progress */}
           <div className="hidden md:flex items-center gap-2 w-48">
             <span className="text-xs text-[var(--text-muted)] w-8 text-right tabular-nums">{formatDuration(Math.round(isSeeking ? (seekValue / 100) * duration : progress) * 1000)}</span>
-            <div className="flex-1 h-1 bg-[var(--border)] rounded-full cursor-pointer group relative"
+            <div
+              className="flex-1 h-1 bg-[var(--border)] rounded-full cursor-pointer group relative"
+              role="slider"
+              tabIndex={0}
+              aria-label="Seek"
+              aria-valuenow={Math.round(progress)}
+              aria-valuemin={0}
+              aria-valuemax={Math.round(duration)}
               onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); seekTo(((e.clientX - r.left) / r.width) * duration) }}
               onMouseEnter={() => setIsSeeking(true)} onMouseLeave={() => setIsSeeking(false)}
-              onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSeekValue(((e.clientX - r.left) / r.width) * 100) }}>
+              onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setSeekValue(((e.clientX - r.left) / r.width) * 100) }}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowRight") seekTo(Math.min(duration, progress + 5))
+                if (e.key === "ArrowLeft") seekTo(Math.max(0, progress - 5))
+              }}
+            >
               <div className="h-full bg-gradient-to-r from-[var(--accent)] to-indigo-400 rounded-full transition-all shadow-sm" style={{ width: `${Math.min(progressPercent, 100)}%` }} />
             </div>
             <span className="text-xs text-[var(--text-muted)] w-8 tabular-nums">{formatDuration(Math.round(duration) * 1000)}</span>
@@ -528,7 +552,7 @@ function PlayerBar() {
               <button onClick={() => setVolume(volume === 0 ? 0.7 : 0)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]" aria-label={volume === 0 ? "Unmute" : "Mute"}>
                 <VolumeIcon className="w-3.5 h-3.5" />
               </button>
-              <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} className="w-16 h-1 bg-[var(--border)] rounded-full appearance-none cursor-pointer accent-[var(--accent)] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--accent)]" />
+              <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} className="w-16 h-1 bg-[var(--border)] rounded-full appearance-none cursor-pointer accent-[var(--accent)] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--accent)]" aria-label={`Volume: ${Math.round(volume * 100)}%`} />
             </div>
 
             {/* Settings button (sleep timer + crossfade) */}
@@ -554,8 +578,18 @@ function PlayerBar() {
         <div className="md:hidden mt-2">
           <div
             className="h-1 bg-[var(--border)] rounded-full cursor-pointer relative"
+            role="slider"
+            tabIndex={0}
+            aria-label="Seek"
+            aria-valuenow={Math.round(progress)}
+            aria-valuemin={0}
+            aria-valuemax={Math.round(duration)}
             onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); seekTo(((e.clientX - r.left) / r.width) * duration) }}
             onTouchStart={(e) => { const r = e.currentTarget.getBoundingClientRect(); seekTo(((e.touches[0].clientX - r.left) / r.width) * duration) }}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowRight") seekTo(Math.min(duration, progress + 5))
+              if (e.key === "ArrowLeft") seekTo(Math.max(0, progress - 5))
+            }}
           >
             <div className="h-full bg-gradient-to-r from-[var(--accent)] to-indigo-400 rounded-full" style={{ width: `${Math.min(progressPercent, 100)}%` }} />
           </div>
@@ -631,6 +665,7 @@ function PlayerBar() {
               type="range" min="0" max="8" step="1" value={crossfade}
               onChange={(e) => setCrossfade(parseInt(e.target.value))}
               className="w-full h-1 bg-[var(--border)] rounded-full appearance-none cursor-pointer accent-[var(--accent)]"
+              aria-label={`Crossfade: ${crossfade} seconds`}
             />
             <div className="flex justify-between text-[10px] text-[var(--text-muted)] mt-1">
               <span>Off</span><span>8s</span>

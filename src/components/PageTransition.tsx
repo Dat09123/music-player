@@ -5,19 +5,26 @@ import { useState, useEffect, useRef, type ReactNode } from "react"
 
 export default function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname()
-  const [visible, setVisible] = useState(true)
+  const [state, setState] = useState<"enter" | "exit">("enter")
   const prevPathRef = useRef(pathname)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    if (pathname === prevPathRef.current) return
+    if (pathname === prevPathRef.current) {
+      // First mount or same path — just show
+      setState("enter")
+      return
+    }
+
     prevPathRef.current = pathname
 
     if (timerRef.current) clearTimeout(timerRef.current)
 
-    setVisible(false)
+    // Exit
+    setState("exit")
     timerRef.current = setTimeout(() => {
-      setVisible(true)
+      // Enter
+      setState("enter")
       timerRef.current = null
     }, 150)
 
@@ -28,10 +35,9 @@ export default function PageTransition({ children }: { children: ReactNode }) {
 
   return (
     <div
-      style={{
-        opacity: visible ? 1 : 0,
-        transition: "opacity 0.15s ease",
-      }}
+      className={
+        state === "enter" ? "animate-page-enter" : "animate-page-exit"
+      }
     >
       {children}
     </div>

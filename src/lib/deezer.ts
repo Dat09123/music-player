@@ -28,7 +28,7 @@ function friendlyHttpError(status: number): string {
   return `Unexpected error (${status}). Please try again.`
 }
 
-async function fetchDeezer<T>(path: string, retries = 2): Promise<T> {
+async function fetchDeezer<T>(path: string, retries = 2, signal?: AbortSignal): Promise<T> {
   const url = `${API}${path}`
 
   // ── Offline fast-path: serve cache immediately, skip network ──
@@ -50,9 +50,9 @@ async function fetchDeezer<T>(path: string, retries = 2): Promise<T> {
     let res: Response
     try {
       res = await fetch(url, {
-        signal: typeof AbortSignal !== "undefined" && "timeout" in AbortSignal
+        signal: signal || (typeof AbortSignal !== "undefined" && "timeout" in AbortSignal
           ? AbortSignal.timeout(15000)
-          : undefined,
+          : undefined),
       })
     } catch (fetchErr: unknown) {
       // fetch() threw → this is ALWAYS a network error or abort
@@ -302,13 +302,13 @@ function transformPlaylist(p: DeezerPlaylist) {
 // ─── High-level API functions ────────────────────────────
 
 /** Search across all types (track, album, artist, playlist) */
-export async function searchAll(query: string) {
+export async function searchAll(query: string, signal?: AbortSignal) {
   console.debug(`[Deezer] 🔍 searchAll("${query}")`)
   const [tracks, albums, artists, playlists] = await Promise.all([
-    fetchDeezer<{ data: DeezerTrack[] }>(`/search/track?q=${encodeURIComponent(query)}&limit=8`),
-    fetchDeezer<{ data: DeezerAlbum[] }>(`/search/album?q=${encodeURIComponent(query)}&limit=5`),
-    fetchDeezer<{ data: DeezerArtist[] }>(`/search/artist?q=${encodeURIComponent(query)}&limit=5`),
-    fetchDeezer<{ data: DeezerPlaylist[] }>(`/search/playlist?q=${encodeURIComponent(query)}&limit=5`),
+    fetchDeezer<{ data: DeezerTrack[] }>(`/search/track?q=${encodeURIComponent(query)}&limit=8`, 2, signal),
+    fetchDeezer<{ data: DeezerAlbum[] }>(`/search/album?q=${encodeURIComponent(query)}&limit=5`, 2, signal),
+    fetchDeezer<{ data: DeezerArtist[] }>(`/search/artist?q=${encodeURIComponent(query)}&limit=5`, 2, signal),
+    fetchDeezer<{ data: DeezerPlaylist[] }>(`/search/playlist?q=${encodeURIComponent(query)}&limit=5`, 2, signal),
   ])
   return transformSearchResults(
     tracks.data || [],
