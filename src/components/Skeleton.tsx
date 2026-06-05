@@ -1,5 +1,7 @@
 "use client"
 
+import { useState, useEffect } from "react"
+
 interface SkeletonProps {
   variant?: "text" | "circle" | "card" | "rect" | "hero-image" | "hero-text"
   width?: string | number
@@ -90,7 +92,64 @@ export default function Skeleton({
   )
 }
 
-// Skeleton track row component
+// ─── Retry / extended loading indicator ─────────────────
+
+/** Fades in a subtle "Connecting..." indicator after a delay */
+function DelayedLoadingIndicator() {
+  const [phase, setPhase] = useState<"hidden" | "connecting" | "retrying">("hidden")
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase("connecting"), 1500)
+    const t2 = setTimeout(() => setPhase("retrying"), 4000)
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+    }
+  }, [])
+
+  if (phase === "hidden") return null
+
+  return (
+    <div
+      className={`flex flex-col items-center justify-center py-4 transition-all duration-500 ${
+        phase === "connecting" ? "opacity-60" : "opacity-100"
+      }`}
+    >
+      <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+        <span className="flex gap-0.5">
+          <span
+            className="w-1 h-1 bg-[var(--accent)] rounded-full animate-bounce"
+            style={{ animationDelay: "0ms", animationDuration: "1s" }}
+          />
+          <span
+            className="w-1 h-1 bg-[var(--accent)] rounded-full animate-bounce"
+            style={{ animationDelay: "200ms", animationDuration: "1s" }}
+          />
+          <span
+            className="w-1 h-1 bg-[var(--accent)] rounded-full animate-bounce"
+            style={{ animationDelay: "400ms", animationDuration: "1s" }}
+          />
+        </span>
+        <span className="tabular-nums">
+          {phase === "retrying" ? "Still connecting, please wait…" : "Connecting…"}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+/** Wraps skeleton content and shows a delayed loading indicator */
+export function LoadingSkeleton({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative">
+      {children}
+      <DelayedLoadingIndicator />
+    </div>
+  )
+}
+
+// ─── Skeleton track row ──────────────────────────────────
+
 export function SkeletonTrackRow({ count = 5, showImage = true }: { count?: number; showImage?: boolean }) {
   return (
     <div className="space-y-2">
@@ -109,7 +168,8 @@ export function SkeletonTrackRow({ count = 5, showImage = true }: { count?: numb
   )
 }
 
-// Skeleton card grid component
+// ─── Skeleton card grid ──────────────────────────────────
+
 export function SkeletonCardGrid({ count = 6, aspect = "square" }: { count?: number; aspect?: "square" | "circle" }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 px-2">
@@ -126,7 +186,8 @@ export function SkeletonCardGrid({ count = 6, aspect = "square" }: { count?: num
   )
 }
 
-// Skeleton hero section for detail pages
+// ─── Skeleton hero ───────────────────────────────────────
+
 export function SkeletonHero({
   variant = "default",
 }: {
@@ -180,7 +241,8 @@ export function SkeletonHero({
   )
 }
 
-// Skeleton for lyrics loading state
+// ─── Skeleton for lyrics loading state ───────────────────
+
 export function SkeletonLyrics() {
   return (
     <div className="space-y-3 p-4">

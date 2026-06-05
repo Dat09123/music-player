@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
+import { useState, useEffect, use, useCallback, useRef } from "react"
 import Link from "next/link"
 import { getGenreRadio } from "@/lib/deezer"
 import { getGenreIcon, formatArtists, getImage, formatDuration } from "@/lib/utils"
 import { usePlayer } from "@/components/Player"
 import LazyImage from "@/components/LazyImage"
-import Skeleton, { SkeletonTrackRow } from "@/components/Skeleton"
+import Skeleton, { SkeletonTrackRow, LoadingSkeleton } from "@/components/Skeleton"
 import { MusicNoteIcon, PlayIcon, ArrowRightIcon, WarningIcon, ChevronLeftIcon } from "@/components/Icons"
 import type { PlayerTrack } from "@/components/Player"
 
@@ -40,24 +40,29 @@ export default function StationPage({ params }: Props) {
   const [error, setError] = useState<string | null>(null)
   const { playAll } = usePlayer()
 
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      try {
-        const data = await getGenreRadio(genreId, 20)
-        if (!cancelled) {
-          setGenre(data.genre)
-          setTracks(data.tracks)
-        }
-      } catch (err: any) {
-        if (!cancelled) setError(err?.message || "Failed to load station")
-      } finally {
-        if (!cancelled) setLoading(false)
+  const loadData = useCallback(async () => {
+    if (cancelledRef.current) return
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await getGenreRadio(genreId, 20)
+      if (!cancelledRef.current) {
+        setGenre(data.genre)
+        setTracks(data.tracks)
       }
+    } catch (err: any) {
+      if (!cancelledRef.current) setError(err?.message || "Failed to load station")
+    } finally {
+      if (!cancelledRef.current) setLoading(false)
     }
-    load()
-    return () => { cancelled = true }
   }, [genreId])
+
+  const cancelledRef = useRef(false)
+  useEffect(() => {
+    cancelledRef.current = false
+    loadData()
+    return () => { cancelledRef.current = true }
+  }, [loadData])
 
   const playerTracks: PlayerTrack[] = tracks
     .filter((t) => t?.id)
@@ -84,14 +89,16 @@ export default function StationPage({ params }: Props) {
 
   if (loading) {
     return (
-      <div className="p-6 pb-20 max-w-4xl mx-auto">
-        <div className="mb-8">
-          <Skeleton width={120} height={20} className="mb-2" />
-          <Skeleton width={200} height={48} className="mb-2" />
-          <Skeleton width={160} height={16} />
+      <LoadingSkeleton>
+        <div className="p-6 pb-20 max-w-4xl mx-auto">
+          <div className="mb-8">
+            <Skeleton width={120} height={20} className="mb-2" />
+            <Skeleton width={200} height={48} className="mb-2" />
+            <Skeleton width={160} height={16} />
+          </div>
+          <SkeletonTrackRow count={10} />
         </div>
-        <SkeletonTrackRow count={10} />
-      </div>
+      </LoadingSkeleton>
     )
   }
 
@@ -101,10 +108,18 @@ export default function StationPage({ params }: Props) {
         <WarningIcon className="w-16 h-16 text-red-300 mb-4" strokeWidth={1.5} />
         <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Station not found</h2>
         <p className="text-sm text-[var(--text-muted)] mb-6">{error || "This station could not be loaded."}</p>
-        <Link href="/stations" className="inline-flex items-center gap-2 text-sm font-medium text-[var(--accent)] hover:underline">
-          <ChevronLeftIcon className="w-4 h-4" />
-          Back to stations
-        </Link>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={loadData}
+            className="bg-[var(--accent)] hover:opacity-90 text-white font-medium px-5 py-2 rounded-lg text-sm transition-all"
+          >
+            Try again
+          </button>
+          <Link href="/stations" className="inline-flex items-center gap-2 text-sm font-medium text-[var(--accent)] hover:underline">
+            <ChevronLeftIcon className="w-4 h-4" />
+            Back to stations
+          </Link>
+        </div>
       </div>
     )
   }

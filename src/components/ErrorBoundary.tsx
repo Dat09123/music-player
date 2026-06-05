@@ -7,6 +7,8 @@ interface Props {
   children: ReactNode
   fallback?: ReactNode
   label?: string
+  error?: string | null
+  onRetry?: () => void
 }
 
 interface State {
@@ -33,16 +35,22 @@ export default class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) return this.props.fallback
 
       return (
-        <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
-          <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
+        <div className="flex flex-col items-center justify-center py-14 px-6 text-center animate-fade-in">
+          <div className="w-12 h-12 bg-red-50 dark:bg-red-950/30 rounded-xl flex items-center justify-center mb-4">
             <WarningIcon className="w-6 h-6 text-red-400" strokeWidth={1.5} />
           </div>
-          <p className="text-sm font-medium text-[var(--text-primary)] mb-1">
+          <p className="text-sm font-semibold text-[var(--text-primary)] mb-1">
             {this.props.label || "Something went wrong"}
           </p>
-          <p className="text-xs text-[var(--text-muted)] max-w-sm">
-            This section encountered an error. Try refreshing the page.
+          <p className="text-xs text-[var(--text-muted)] mb-4 max-w-sm">
+            {this.state.error?.message || this.props.error || "This section encountered an issue."}
           </p>
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="text-xs font-medium text-[var(--accent)] hover:underline transition-all"
+          >
+            Try again
+          </button>
         </div>
       )
     }

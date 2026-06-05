@@ -11,8 +11,10 @@ import { useTheme, ACCENT_COLORS } from "@/lib/ThemeContext"
 import {
   HomeIcon, SearchIcon, ClockIcon, PersonIcon, MusicNoteIcon,
   ChartIcon, PlusIcon, MusicNoteStrokeIcon, CollapseIcon,
-  XIcon, MoonIcon, SunIcon, PlayCircleIcon,
+  XIcon, MoonIcon, SunIcon, PlayCircleIcon, WarningIcon,
 } from "@/components/Icons"
+import { useConnectionQuality } from "@/hooks/useConnectionQuality"
+import { qualityLabel, qualityColor, qualityBars } from "@/lib/connection"
 
 const CreatePlaylistModal = dynamic(() => import("./CreatePlaylistModal"), { ssr: false })
 
@@ -26,6 +28,7 @@ const navItems = [
   { href: "/me/album-history", label: "Album History", icon: MusicNoteIcon },
   { href: "/me/top", label: "Top Charts", icon: ChartIcon },
   { href: "/me/liked", label: "Trending Now", icon: ChartIcon },
+  { href: "/debug/logs", label: "Error Logs", icon: WarningIcon },
 ]
 
 const deezerPlaylists = [
@@ -158,6 +161,7 @@ export default function Sidebar() {
         <SidebarContent localPlaylists={localPlaylists} collapsed={collapsed} onCreatePlaylist={() => setShowCreateModal(true)} />
         {!collapsed && (
           <div className="px-2 pb-3 border-t border-[var(--border)] pt-2 mt-auto">
+            <ConnectionIndicator />
             <ThemeToggle collapsed={collapsed} />
             <AccentPicker collapsed={collapsed} />
           </div>
@@ -193,6 +197,42 @@ export default function Sidebar() {
         />
       )}
     </>
+  )
+}
+
+function ConnectionIndicator() {
+  const { info, online } = useConnectionQuality()
+
+  if (!online || !info) return null
+
+  const bars = qualityBars(info.effectiveType)
+  const color = qualityColor(info.effectiveType)
+  const label = qualityLabel(info.effectiveType)
+
+  return (
+    <div
+      className="flex items-center gap-2 px-3 py-2 text-xs"
+      title={`${label} · ${info.downlink.toFixed(1)} Mbps · ${info.rtt}ms RTT`}
+    >
+      {/* Signal bars */}
+      <div className="flex items-end gap-[2px] h-3">
+        {[1, 2, 3, 4].map((i) => (
+          <span
+            key={i}
+            className={`w-[3px] rounded-full transition-all duration-300 ${
+              i <= bars ? color : "bg-[var(--border)]"
+            }`}
+            style={{ height: `${i * 25}%` }}
+          />
+        ))}
+      </div>
+      <span className={`${color} font-medium tabular-nums`}>{label}</span>
+      {info.saveData && (
+        <span className="text-[10px] bg-[var(--accent)]/10 text-[var(--accent)] px-1 rounded font-medium">
+          SD
+        </span>
+      )}
+    </div>
   )
 }
 

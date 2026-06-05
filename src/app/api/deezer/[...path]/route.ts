@@ -15,9 +15,13 @@ export async function GET(
 
     console.debug(`[Deezer Proxy] ➡ ${url}`)
 
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 20000) // 20s server-side timeout
+
     const res = await fetch(url, {
       cache: "no-store",
-    })
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId))
 
     const duration = Math.round(performance.now() - start)
     console.debug(`[Deezer Proxy] ${res.ok ? "✅" : "❌"} ${url} → ${res.status} (${duration}ms)`)
@@ -36,9 +40,10 @@ export async function GET(
   } catch (error) {
     const duration = Math.round(performance.now() - start)
     console.error(`[Deezer Proxy] 💥 after ${duration}ms:`, error)
+    const isTimeout = error instanceof DOMException && error.name === "AbortError"
     return NextResponse.json(
-      { error: "Failed to fetch from Deezer API" },
-      { status: 500 }
+      { error: isTimeout ? "Deezer API timed out" : "Failed to fetch from Deezer API" },
+      { status: isTimeout ? 504 : 500 }
     )
   }
 }

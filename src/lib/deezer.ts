@@ -9,69 +9,132 @@ const API = "/api/deezer"
 
 // ─── Raw fetch ───────────────────────────────────────────
 
+import { logApiError } from "./api-logger"
+import { cacheApiData, getFallbackData } from "./data-cache"
+import { enqueueRetry } from "./offline-queue"
+
 /** Retry delay with exponential backoff (ms) */
 function retryDelay(attempt: number): number {
   return Math.min(100 * Math.pow(2, attempt), 2000)
 }
 
+/** Map HTTP status to a user-friendly error message */
+function friendlyHttpError(status: number): string {
+  if (status === 404) return "Content not found. It may have been removed or the link may be incorrect."
+  if (status === 429) return "Too many requests. Please wait a moment and try again."
+  if (status === 403) return "Access denied. This content may not be available in your region."
+  if (status === 502 || status === 503) return "The music service is temporarily unavailable. Please try again later."
+  if (status >= 500) return "The music service encountered a server error. Please try again later."
+  return `Unexpected error (${status}). Please try again.`
+}
+
 async function fetchDeezer<T>(path: string, retries = 2): Promise<T> {
   const url = `${API}${path}`
+
+  // ── Offline fast-path: serve cache immediately, skip network ──
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    const cached = getFallbackData<T>(path)
+    if (cached !== null) {
+      console.warn(`[Deezer] 📦 Offline — serving cache for GET ${url}`)
+      enqueueRetry(path)
+      return cached
+    }
+  }
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     const start = performance.now()
 
+    // ── Phase 1: The actual fetch (network layer only) ──
+    // fetch() ONLY throws on network failure or abort. HTTP 4xx/5xx NEVER throw.
+    // So ANY error we catch here is DEFINITELY a network/abort issue — retry it.
+    let res: Response
     try {
-      const res = await fetch(url, {
-        // Add a signal so the request can be aborted on cleanup
+      res = await fetch(url, {
         signal: typeof AbortSignal !== "undefined" && "timeout" in AbortSignal
           ? AbortSignal.timeout(15000)
-          : undefined, // 15s timeout
+          : undefined,
       })
-      const duration = Math.round(performance.now() - start)
-      console.debug(`[Deezer] ➡ GET ${url} → ${res.status} (${duration}ms)`)
+    } catch (fetchErr: unknown) {
+      // fetch() threw → this is ALWAYS a network error or abort
+      const fetchErrObj = fetchErr && typeof fetchErr === "object"
+        ? (fetchErr as { name?: string; message?: string })
+        : null
+      const fetchErrName = fetchErrObj?.name || String(fetchErr)
+      const fetchErrMsg = fetchErrObj?.message || String(fetchErr)
 
-      if (!res.ok) {
-        const text = await res.text()
-        console.error(`[Deezer] ❌ GET ${url} → ${res.status}: ${text.slice(0, 200)}`)
-        throw new Error(`Deezer API error (${res.status}): ${text.slice(0, 200)}`)
+      // Abort → component unmount or manual cancel, don't retry
+      if (fetchErrName.includes("Abort")) throw fetchErr
+
+      // Network error → retry
+      console.warn(`[Deezer] ⚠ Network: GET ${url} (attempt ${attempt + 1}/${retries + 1}): ${fetchErrMsg}`)
+
+      if (attempt < retries) {
+        const delay = retryDelay(attempt)
+        await new Promise((r) => setTimeout(r, delay))
+        continue
       }
 
-      return res.json()
-    } catch (err) {
-      const isLastAttempt = attempt === retries
-      const isNetworkError = err instanceof TypeError && err.message === "NetworkError when attempting to fetch resource"
-      const isTimeout = err instanceof DOMException && err.name === "TimeoutError"
-      const isAbort = err instanceof DOMException && err.name === "AbortError"
+      logApiError(path, fetchErr, attempt)
+      console.error(`[Deezer] 💥 Network: GET ${url} failed after ${retries + 1} attempts`)
 
-      // Don't retry on abort (component unmount), rethrow immediately
-      if (isAbort) throw err
+      const cached = getFallbackData<T>(path)
+      if (cached !== null) {
+        console.warn(`[Deezer] 📦 Serving stale cache for GET ${url}`)
+        enqueueRetry(path)
+        return cached
+      }
 
-      if (isNetworkError || isTimeout) {
-        console.warn(`[Deezer] ⚠ Network issue GET ${url} (attempt ${attempt + 1}/${retries + 1}): ${err instanceof Error ? err.message : err}`)
+      throw new Error("Could not load data. Please check your internet connection and try again.")
+    }
 
-        if (!isLastAttempt) {
+    // ── Phase 2: Response handling (HTTP errors, JSON parsing) ──
+    // If we're here, the network request succeeded (we got a Response object)
+    const duration = Math.round(performance.now() - start)
+    console.debug(`[Deezer] ➡ GET ${url} → ${res.status} (${duration}ms)`)
+
+    // Handle HTTP errors
+    if (!res.ok) {
+      const text = await res.text()
+      console.error(`[Deezer] ❌ GET ${url} → ${res.status}: ${text.slice(0, 200)}`)
+      logApiError(path, new Error(friendlyHttpError(res.status)), attempt, res.status)
+
+      // 5xx (server errors) → retry or cache
+      if (res.status >= 500) {
+        if (attempt < retries) {
           const delay = retryDelay(attempt)
-          console.debug(`[Deezer] ⏳ Retrying in ${delay}ms...`)
-          await new Promise((resolve) => setTimeout(resolve, delay))
+          await new Promise((r) => setTimeout(r, delay))
           continue
         }
-
-        console.error(`[Deezer] 💥 GET ${url} failed after ${retries + 1} attempts`)
-        throw new Error("Could not load data. Please check your internet connection and try again.")
+        const cached = getFallbackData<T>(path)
+        if (cached !== null) {
+          console.warn(`[Deezer] 📦 Serving stale cache for GET ${url} after server error`)
+          return cached
+        }
       }
 
-      // For HTTP errors (4xx/5xx) and other errors, rethrow directly
-      if (err instanceof Error && err.message.startsWith("Deezer API error")) {
-        // Already logged above
-      } else {
-        console.error(`[Deezer] 💥 GET ${url}:`, err)
-      }
-      throw err
+      // 4xx (client errors: 404, 403, 429) → never retry, show message
+      throw new Error(friendlyHttpError(res.status))
     }
+
+    // Parse JSON
+    let json: T
+    try {
+      json = await res.json()
+    } catch {
+      const cached = getFallbackData<T>(path)
+      if (cached !== null) {
+        console.warn(`[Deezer] 📦 Serving stale cache for GET ${url} after parse error`)
+        return cached
+      }
+      throw new Error("Invalid response from server")
+    }
+
+    // Success!
+    cacheApiData(path, json)
+    return json
   }
 
-  // Unreachable, but TypeScript wants a return
-  throw new Error("Unexpected error")
+  throw new Error("Could not load data")
 }
 
 // ─── Deezer raw types ────────────────────────────────────

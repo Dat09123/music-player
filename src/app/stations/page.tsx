@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import Link from "next/link"
 import { getGenres } from "@/lib/deezer"
 import { getGenreIcon } from "@/lib/utils"
 import LazyImage from "@/components/LazyImage"
-import Skeleton from "@/components/Skeleton"
+import Skeleton, { LoadingSkeleton } from "@/components/Skeleton"
 import { MusicNoteIcon, ArrowRightIcon, EmptyMusicIcon } from "@/components/Icons"
 
 const genreGradients: Record<string, string> = {
@@ -43,35 +43,42 @@ export default function StationsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      try {
-        const data = await getGenres()
-        if (!cancelled) setGenres(data)
-      } catch (err: any) {
-        if (!cancelled) setError(err?.message || "Failed to load genres")
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
+  const loadData = useCallback(async () => {
+    if (cancelledRef.current) return
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await getGenres()
+      if (!cancelledRef.current) setGenres(data)
+    } catch (err: any) {
+      if (!cancelledRef.current) setError(err?.message || "Failed to load genres")
+    } finally {
+      if (!cancelledRef.current) setLoading(false)
     }
-    load()
-    return () => { cancelled = true }
   }, [])
+
+  const cancelledRef = useRef(false)
+  useEffect(() => {
+    cancelledRef.current = false
+    loadData()
+    return () => { cancelledRef.current = true }
+  }, [loadData])
 
   if (loading) {
     return (
-      <div className="p-6 pb-20 max-w-7xl mx-auto">
-        <Skeleton width={240} height={36} className="mb-2" />
-        <Skeleton width={180} height={16} className="mb-8" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {Array.from({ length: 15 }).map((_, i) => (
-            <div key={i} className="aspect-square rounded-xl overflow-hidden">
-              <Skeleton variant="card" />
-            </div>
-          ))}
+      <LoadingSkeleton>
+        <div className="p-6 pb-20 max-w-7xl mx-auto">
+          <Skeleton width={240} height={36} className="mb-2" />
+          <Skeleton width={180} height={16} className="mb-8" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {Array.from({ length: 15 }).map((_, i) => (
+              <div key={i} className="aspect-square rounded-xl overflow-hidden">
+                <Skeleton variant="card" />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </LoadingSkeleton>
     )
   }
 
@@ -84,7 +91,13 @@ export default function StationsPage() {
           </svg>
         </div>
         <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Could not load stations</h2>
-        <p className="text-sm text-[var(--text-muted)]">{error}</p>
+        <p className="text-sm text-[var(--text-muted)] mb-6">{error}</p>
+        <button
+          onClick={loadData}
+          className="bg-[var(--accent)] hover:opacity-90 text-white font-medium px-5 py-2 rounded-lg text-sm transition-all"
+        >
+          Try again
+        </button>
       </div>
     )
   }

@@ -273,3 +273,13 @@ input[type="range"]:hover::-webkit-slider-thumb {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
+
+/* Network status slide-down */
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s ease-out both;
+}

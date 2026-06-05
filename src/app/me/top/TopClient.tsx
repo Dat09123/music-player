@@ -14,16 +14,17 @@ export default function TopClient() {
   const [artists, setArtists] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
   const { playAll } = usePlayer()
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setError(null)
 
-    async function fetchTopItems() {
+    async function loadData() {
+      if (cancelled) return
+      setLoading(true)
+      setError(null)
       try {
-        if (cancelled) return
         const chart = await getChart()
         if (!cancelled) {
           setTracks(chart.tracks?.slice(0, 20) || [])
@@ -38,9 +39,9 @@ export default function TopClient() {
       }
     }
 
-    fetchTopItems()
+    loadData()
     return () => { cancelled = true }
-  }, [])
+  }, [retryCount])
 
   // Build player tracks
   const playerTracks: PlayerTrack[] = tracks
@@ -87,7 +88,13 @@ export default function TopClient() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
         </svg>
         <p className="text-lg font-medium text-[var(--text-primary)] mb-2">Failed to load top charts</p>
-        <p className="text-sm text-[var(--text-muted)] mb-4">{error}</p>
+        <p className="text-sm text-[var(--text-muted)] mb-6">{error}</p>
+        <button
+          onClick={() => setRetryCount(c => c + 1)}
+          className="bg-[var(--accent)] hover:opacity-90 text-white font-medium px-5 py-2 rounded-lg text-sm transition-all"
+        >
+          Try again
+        </button>
       </div>
     )
   }

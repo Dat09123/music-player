@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
+import { useState, useEffect, use, useCallback, useRef } from "react"
 import dynamic from "next/dynamic"
 import { getImage, formatDuration, formatArtists, formatNumber } from "@/lib/utils"
 import { getTrack } from "@/lib/deezer"
-import Skeleton, { SkeletonTrackRow } from "@/components/Skeleton"
+import Skeleton, { SkeletonTrackRow, LoadingSkeleton } from "@/components/Skeleton"
 import LazyImage from "@/components/LazyImage"
 import { trackPageView } from "@/lib/recently-viewed"
 import { WarningIcon, MusicNoteIcon } from "@/components/Icons"
@@ -40,60 +40,60 @@ export default function TrackPage({ params }: Props) {
     })
   }, [track?.id])
 
-  useEffect(() => {
-    let cancelled = false
-
-    async function loadData() {
-      try {
-        if (cancelled) return
-        setLoading(true)
-        setError(null)
-
-        const data = await getTrack(id)
-
-        if (!cancelled) {
-          setTrack(data)
-        }
-      } catch (err: any) {
-        if (!cancelled) {
-          setError(err?.message || "Could not load track")
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
+  const loadData = useCallback(async () => {
+    if (cancelledRef.current) return
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await getTrack(id)
+      if (!cancelledRef.current) {
+        setTrack(data)
       }
+    } catch (err: any) {
+      if (!cancelledRef.current) {
+        setError(err?.message || "Could not load track")
+      }
+    } finally {
+      if (!cancelledRef.current) setLoading(false)
     }
-
-    loadData()
-    return () => { cancelled = true }
   }, [id])
+
+  const cancelledRef = useRef(false)
+  useEffect(() => {
+    cancelledRef.current = false
+    loadData()
+    return () => { cancelledRef.current = true }
+  }, [loadData])
 
   if (loading) {
     return (
-      <div>
-        {/* Hero skeleton */}
-        <div className="relative overflow-hidden bg-gradient-to-b from-gray-200/50 dark:from-gray-800/50 to-zinc-900">
-          <div className="px-6 pt-20 pb-8 md:pt-28 md:pb-12">
-            <div className="flex flex-col md:flex-row items-center md:items-end gap-8">
-              <Skeleton variant="hero-image" width={200} height={200} className="ring-4 ring-white/10" />
-              <div className="text-center md:text-left flex-1 space-y-3">
-                <Skeleton width={64} height={16} />
-                <Skeleton width={250} height={40} />
-                <Skeleton width={250} height={16} />
+      <LoadingSkeleton>
+        <div>
+          {/* Hero skeleton */}
+          <div className="relative overflow-hidden bg-gradient-to-b from-gray-200/50 dark:from-gray-800/50 to-zinc-900">
+            <div className="px-6 pt-20 pb-8 md:pt-28 md:pb-12">
+              <div className="flex flex-col md:flex-row items-center md:items-end gap-8">
+                <Skeleton variant="hero-image" width={200} height={200} className="ring-4 ring-white/10" />
+                <div className="text-center md:text-left flex-1 space-y-3">
+                  <Skeleton width={64} height={16} />
+                  <Skeleton width={250} height={40} />
+                  <Skeleton width={250} height={16} />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        {/* Content skeleton */}
-        <div className="px-3 py-4 space-y-6 pb-20">
-          <div className="flex items-center gap-4 px-4">
-            <Skeleton variant="circle" width={56} height={56} />
+          {/* Content skeleton */}
+          <div className="px-3 py-4 space-y-6 pb-20">
+            <div className="flex items-center gap-4 px-4">
+              <Skeleton variant="circle" width={56} height={56} />
+            </div>
+            <section className="px-4">
+              <Skeleton width={96} height={20} className="mb-4" />
+              <SkeletonTrackRow count={5} />
+            </section>
           </div>
-          <section className="px-4">
-            <Skeleton width={96} height={20} className="mb-4" />
-            <SkeletonTrackRow count={5} />
-          </section>
         </div>
-      </div>
+      </LoadingSkeleton>
     )
   }
 
@@ -102,7 +102,13 @@ export default function TrackPage({ params }: Props) {
       <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
         <WarningIcon className="w-16 h-16 text-red-300 mb-4" strokeWidth={1.5} />
         <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Track not found</h2>
-        <p className="text-sm text-[var(--text-muted)]">{error || "This track could not be loaded."}</p>
+        <p className="text-sm text-[var(--text-muted)] mb-6">{error || "This track could not be loaded."}</p>
+        <button
+          onClick={loadData}
+          className="bg-[var(--accent)] hover:opacity-90 text-white font-medium px-5 py-2 rounded-lg text-sm transition-all"
+        >
+          Try again
+        </button>
       </div>
     )
   }

@@ -4,7 +4,7 @@ import { useState, useEffect, use } from "react"
 import dynamic from "next/dynamic"
 import { getImage, formatNumber } from "@/lib/utils"
 import { getArtist, getRelatedArtists } from "@/lib/deezer"
-import Skeleton, { SkeletonHero, SkeletonTrackRow, SkeletonCardGrid } from "@/components/Skeleton"
+import Skeleton, { SkeletonHero, SkeletonTrackRow, SkeletonCardGrid, LoadingSkeleton } from "@/components/Skeleton"
 import { trackPageView } from "@/lib/recently-viewed"
 import LazyImage from "@/components/LazyImage"
 
@@ -31,14 +31,16 @@ export default function ArtistPage({ params }: Props) {
   const [nbAlbum, setNbAlbum] = useState<number>(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     let cancelled = false
 
     async function loadData() {
+      if (cancelled) return
+      setLoading(true)
+      setError(null)
       try {
-        if (cancelled) return
-
         const [data, related] = await Promise.all([
           getArtist(id),
           getRelatedArtists(id),
@@ -63,7 +65,7 @@ export default function ArtistPage({ params }: Props) {
 
     loadData()
     return () => { cancelled = true }
-  }, [id])
+  }, [id, retryCount])
 
   // Track page view after artist loads
   useEffect(() => {
@@ -100,22 +102,24 @@ export default function ArtistPage({ params }: Props) {
 
   if (loading) {
     return (
-      <div>
-        <SkeletonHero variant="artist" />
-        <div className="px-3 py-4 space-y-10 pb-20">
-          <div className="flex items-center gap-4 px-4">
-            <Skeleton variant="circle" width={56} height={56} />
+      <LoadingSkeleton>
+        <div>
+          <SkeletonHero variant="artist" />
+          <div className="px-3 py-4 space-y-10 pb-20">
+            <div className="flex items-center gap-4 px-4">
+              <Skeleton variant="circle" width={56} height={56} />
+            </div>
+            <section>
+              <Skeleton width={80} height={20} className="mb-4 ml-4" />
+              <SkeletonTrackRow count={5} />
+            </section>
+            <section>
+              <Skeleton width={80} height={20} className="mb-4 ml-4" />
+              <SkeletonCardGrid count={6} />
+            </section>
           </div>
-          <section>
-            <Skeleton width={80} height={20} className="mb-4 ml-4" />
-            <SkeletonTrackRow count={5} />
-          </section>
-          <section>
-            <Skeleton width={80} height={20} className="mb-4 ml-4" />
-            <SkeletonCardGrid count={6} />
-          </section>
         </div>
-      </div>
+      </LoadingSkeleton>
     )
   }
 
@@ -126,7 +130,13 @@ export default function ArtistPage({ params }: Props) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
         </svg>
         <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Artist not found</h2>
-        <p className="text-sm text-[var(--text-muted)]">{error || "This artist could not be loaded."}</p>
+        <p className="text-sm text-[var(--text-muted)] mb-6">{error || "This artist could not be loaded."}</p>
+        <button
+          onClick={() => setRetryCount(c => c + 1)}
+          className="bg-[var(--accent)] hover:opacity-90 text-white font-medium px-5 py-2 rounded-lg text-sm transition-all"
+        >
+          Try again
+        </button>
       </div>
     )
   }

@@ -15,6 +15,9 @@ import MobileNav from "@/components/MobileNav"
 import PageTransition from "@/components/PageTransition"
 import DynamicTitle from "@/components/DynamicTitle"
 import PWARegister from "@/components/PWARegister"
+import NetworkStatus from "@/components/NetworkStatus"
+import StaleDataBanner from "@/components/StaleDataBanner"
+import OfflineRetryHandler from "@/components/OfflineRetryHandler"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -103,6 +106,9 @@ export default function RootLayout({
         <ToastProvider>
         <SidebarProvider>
           <PlayerProvider>
+            <OfflineRetryHandler />
+            <StaleDataBanner />
+            <NetworkStatus />
             <PWARegister />
             <DynamicTitle />
             <KeyboardShortcuts />

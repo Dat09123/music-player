@@ -4,7 +4,7 @@ import { useState, useEffect, use } from "react"
 import dynamic from "next/dynamic"
 import { getImage, formatDate } from "@/lib/utils"
 import { getAlbum } from "@/lib/deezer"
-import Skeleton, { SkeletonTrackRow } from "@/components/Skeleton"
+import Skeleton, { SkeletonTrackRow, LoadingSkeleton } from "@/components/Skeleton"
 import LazyImage from "@/components/LazyImage"
 import { trackPageView } from "@/lib/recently-viewed"
 
@@ -26,11 +26,15 @@ export default function AlbumPage({ params }: Props) {
   const [album, setAlbum] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     let cancelled = false
 
     async function loadData() {
+      if (cancelled) return
+      setLoading(true)
+      setError(null)
       try {
         const data = await getAlbum(id)
         if (!cancelled) {
@@ -46,7 +50,7 @@ export default function AlbumPage({ params }: Props) {
 
     loadData()
     return () => { cancelled = true }
-  }, [id])
+  }, [id, retryCount])
 
   useEffect(() => {
     if (!album) return
@@ -62,26 +66,28 @@ export default function AlbumPage({ params }: Props) {
 
   if (loading) {
     return (
-      <div>
-        {/* Hero skeleton */}
-        <div className="px-6 pt-12 pb-8 md:pt-20 md:pb-10 bg-gradient-to-b from-gray-100 dark:from-gray-800 to-[var(--bg-primary)]">
-          <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
-            <Skeleton variant="hero-image" width={200} height={200} />
-            <div className="text-center md:text-left flex-1 space-y-3">
-              <Skeleton width={64} height={16} />
-              <Skeleton width={250} height={40} />
-              <Skeleton width={250} height={16} />
+      <LoadingSkeleton>
+        <div>
+          {/* Hero skeleton */}
+          <div className="px-6 pt-12 pb-8 md:pt-20 md:pb-10 bg-gradient-to-b from-gray-100 dark:from-gray-800 to-[var(--bg-primary)]">
+            <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
+              <Skeleton variant="hero-image" width={200} height={200} />
+              <div className="text-center md:text-left flex-1 space-y-3">
+                <Skeleton width={64} height={16} />
+                <Skeleton width={250} height={40} />
+                <Skeleton width={250} height={16} />
+              </div>
             </div>
           </div>
-        </div>
-        {/* Track list skeleton */}
-        <div className="px-3 py-4">
-          <div className="flex items-center gap-4 px-4 py-2 mb-4">
-            <Skeleton variant="circle" width={56} height={56} />
+          {/* Track list skeleton */}
+          <div className="px-3 py-4">
+            <div className="flex items-center gap-4 px-4 py-2 mb-4">
+              <Skeleton variant="circle" width={56} height={56} />
+            </div>
+            <SkeletonTrackRow count={8} showImage={false} />
           </div>
-          <SkeletonTrackRow count={8} showImage={false} />
         </div>
-      </div>
+      </LoadingSkeleton>
     )
   }
 
@@ -92,7 +98,13 @@ export default function AlbumPage({ params }: Props) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
         </svg>
         <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Album not found</h2>
-        <p className="text-sm text-[var(--text-muted)]">{error || "This album could not be loaded."}</p>
+        <p className="text-sm text-[var(--text-muted)] mb-6">{error || "This album could not be loaded."}</p>
+        <button
+          onClick={() => setRetryCount(c => c + 1)}
+          className="bg-[var(--accent)] hover:opacity-90 text-white font-medium px-5 py-2 rounded-lg text-sm transition-all"
+        >
+          Try again
+        </button>
       </div>
     )
   }
