@@ -96,20 +96,6 @@ body {
   background: rgba(20, 20, 31, 0.4);
 }
 
-/* Glow effect on accent elements */
-.glow-accent {
-  box-shadow: var(--shadow-glow);
-}
-
-/* Hover lift effect */
-.hover-lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -206,11 +192,6 @@ input[type="range"]:hover::-webkit-slider-thumb {
   to { opacity: 1; transform: scale(1); }
 }
 
-@keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 .animate-fade-in-up {
   animation: fadeInUp 0.4s ease-out both;
 }
@@ -221,10 +202,6 @@ input[type="range"]:hover::-webkit-slider-thumb {
 
 .animate-scale-in {
   animation: scaleIn 0.3s ease-out both;
-}
-
-.animate-fade-in-down {
-  animation: fadeInDown 0.3s ease-out both;
 }
 
 /* Toast animations */
@@ -253,16 +230,6 @@ input[type="range"]:hover::-webkit-slider-thumb {
 
 .animate-toast-progress {
   animation: toastProgress 2.5s linear forwards;
-}
-
-/* Now playing bar animation */
-@keyframes nowPlaying {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.animate-now-playing {
-  animation: nowPlaying 1.5s ease-in-out infinite;
 }
 
 /* Page transition animations */
