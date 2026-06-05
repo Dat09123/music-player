@@ -9,6 +9,7 @@ import LazyImage from "@/components/LazyImage"
 import Link from "next/link"
 import { formatDuration, getImage } from "@/lib/utils"
 import type { PlayerTrack } from "@/lib/types"
+import Visualizer from "@/components/Visualizer"
 
 const SyncedLyrics = dynamic(() => import("@/components/SyncedLyrics"), { ssr: false })
 const CinemaMode = dynamic(() => import("@/components/CinemaMode"), { ssr: false })
@@ -143,7 +144,14 @@ export default function TrackClient({ track }: Props) {
   const albumImage = getImage(track.album?.images, "lg")
 
   return (
-    <div className="bg-[var(--bg-secondary)]/50 px-3 py-4 pb-20">
+    <div className="relative bg-[var(--bg-secondary)]/50 px-3 py-4 pb-20 overflow-hidden">
+      {/* Subtle animated background visualizer */}
+      <div className="absolute inset-0 opacity-15 pointer-events-none">
+        <Visualizer barCount={36} variant="full" mode="waveform" className="h-full" />
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10">
       {/* Play controls */}
       <div className="flex items-center gap-4 px-4 py-2 mb-6">
         <button
@@ -392,6 +400,7 @@ export default function TrackClient({ track }: Props) {
           </div>
         </div>
       )}
+      </div>{/* End content wrapper */}
     </div>
   )
 }
