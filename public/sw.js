@@ -1,35 +1,54 @@
-const CACHE = "muse-v1"
-const STATIC = ["/", "/search", "/manifest.json", "/favicon.ico"]
+const CACHE_NAME = "muse-cache-v1"
+const STATIC_ASSETS = [
+  "/",
+  "/manifest.json",
+  "/favicon.ico",
+  "/icon-192.png",
+  "/icon-512.png",
+]
 
-self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(STATIC)).then(() => self.skipWaiting()))
-})
-
-self.addEventListener("activate", (e) => {
-  e.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
+// Install: cache static assets
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(STATIC_ASSETS).catch(() => {
+        // Non-critical — assets still load from network
+      })
+    })
   )
 })
 
-self.addEventListener("fetch", (e) => {
-  if (e.request.method !== "GET") return
-  const url = new URL(e.request.url)
-  // Network-first for API, cache-first for static assets
-  if (url.pathname.startsWith("/api/") || url.hostname !== location.hostname) {
-    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)))
-    return
-  }
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached
-      return fetch(e.request).then(res => {
-        if (res.ok) {
-          const clone = res.clone()
-          caches.open(CACHE).then(c => c.put(e.request, clone))
+// Activate: clean old caches
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    )
+  )
+})
+
+// Fetch: network first, fallback to cache
+self.addEventListener("fetch", (event) => {
+  // Skip non-GET requests
+  if (event.request.method !== "GET") return
+
+  // Skip API calls — always go to network
+  if (event.request.url.includes("/api/")) return
+
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        // Cache successful responses for static assets
+        if (response.status === 200) {
+          const cache = caches.open(CACHE_NAME)
+          cache.then((c) => c.put(event.request, response.clone()))
         }
-        return res
+        return response
       })
-    })
+      .catch(() => {
+        return caches.match(event.request).then((cached) => {
+          return cached || caches.match("/")
+        })
+      })
   )
 })

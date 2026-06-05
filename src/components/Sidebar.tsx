@@ -128,7 +128,7 @@ function SidebarContent({
           </nav>
 
           <div className="px-2 py-2 border-t border-[var(--border)]">
-            <button onClick={onCreatePlaylist} className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--accent-light)] transition-all">
+            <button onClick={onCreatePlaylist} className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--accent)] hover:bg-[var(--accent-light)] transition-all" aria-label="Create new playlist">
               <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
               <span>New Playlist</span>
             </button>
