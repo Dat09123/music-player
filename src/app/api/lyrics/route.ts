@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
     // ── Phase 1: Exact match ──
     if (artist) {
-      const exactUrl = `${LRCLIB_API}/get?artistName=${encodeURIComponent(artist)}&trackName=${encodeURIComponent(track)}`
+      const exactUrl = `${LRCLIB_API}/get?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(track)}`
       const exactRes = await fetch(exactUrl, {
         headers: { "User-Agent": "MusePlayer/1.0" },
         cache: "no-store",

@@ -25,10 +25,23 @@ export default function PlaylistClient({ tracks, playlistName, playlistUri, play
   const { showToast } = useToast()
   const [imported, setImported] = useState(false)
 
-  const playerTracks = tracks.filter((t) => t?.track?.id).map((t) => toPlayerTrack(t.track))
+  const playerTracks = tracks
+    .filter((t) => t?.track?.id)
+    .map((t) => toPlayerTrack(t.track))
+    .filter((t) => t.previewUrl)
+
+  const playableCount = playerTracks.length
+  const totalCount = tracks.filter((t) => t?.track?.id).length
 
   function handlePlayAll() {
-    if (playerTracks.length > 0) playAll(playerTracks, 0)
+    if (playerTracks.length === 0) {
+      showToast("No playable tracks in this playlist", "error")
+      return
+    }
+    playAll(playerTracks, 0)
+    if (playableCount < totalCount) {
+      showToast(`Playing ${playableCount}/${totalCount} tracks (${totalCount - playableCount} unavailable)`)
+    }
   }
 
   function handleImport() {
@@ -93,7 +106,7 @@ export default function PlaylistClient({ tracks, playlistName, playlistUri, play
 
       {/* Track count */}
       <div className="mx-4 p-4 rounded-xl bg-[var(--bg-secondary)]/50 backdrop-blur-sm border border-[var(--border)] text-xs text-[var(--text-muted)]">
-        {tracks.filter((t) => t?.track?.id).length} songs
+        {playableCount}/{totalCount} songs available
       </div>
     </div>
   )

@@ -232,28 +232,49 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   function playTrack(track: PlayerTrack) {
     const audio = audioRef.current
     if (!audio) return
+
+    // Skip track if no preview URL — jump to next in queue
+    if (!track.previewUrl) {
+      setCurrentTrack(track)
+      setIsPlaying(false)
+      // Auto-skip to next playable track in queue
+      const idx = queue.findIndex((t) => t.id === track.id)
+      if (idx >= 0) {
+        const nextIdx = (idx + 1) % queue.length
+        if (nextIdx !== idx) {
+          setTimeout(() => {
+            const next = queue[nextIdx]
+            if (next?.previewUrl) {
+              setQueueIndex(nextIdx)
+              playTrack(next)
+              return
+            }
+          }, 300)
+        }
+      }
+      return
+    }
+
     // Crossfade: fade in new track
     if (crossfadeRef.current > 0) {
       audio.volume = 0
-      if (track.previewUrl) {
-        audio.src = track.previewUrl
-        audio.play().catch(() => setIsPlaying(false))
-        let elapsed = 0
-        const step = 50
-        const cf = crossfadeRef.current * 1000
-        if (crossfadeTimerRef.current) clearInterval(crossfadeTimerRef.current)
-        crossfadeTimerRef.current = setInterval(() => {
-          elapsed += step
-          if (audio) audio.volume = Math.min(volumeRef.current, volumeRef.current * (elapsed / cf))
-          if (elapsed >= cf) {
-            clearInterval(crossfadeTimerRef.current!)
-            crossfadeTimerRef.current = null
-          }
-        }, step)
-      }
+      audio.src = track.previewUrl
+      audio.play().catch(() => setIsPlaying(false))
+      let elapsed = 0
+      const step = 50
+      const cf = crossfadeRef.current * 1000
+      if (crossfadeTimerRef.current) clearInterval(crossfadeTimerRef.current)
+      crossfadeTimerRef.current = setInterval(() => {
+        elapsed += step
+        if (audio) audio.volume = Math.min(volumeRef.current, volumeRef.current * (elapsed / cf))
+        if (elapsed >= cf) {
+          clearInterval(crossfadeTimerRef.current!)
+          crossfadeTimerRef.current = null
+        }
+      }, step)
     } else {
-      if (track.previewUrl) { audio.src = track.previewUrl; audio.play().catch(() => setIsPlaying(false)) }
-      else setIsPlaying(false)
+      audio.src = track.previewUrl
+      audio.play().catch(() => setIsPlaying(false))
     }
     setCurrentTrack(track)
     addToRecentlyPlayed(track)
