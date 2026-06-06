@@ -92,7 +92,7 @@ export default function NowPlayingPage() {
   return (
     <div
       ref={pageRef}
-      className="relative h-full w-full overflow-hidden select-none"
+      className="relative h-full w-full overflow-hidden select-none flex flex-col"
       style={{ background: "linear-gradient(135deg, #000 0%, #0a0a1a 50%, #000 100%)" }}
     >
       {/* Animated background orbs */}
@@ -220,10 +220,10 @@ export default function NowPlayingPage() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center flex-1 px-6 py-4 gap-6 md:gap-8 -mt-8">
+      <div className={`relative z-10 flex flex-col items-center flex-1 px-6 py-4 gap-6 md:gap-8 ${showLyrics ? '' : 'justify-center -mt-8'}`}>
         {showLyrics ? (
           /* Lyrics panel */
-          <div className="flex-1 w-full max-w-2xl animate-fade-in" key={`lyrics-${currentTrack.id}`}>
+          <div className="flex-1 w-full max-w-2xl min-h-0 animate-fade-in flex flex-col" key={`lyrics-${currentTrack.id}`}>
             <LyricsDisplay />
           </div>
         ) : (

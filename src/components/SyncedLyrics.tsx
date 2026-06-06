@@ -2,41 +2,11 @@
 
 import { useRef, useEffect, useMemo } from "react"
 import { usePlayer } from "./Player"
-
-interface TimedLine {
-  time: number // seconds
-  text: string
-}
+import { parseLRC, type LyricLine } from "@/lib/lyrics"
 
 interface Props {
   syncedLyrics: string
   cinemaMode?: boolean
-}
-
-function parseLRC(lrc: string): TimedLine[] {
-  const lines = lrc.split("\n")
-  const result: TimedLine[] = []
-  // Matches [mm:ss.xx] or [mm:ss.xxx] at the start of a line
-  const lineRegex = /^\[(\d{1,3}):(\d{2})\.(\d{2,3})\](.*)$/
-
-  for (const line of lines) {
-    const trimmed = line.trim()
-    if (!trimmed) continue
-
-    const match = trimmed.match(lineRegex)
-    if (match) {
-      const minutes = parseInt(match[1], 10)
-      const seconds = parseInt(match[2], 10)
-      let millis = parseInt(match[3], 10)
-      // If the timestamp has 2-digit millis, treat as centiseconds * 10
-      if (match[3].length === 2) millis *= 10
-      const time = minutes * 60 + seconds + millis / 1000
-      const text = match[4].trim()
-      if (text) result.push({ time, text })
-    }
-  }
-
-  return result.sort((a, b) => a.time - b.time)
 }
 
 export default function SyncedLyrics({ syncedLyrics, cinemaMode }: Props) {
