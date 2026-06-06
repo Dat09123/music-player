@@ -34,6 +34,9 @@ export default function Header() {
     ""
   )
 
+  // Hide header on Now Playing page for immersive full-screen experience
+  if (pathname.startsWith('/now-playing')) return null
+
   return (
     <header className="sticky top-0 z-40 glass-subtle border-b border-[var(--border)]" role="banner">
       {/* Auth error banner */}

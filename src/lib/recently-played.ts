@@ -22,8 +22,8 @@ function loadAll(): RecentTrack[] {
 function saveAll(tracks: RecentTrack[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(tracks))
-  } catch (e) {
-    console.error("[RecentlyPlayed] Failed to save:", e)
+  } catch {
+    // localStorage full or unavailable — silently fail
   }
 }
 

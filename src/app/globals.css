@@ -330,3 +330,22 @@ input[type="range"]:hover::-webkit-slider-thumb {
 .animate-slide-down {
   animation: slideDown 0.3s ease-out both;
 }
+
+/* Slow spin for vinyl record animation (Now Playing view) */
+@keyframes slowSpin {
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: slowSpin 8s linear infinite;
+}
+
+/* Fast shimmer for progress bar (Now Playing view) */
+@keyframes shimmerFast {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer-fast {
+  animation: shimmerFast 1.5s ease-in-out infinite;
+}

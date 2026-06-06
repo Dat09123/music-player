@@ -7,26 +7,13 @@ import type { PlayerTrack, RepeatMode } from "@/lib/types"
 import ErrorBoundary from "./ErrorBoundary"
 import LazyImage from "./LazyImage"
 import { addToRecentlyPlayed } from "@/lib/recently-played"
+import { getLikedIds, saveLikedIds, getLikedTracksData, LIKED_DATA_KEY } from "@/lib/liked-tracks"
 import { MusicNoteIcon, PlayIcon, PauseIcon, SkipPrevIcon, SkipNextIcon, HeartIcon, ShuffleIcon, RepeatIcon, VolumeIcon, QueueListIcon, SettingsIcon, MoonIcon, XIcon, PlusIcon } from "@/components/Icons"
 import Visualizer from "./Visualizer"
 
 const QueuePanel = dynamic(() => import("./QueuePanel"), { ssr: false })
 
 export type { PlayerTrack }
-
-const LIKED_KEY = "muse-liked-tracks"
-const LIKED_DATA_KEY = "muse-liked-data"
-function getLiked(): Set<string> {
-  if (typeof window === "undefined") return new Set()
-  try { return new Set(JSON.parse(localStorage.getItem(LIKED_KEY) || "[]")) } catch { return new Set() }
-}
-function saveLiked(ids: Set<string>) {
-  localStorage.setItem(LIKED_KEY, JSON.stringify([...ids]))
-}
-function getLikedData(): PlayerTrack[] {
-  if (typeof window === "undefined") return []
-  try { return JSON.parse(localStorage.getItem(LIKED_DATA_KEY) || "[]") } catch { return [] }
-}
 
 interface PlayerContextType {
   currentTrack: PlayerTrack | null
@@ -99,7 +86,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   )
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const sleepTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const crossfadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const crossfadeTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const nextTrackRef = useRef(nextTrack)
   nextTrackRef.current = nextTrack
@@ -111,7 +98,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   volumeRef.current = volume
 
   // Load liked tracks on mount
-  useEffect(() => { setLikedTracks(getLiked()) }, [])
+  useEffect(() => { setLikedTracks(getLikedIds()) }, [])
 
   useEffect(() => {
     audioRef.current = new Audio()
@@ -242,7 +229,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         crossfadeTimerRef.current = setInterval(() => {
           elapsed += step
           if (audio) audio.volume = Math.min(volumeRef.current, volumeRef.current * (elapsed / cf))
-          if (elapsed >= cf) clearInterval(crossfadeTimerRef.current!)
+          if (elapsed >= cf) {
+            clearInterval(crossfadeTimerRef.current!)
+            crossfadeTimerRef.current = null
+          }
         }, step)
       }
     } else {
@@ -355,21 +345,21 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       const next = new Set(prev)
       const adding = !next.has(id)
       if (adding) next.add(id); else next.delete(id)
-      saveLiked(next)
-      
+      saveLikedIds(next)
+
       // Find track: passed in, or from queue, or from currentTrack, or from likedData
-      const track = trackData || queue.find(t => t.id === id) || (currentTrack?.id === id ? currentTrack : null) || getLikedData().find(t => t.id === id)
-      
+      const track = trackData || queue.find(t => t.id === id) || (currentTrack?.id === id ? currentTrack : null) || getLikedTracksData().find(t => t.id === id)
+
       if (adding && track) {
         // Add to data
-        const data = getLikedData()
+        const data = getLikedTracksData()
         if (!data.find(t => t.id === track.id)) {
           data.unshift(track)
           localStorage.setItem(LIKED_DATA_KEY, JSON.stringify(data))
         }
       } else if (!adding) {
         // Remove from data even if track not found
-        const data = getLikedData().filter(t => t.id !== id)
+        const data = getLikedTracksData().filter(t => t.id !== id)
         localStorage.setItem(LIKED_DATA_KEY, JSON.stringify(data))
       }
       

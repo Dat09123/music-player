@@ -17,13 +17,12 @@ export default function PWARegister() {
 
           installing.addEventListener("statechange", () => {
             if (installing.state === "installed" && navigator.serviceWorker.controller) {
-              console.log("[PWA] New version available, reloading...")
               installing.postMessage({ type: "SKIP_WAITING" })
             }
           })
         })
-      } catch (err) {
-        console.warn("[PWA] Service worker registration failed:", err)
+      } catch {
+        // Service worker not supported or registration failed
       }
     }
 

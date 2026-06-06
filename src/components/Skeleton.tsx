@@ -262,6 +262,53 @@ export function SkeletonHero({
   )
 }
 
+// ─── Liked Songs page skeleton ──────────────────────────
+
+export function LikedSkeleton() {
+  return (
+    <div className="animate-fade-in">
+      {/* Header */}
+      <div className="bg-gradient-to-b from-red-100/50 via-pink-50/50 to-transparent dark:from-red-950/20 dark:via-pink-950/10 dark:to-transparent px-6 pt-12 pb-8 md:pt-20 md:pb-10">
+        <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
+          <div className="w-48 h-48 md:w-56 md:h-56 rounded-xl overflow-hidden flex-shrink-0 skeleton-pulse" />
+          <div className="text-center md:text-left flex-1 space-y-3">
+            <Skeleton width={64} height={16} />
+            <Skeleton width={250} height={40} />
+            <Skeleton width={180} height={16} />
+          </div>
+        </div>
+      </div>
+
+      <div className="px-5 py-4">
+        {/* Play button */}
+        <div className="px-4 mb-4">
+          <Skeleton variant="circle" width={56} height={56} />
+        </div>
+
+        {/* Track rows */}
+        <div className="space-y-2">
+          {[...Array(8)].map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 px-4 py-2 animate-fade-in-up"
+              style={{ animationDelay: `${i * 40}ms` }}
+            >
+              <Skeleton width={20} height={20} />
+              <Skeleton variant="rect" width={32} height={32} />
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <Skeleton width={`${65 + Math.random() * 25}%`} height={14} />
+                <Skeleton width={`${40 + Math.random() * 20}%`} height={12} />
+              </div>
+              <Skeleton width={40} height={12} />
+              <Skeleton variant="circle" width={16} height={16} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Skeleton for lyrics loading state ───────────────────
 
 export function SkeletonLyrics() {

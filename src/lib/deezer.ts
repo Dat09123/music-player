@@ -9,7 +9,6 @@ const API = "/api/deezer"
 
 // ─── Raw fetch ───────────────────────────────────────────
 
-import { logApiError } from "./api-logger"
 import { cacheApiData, getFallbackData } from "./data-cache"
 import { enqueueRetry } from "./offline-queue"
 
@@ -35,18 +34,13 @@ async function fetchDeezer<T>(path: string, retries = 2, signal?: AbortSignal): 
   if (typeof navigator !== "undefined" && !navigator.onLine) {
     const cached = getFallbackData<T>(path)
     if (cached !== null) {
-      console.warn(`[Deezer] 📦 Offline — serving cache for GET ${url}`)
       enqueueRetry(path)
       return cached
     }
   }
 
   for (let attempt = 0; attempt <= retries; attempt++) {
-    const start = performance.now()
-
     // ── Phase 1: The actual fetch (network layer only) ──
-    // fetch() ONLY throws on network failure or abort. HTTP 4xx/5xx NEVER throw.
-    // So ANY error we catch here is DEFINITELY a network/abort issue — retry it.
     let res: Response
     try {
       res = await fetch(url, {
@@ -55,31 +49,22 @@ async function fetchDeezer<T>(path: string, retries = 2, signal?: AbortSignal): 
           : undefined),
       })
     } catch (fetchErr: unknown) {
-      // fetch() threw → this is ALWAYS a network error or abort
-      const fetchErrObj = fetchErr && typeof fetchErr === "object"
-        ? (fetchErr as { name?: string; message?: string })
-        : null
-      const fetchErrName = fetchErrObj?.name || String(fetchErr)
-      const fetchErrMsg = fetchErrObj?.message || String(fetchErr)
+      const fetchErrName = fetchErr && typeof fetchErr === "object"
+        ? (fetchErr as { name?: string }).name || String(fetchErr)
+        : String(fetchErr)
 
       // Abort → component unmount or manual cancel, don't retry
       if (fetchErrName.includes("Abort")) throw fetchErr
 
       // Network error → retry
-      console.warn(`[Deezer] ⚠ Network: GET ${url} (attempt ${attempt + 1}/${retries + 1}): ${fetchErrMsg}`)
-
       if (attempt < retries) {
         const delay = retryDelay(attempt)
         await new Promise((r) => setTimeout(r, delay))
         continue
       }
 
-      logApiError(path, fetchErr, attempt)
-      console.error(`[Deezer] 💥 Network: GET ${url} failed after ${retries + 1} attempts`)
-
       const cached = getFallbackData<T>(path)
       if (cached !== null) {
-        console.warn(`[Deezer] 📦 Serving stale cache for GET ${url}`)
         enqueueRetry(path)
         return cached
       }
@@ -88,16 +73,7 @@ async function fetchDeezer<T>(path: string, retries = 2, signal?: AbortSignal): 
     }
 
     // ── Phase 2: Response handling (HTTP errors, JSON parsing) ──
-    // If we're here, the network request succeeded (we got a Response object)
-    const duration = Math.round(performance.now() - start)
-    console.debug(`[Deezer] ➡ GET ${url} → ${res.status} (${duration}ms)`)
-
-    // Handle HTTP errors
     if (!res.ok) {
-      const text = await res.text()
-      console.error(`[Deezer] ❌ GET ${url} → ${res.status}: ${text.slice(0, 200)}`)
-      logApiError(path, new Error(friendlyHttpError(res.status)), attempt, res.status)
-
       // 5xx (server errors) → retry or cache
       if (res.status >= 500) {
         if (attempt < retries) {
@@ -106,10 +82,7 @@ async function fetchDeezer<T>(path: string, retries = 2, signal?: AbortSignal): 
           continue
         }
         const cached = getFallbackData<T>(path)
-        if (cached !== null) {
-          console.warn(`[Deezer] 📦 Serving stale cache for GET ${url} after server error`)
-          return cached
-        }
+        if (cached !== null) return cached
       }
 
       // 4xx (client errors: 404, 403, 429) → never retry, show message
@@ -122,10 +95,7 @@ async function fetchDeezer<T>(path: string, retries = 2, signal?: AbortSignal): 
       json = await res.json()
     } catch {
       const cached = getFallbackData<T>(path)
-      if (cached !== null) {
-        console.warn(`[Deezer] 📦 Serving stale cache for GET ${url} after parse error`)
-        return cached
-      }
+      if (cached !== null) return cached
       throw new Error("Invalid response from server")
     }
 
@@ -218,9 +188,6 @@ function transformSearchResults(
 }
 
 function transformTrack(t: DeezerTrack): any {
-  if (!t.artist) console.debug(`[Deezer] ⚠ Track ${t.id} missing artist, using fallback`)
-  if (!t.album) console.debug(`[Deezer] ⚠ Track ${t.id} missing album, using fallback`)
-
   const artist = t.artist || {} as any
   return {
     id: String(t.id),
@@ -242,8 +209,6 @@ function transformTrack(t: DeezerTrack): any {
 }
 
 function transformAlbum(a: DeezerAlbum): any {
-  if (!a.artist) console.debug(`[Deezer] ⚠ Album ${a.id} missing artist, using fallback`)
-
   const artist = a.artist || {} as any
   return {
     id: String(a.id),
@@ -303,7 +268,6 @@ function transformPlaylist(p: DeezerPlaylist) {
 
 /** Search across all types (track, album, artist, playlist) */
 export async function searchAll(query: string, signal?: AbortSignal) {
-  console.debug(`[Deezer] 🔍 searchAll("${query}")`)
   const [tracks, albums, artists, playlists] = await Promise.all([
     fetchDeezer<{ data: DeezerTrack[] }>(`/search/track?q=${encodeURIComponent(query)}&limit=8`, 2, signal),
     fetchDeezer<{ data: DeezerAlbum[] }>(`/search/album?q=${encodeURIComponent(query)}&limit=5`, 2, signal),
@@ -320,28 +284,24 @@ export async function searchAll(query: string, signal?: AbortSignal) {
 
 /** Search by type (track, album, artist, playlist) */
 export async function searchByType(query: string, type: string, limit = 8) {
-  console.debug(`[Deezer] 🔍 searchByType("${query}", "${type}")`)
   const result = await fetchDeezer<{ data: DeezerTrack[] }>(`/search/${type}?q=${encodeURIComponent(query)}&limit=${limit}`)
   return result.data || []
 }
 
 /** Get a single album with tracks */
 export async function getAlbum(id: string) {
-  console.debug(`[Deezer] 💿 getAlbum(${id})`)
   const data = await fetchDeezer<DeezerAlbum>(`/album/${id}`)
   return transformAlbum(data)
 }
 
 /** Get a single track by ID */
 export async function getTrack(id: string) {
-  console.debug(`[Deezer] 🎵 getTrack(${id})`)
   const data = await fetchDeezer<DeezerTrack>(`/track/${id}`)
   return transformTrack(data)
 }
 
 /** Get a single artist */
 export async function getArtist(id: string) {
-  console.debug(`[Deezer] 🎤 getArtist(${id})`)
   const [artistData, topTracksData, albumsData]: [any, any, any] = await Promise.all([
     fetchDeezer(`/artist/${id}`),
     fetchDeezer(`/artist/${id}/top?limit=10`),
@@ -374,14 +334,12 @@ export async function getRelatedArtists(_id: string) {
 
 /** Get a single playlist with tracks */
 export async function getPlaylist(id: string) {
-  console.debug(`[Deezer] 📋 getPlaylist(${id})`)
   const data = await fetchDeezer<DeezerPlaylist>(`/playlist/${id}`)
   return transformPlaylist(data)
 }
 
-/** Get chart/featured content (replaces Spotify's featured playlists + new releases) */
+/** Get chart/featured content */
 export async function getChart() {
-  console.debug(`[Deezer] 📊 getChart()`)
   const data: any = await fetchDeezer("/chart")
   return {
     playlists: (data.playlists?.data || []).map(transformPlaylist),
@@ -393,29 +351,24 @@ export async function getChart() {
 
 /** Search tracks (for SearchClient) */
 export async function searchTracks(query: string, limit = 8) {
-  console.debug(`[Deezer] 🔍 searchTracks("${query}")`)
   const result = await fetchDeezer<{ data: DeezerTrack[] }>(`/search/track?q=${encodeURIComponent(query)}&limit=${limit}`)
   return (result.data || []).map(transformTrack)
 }
 
 /** Get all music genres */
 export async function getGenres() {
-  console.debug(`[Deezer] 🏷️ getGenres()`)
   const data = await fetchDeezer<{ data: { id: number; name: string; picture: string }[] }>("/genre")
-  return (data.data || []).filter((g) => g.id !== 0) // Remove "All" genre
+  return (data.data || []).filter((g) => g.id !== 0)
 }
 
 /** Search by genre ID (returns top tracks for a genre) */
 export async function searchByGenre(genreId: number, limit = 8) {
-  console.debug(`[Deezer] 🏷️ searchByGenre(${genreId})`)
-  // Deezer doesn't have a direct genre search, use the genre's artist endpoint or radio
   const data = await fetchDeezer<{ data: DeezerTrack[] }>(`/radio/genre/${genreId}/tracks?limit=${limit}`)
   return (data.data || []).map(transformTrack)
 }
 
 /** Get full genre radio station data: genre info + tracks */
 export async function getGenreRadio(genreId: number, limit = 20) {
-  console.debug(`[Deezer] 📻 getGenreRadio(${genreId})`)
   const [genres, tracksData] = await Promise.all([
     getGenres(),
     fetchDeezer<{ data: DeezerTrack[] }>(`/radio/genre/${genreId}/tracks?limit=${limit}`),

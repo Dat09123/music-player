@@ -9,7 +9,7 @@ import { useState, useRef, useEffect, useMemo, useCallback, memo } from "react"
 import Link from "next/link"
 import { useToast } from "./Toast"
 import LazyImage from "./LazyImage"
-import { PlayIcon, ClockIcon, PlusIcon, LinkIcon, MusicNoteStrokeIcon, PersonIcon, SettingsIcon, EmptyMusicIcon } from "@/components/Icons"
+import { PlayIcon, ClockIcon, PlusIcon, LinkIcon, MusicNoteStrokeIcon, PersonIcon, SettingsIcon, EmptyMusicIcon, HeartIcon } from "@/components/Icons"
 
 interface TrackRowProps {
   track: SpotifyTrack
@@ -21,12 +21,18 @@ interface TrackRowProps {
   showAlbum: boolean
   onPlay: (index: number) => void
   onOpenMenu: (track: PlayerTrack, e: React.MouseEvent) => void
+  onToggleLike?: (id: string) => void
 }
 
-const TrackRow = memo(function TrackRow({ track, pt, index, isCurrent, isPlaying, showImage, showAlbum, onPlay, onOpenMenu }: TrackRowProps) {
+const TrackRow = memo(function TrackRow({ track, pt, index, isCurrent, isPlaying, showImage, showAlbum, onPlay, onOpenMenu, onToggleLike }: TrackRowProps) {
+  const hasAction = !!onToggleLike
   return (
     <div
-      className={`grid grid-cols-[32px_1fr_64px_28px] gap-3 px-4 py-2 rounded-xl group cursor-pointer transition-all duration-200 hover:bg-[var(--bg-hover)]/70 hover:shadow-sm active:scale-[0.99] ${isCurrent ? "text-[var(--accent)] bg-[var(--accent)]/8" : "text-[var(--text-secondary)]"}`}
+      className={`gap-3 px-4 py-2 rounded-xl group cursor-pointer transition-all duration-200 hover:bg-[var(--bg-hover)]/70 hover:shadow-sm active:scale-[0.99] ${isCurrent ? "text-[var(--accent)] bg-[var(--accent)]/8" : "text-[var(--text-secondary)]"}`}
+      style={{
+        display: "grid",
+        gridTemplateColumns: hasAction ? "32px 1fr 64px 40px" : "32px 1fr 64px 28px",
+      }}
       onClick={() => onPlay(index)}
       role="row"
       tabIndex={0}
@@ -73,7 +79,17 @@ const TrackRow = memo(function TrackRow({ track, pt, index, isCurrent, isPlaying
         {track.explicit && <span className="text-[9px] bg-[var(--bg-hover)] text-[var(--text-muted)] font-bold px-1 py-0.5 rounded uppercase leading-none">E</span>}
         <span className="text-xs tabular-nums text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors duration-200">{formatDuration(track.duration_ms || 0)}</span>
       </div>
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-end gap-1">
+        {onToggleLike && pt && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleLike(pt.id) }}
+            className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-500 transition-all p-0.5"
+            title="Unlike"
+            aria-label={`Unlike ${pt.name}`}
+          >
+            <HeartIcon className="w-3.5 h-3.5" fill="currentColor" />
+          </button>
+        )}
         {pt && (
           <button
             onClick={(e) => onOpenMenu(pt, e)}
@@ -95,9 +111,11 @@ interface TrackListProps {
   showImage?: boolean
   showIndex?: boolean
   startIndex?: number
+  playerTracks?: PlayerTrack[]
+  onToggleLike?: (id: string) => void
 }
 
-export default function TrackList({ tracks, showAlbum = true, showImage = true, showIndex = false, startIndex = 0 }: TrackListProps) {
+export default function TrackList({ tracks, showAlbum = true, showImage = true, showIndex = false, startIndex = 0, playerTracks: precomputedPlayerTracks, onToggleLike }: TrackListProps) {
   const { playAll, playNext, addToQueue, currentTrack, isPlaying } = usePlayer()
   const { showToast } = useToast()
   const [menuTrack, setMenuTrack] = useState<PlayerTrack | null>(null)
@@ -138,13 +156,13 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
   )
 
   const playerTracks: PlayerTrack[] = useMemo(
-    () => validTracks.map(({ track }) => ({
+    () => precomputedPlayerTracks ?? validTracks.map(({ track }) => ({
       id: track.id, name: track.name, artists: formatArtists(track.artists || []),
       artistIds: (track.artists || []).map((a) => a.id), album: track.album?.name || "",
       albumId: track.album?.id || "", albumImage: getImage(track.album?.images, "sm"),
       duration: track.duration_ms || 0, previewUrl: track.preview_url, uri: track.uri,
     })),
-    [validTracks]
+    [validTracks, precomputedPlayerTracks]
   )
 
   const handlePlay = useCallback((trackIndex: number) => {
@@ -192,7 +210,13 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
 
   return (
     <div className="space-y-0.5">
-      <div className="grid grid-cols-[32px_1fr_64px_28px] gap-3 px-4 py-1.5 text-[11px] text-[var(--text-muted)] font-medium border-b border-[var(--border)]/50">
+      <div
+        className="gap-3 px-4 py-1.5 text-[11px] text-[var(--text-muted)] font-medium border-b border-[var(--border)]/50"
+        style={{
+          display: "grid",
+          gridTemplateColumns: onToggleLike ? "32px 1fr 64px 40px" : "32px 1fr 64px 28px",
+        }}
+      >
         <span className="text-center">#</span>
         <span>Title</span>
         <span className="text-right flex items-center justify-end gap-1">
@@ -215,6 +239,7 @@ export default function TrackList({ tracks, showAlbum = true, showImage = true, 
             showAlbum={showAlbum}
             onPlay={handlePlay}
             onOpenMenu={openMenu}
+            onToggleLike={onToggleLike}
           />
         )
       })}

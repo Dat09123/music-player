@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { usePlayer } from "@/components/Player"
-import { getImage, formatDuration, toPlayerTrack } from "@/lib/utils"
+import { toPlayerTrack } from "@/lib/utils"
 import { getChart } from "@/lib/deezer"
 import Link from "next/link"
 import LazyImage from "@/components/LazyImage"
-import Skeleton, { SkeletonTrackRow, SkeletonCardGrid } from "@/components/Skeleton"
+import TrackList from "@/components/TrackList"
+import Skeleton, { SkeletonCardGrid, TrackListSkeleton } from "@/components/Skeleton"
 
 export default function TopClient() {
   const [tracks, setTracks] = useState<any[]>([])
@@ -42,8 +43,10 @@ export default function TopClient() {
     return () => { cancelled = true }
   }, [retryCount])
 
-  // Build player tracks
-  const playerTracks = tracks.filter((t: any) => t?.id).map((t: any) => toPlayerTrack(t))
+  const playerTracks = useMemo(
+    () => tracks.filter((t: any) => t?.id).map((t: any) => toPlayerTrack(t)),
+    [tracks]
+  )
 
   function playAllTracks() {
     if (playerTracks.length > 0) playAll(playerTracks, 0)
@@ -60,7 +63,7 @@ export default function TopClient() {
         </div>
         <div>
           <Skeleton width={120} height={24} className="mb-5" />
-          <SkeletonTrackRow count={5} />
+          <TrackListSkeleton />
         </div>
       </div>
     )
@@ -151,60 +154,12 @@ export default function TopClient() {
             </button>
           </div>
 
-          <div className="space-y-0.5">
-            <div className="grid grid-cols-[40px_1fr_80px] gap-3 px-4 py-2 text-xs uppercase tracking-wider text-[var(--text-muted)] border-b border-[var(--border)]">
-              <span className="text-center">#</span>
-              <span>Title</span>
-              <span className="text-right">
-                <svg className="w-4 h-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </span>
-            </div>
-            {tracks.map((track, index) => (
-              <div
-                key={track.id}
-                className="grid grid-cols-[40px_1fr_80px] gap-3 px-4 py-2.5 rounded-lg group cursor-pointer transition-all duration-200 hover:bg-[var(--bg-hover)] text-[var(--text-secondary)]"
-                onClick={() => {
-                  if (index < playerTracks.length) playAll(playerTracks, index)
-                }}
-              >
-                <div className="flex items-center justify-center">
-                  <span className="group-hover:hidden text-sm tabular-nums">{index + 1}</span>
-                  <svg className="hidden group-hover:block w-4 h-4 text-[var(--text-primary)]" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </div>
-                <div className="flex items-center gap-3 min-w-0">
-                  {track.album?.images && (
-                    <div className="w-10 h-10 rounded bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden hidden sm:block">
-                      <LazyImage src={getImage(track.album.images, "sm")} alt="" className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-[var(--text-primary)] truncate">{track.name}</p>
-                    <p className="text-xs truncate text-[var(--text-muted)]">
-                      {(track.artists || []).map((artist: any, i: number) => (
-                        <span key={artist.id}>
-                          <Link
-                            href={`/artist/${artist.id}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="hover:text-[var(--accent)] hover:underline transition-colors"
-                          >
-                            {artist.name}
-                          </Link>
-                          {i < (track.artists?.length || 0) - 1 && <span>, </span>}
-                        </span>
-                      ))}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-end gap-2">
-                  <span className="text-sm tabular-nums">{formatDuration(track.duration_ms || 0)}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+          <TrackList
+            tracks={tracks}
+            playerTracks={playerTracks}
+            showAlbum={true}
+            showImage={true}
+          />
         </section>
       )}
 

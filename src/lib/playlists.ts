@@ -17,8 +17,8 @@ function loadAll(): LocalPlaylist[] {
 function saveAll(playlists: LocalPlaylist[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(playlists))
-  } catch (e) {
-    console.error("[Playlists] Failed to save:", e)
+  } catch {
+    // localStorage full or unavailable — silently fail
   }
 }
 

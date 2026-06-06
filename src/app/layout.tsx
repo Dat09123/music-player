@@ -43,12 +43,12 @@ export const metadata: Metadata = {
   description: "Listen to your favorite tracks from Deezer. Discover music, explore playlists and albums, and enjoy a seamless streaming experience.",
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "48x48" },
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/favicon.svg", sizes: "48x48", type: "image/svg+xml" },
+      { url: "/icon-192.svg", sizes: "192x192", type: "image/svg+xml" },
+      { url: "/icon-512.svg", sizes: "512x512", type: "image/svg+xml" },
     ],
-    apple: [{ url: "/icon-192.png", sizes: "192x192" }],
-    shortcut: [{ url: "/favicon.ico" }],
+    apple: [{ url: "/icon-192.svg", sizes: "192x192" }],
+    shortcut: [{ url: "/favicon.svg" }],
   },
   manifest: "/manifest.json",
   openGraph: {
@@ -88,9 +88,10 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://e-cdns-images.dzcdn.net" />
         <link rel="dns-prefetch" href="https://cdn-images.dzcdn.net" />
         <link rel="dns-prefetch" href="https://api.deezer.com" />
-        <link rel="apple-touch-icon" href="/icon-192.png" sizes="192x192" />
+        <link rel="apple-touch-icon" href="/icon-192.svg" sizes="192x192" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="h-full bg-[var(--bg-primary)] text-[var(--text-primary)]">
         {/* Skip to content link — for keyboard/AT users */}

@@ -1,222 +1,262 @@
 "use client"
 
-import { useState, useEffect, use, useCallback, useRef } from "react"
-import Link from "next/link"
-import { getGenreRadio } from "@/lib/deezer"
-import { getGenreIcon, formatArtists, getImage, formatDuration } from "@/lib/utils"
+import { useState, useEffect, useMemo } from "react"
+import { useParams } from "next/navigation"
 import { usePlayer } from "@/components/Player"
-import LazyImage from "@/components/LazyImage"
-import Skeleton, { SkeletonTrackRow, LoadingSkeleton } from "@/components/Skeleton"
-import { MusicNoteIcon, PlayIcon, ArrowRightIcon, WarningIcon, ChevronLeftIcon } from "@/components/Icons"
-import type { PlayerTrack } from "@/components/Player"
+import { getGenreRadio, searchByGenre } from "@/lib/deezer"
+import { toPlayerTrack, getGenreIcon } from "@/lib/utils"
+import TrackList from "@/components/TrackList"
+import { TrackListSkeleton } from "@/components/Skeleton"
+import { MusicNoteIcon, PlayIcon } from "@/components/Icons"
 
-interface Props {
-  params: Promise<{ id: string }>
+const genreGradients: Record<string, string> = {
+  Pop: "from-pink-500 to-rose-500",
+  Rock: "from-amber-600 to-red-600",
+  "Hip Hop": "from-yellow-500 to-orange-500",
+  Jazz: "from-blue-600 to-indigo-700",
+  Classical: "from-stone-500 to-amber-800",
+  Electronic: "from-cyan-500 to-blue-600",
+  Dance: "from-purple-500 to-pink-500",
+  RnB: "from-violet-500 to-purple-600",
+  Soul: "from-red-400 to-rose-600",
+  Reggae: "from-green-600 to-emerald-700",
+  Blues: "from-sky-600 to-blue-700",
+  Country: "from-amber-600 to-yellow-700",
+  Metal: "from-gray-600 to-zinc-800",
+  Indie: "from-teal-500 to-cyan-600",
+  Folk: "from-lime-600 to-green-700",
+  Latin: "from-red-500 to-orange-500",
+  Alternative: "from-emerald-500 to-teal-600",
+  Punk: "from-red-700 to-rose-800",
+  Funk: "from-fuchsia-500 to-purple-600",
+  Gospel: "from-amber-400 to-yellow-500",
 }
 
-const genreEmojiBg: Record<string, string> = {
-  Pop: "from-pink-500/20 via-rose-500/10 to-transparent",
-  Rock: "from-amber-600/20 via-red-600/10 to-transparent",
-  "Hip Hop": "from-yellow-500/20 via-orange-500/10 to-transparent",
-  Jazz: "from-blue-600/20 via-indigo-700/10 to-transparent",
-  Classical: "from-stone-500/20 via-amber-800/10 to-transparent",
-  Electronic: "from-cyan-500/20 via-blue-600/10 to-transparent",
-}
-
-function getBg(name: string): string {
-  for (const [key, bg] of Object.entries(genreEmojiBg)) {
-    if (name.toLowerCase().includes(key.toLowerCase())) return bg
+function getGradient(name: string): string {
+  for (const [key, gradient] of Object.entries(genreGradients)) {
+    if (name.toLowerCase().includes(key.toLowerCase())) return gradient
   }
-  return "from-[var(--accent)]/20 via-indigo-600/10 to-transparent"
+  return "from-[var(--accent)] to-indigo-600"
 }
 
-export default function StationPage({ params }: Props) {
-  const { id } = use(params)
-  const genreId = parseInt(id, 10)
+const RADIO_BATCH_SIZE = 20
+
+export default function GenreRadioPage() {
+  const params = useParams()
+  const genreId = Number(params.id)
+  const { playAll, queue, queueIndex } = usePlayer()
 
   const [genre, setGenre] = useState<{ id: number; name: string; picture: string } | null>(null)
   const [tracks, setTracks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { playAll } = usePlayer()
+  const [radioMode, setRadioMode] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
 
-  const loadData = useCallback(async () => {
-    if (cancelledRef.current) return
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await getGenreRadio(genreId, 20)
-      if (!cancelledRef.current) {
-        setGenre(data.genre)
-        setTracks(data.tracks)
+  // ALL hooks must be declared BEFORE any early return (React hooks rule)
+
+  // Load initial tracks
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      setLoading(true)
+      setError(null)
+      try {
+        const data = await getGenreRadio(genreId, RADIO_BATCH_SIZE)
+        if (!cancelled) {
+          setGenre(data.genre)
+          setTracks(data.tracks)
+        }
+      } catch (err: any) {
+        if (!cancelled) setError(err?.message || "Failed to load radio station")
+      } finally {
+        if (!cancelled) setLoading(false)
       }
-    } catch (err: any) {
-      if (!cancelledRef.current) setError(err?.message || "Failed to load station")
-    } finally {
-      if (!cancelledRef.current) setLoading(false)
     }
+    load()
+    return () => { cancelled = true }
   }, [genreId])
 
-  const cancelledRef = useRef(false)
+  const playerTracks = useMemo(
+    () => tracks.filter((t: any) => t?.id).map((t: any) => toPlayerTrack(t)),
+    [tracks]
+  )
+
+  // Load more tracks when radio mode is active and queue is running low
   useEffect(() => {
-    cancelledRef.current = false
-    loadData()
-    return () => { cancelledRef.current = true }
-  }, [loadData])
+    if (!radioMode || loadingMore || tracks.length === 0) return
+    const remaining = queue.length - queueIndex - 1
+    if (remaining <= 3) {
+      setLoadingMore(true)
+      searchByGenre(genreId, RADIO_BATCH_SIZE).then((newTracks) => {
+        setTracks((prev) => {
+          const existingIds = new Set(prev.map((t: any) => t.id))
+          const fresh = newTracks.filter((t: any) => !existingIds.has(t.id))
+          return fresh.length > 0 ? [...prev, ...fresh] : prev
+        })
+      }).finally(() => {
+        setLoadingMore(false)
+      })
+    }
+  }, [radioMode, loadingMore, tracks.length, queue.length, queueIndex, genreId])
 
-  const playerTracks: PlayerTrack[] = tracks
-    .filter((t) => t?.id)
-    .map((t) => ({
-      id: t.id,
-      name: t.name,
-      artists: formatArtists(t.artists || []),
-      artistIds: (t.artists || []).map((a: any) => a.id),
-      album: t.album?.name || "",
-      albumId: t.album?.id || "",
-      albumImage: getImage(t.album?.images, "sm"),
-      duration: t.duration_ms || 0,
-      previewUrl: t.preview_url,
-      uri: t.uri,
-    }))
-
-  function handlePlayAll() {
-    if (playerTracks.length > 0) playAll(playerTracks, 0)
-  }
-
-  function handlePlayTrack(index: number) {
-    if (index < playerTracks.length) playAll(playerTracks, index)
-  }
-
-  if (loading) {
+  // Guard: invalid genreId (AFTER all hooks)
+  if (!genreId || isNaN(genreId)) {
     return (
-      <LoadingSkeleton>
-        <div className="p-6 pb-20 max-w-4xl mx-auto">
-          <div className="mb-8">
-            <Skeleton width={120} height={20} className="mb-2" />
-            <Skeleton width={200} height={48} className="mb-2" />
-            <Skeleton width={160} height={16} />
-          </div>
-          <SkeletonTrackRow count={10} />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
+        <div className="w-16 h-16 bg-red-50 dark:bg-red-950/30 rounded-2xl flex items-center justify-center mb-5">
+          <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
         </div>
-      </LoadingSkeleton>
+        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Invalid station</h2>
+        <p className="text-sm text-[var(--text-muted)] mb-6">This station could not be found</p>
+        <a href="/stations" className="bg-[var(--accent)] hover:opacity-90 text-white font-medium px-5 py-2 rounded-lg text-sm transition-all">
+          Browse Stations
+        </a>
+      </div>
     )
   }
 
-  if (error || !genre) {
+  function startRadio() {
+    setRadioMode(true)
+    playAll(playerTracks, 0)
+  }
+
+  // Loading state
+  if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
-        <WarningIcon className="w-16 h-16 text-red-300 mb-4" strokeWidth={1.5} />
-        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Station not found</h2>
-        <p className="text-sm text-[var(--text-muted)] mb-6">{error || "This station could not be loaded."}</p>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={loadData}
-            className="bg-[var(--accent)] hover:opacity-90 text-white font-medium px-5 py-2 rounded-lg text-sm transition-all"
-          >
-            Try again
-          </button>
-          <Link href="/stations" className="inline-flex items-center gap-2 text-sm font-medium text-[var(--accent)] hover:underline">
-            <ChevronLeftIcon className="w-4 h-4" />
-            Back to stations
-          </Link>
+      <div className="p-6 pb-20">
+        <div className="animate-pulse">
+          <div className="h-48 md:h-56 rounded-2xl bg-gradient-to-br from-zinc-700 to-zinc-900 mb-6 flex items-end p-6">
+            <div className="space-y-3">
+              <div className="h-4 w-16 bg-white/10 rounded" />
+              <div className="h-8 w-48 bg-white/10 rounded" />
+              <div className="h-4 w-32 bg-white/10 rounded" />
+            </div>
+          </div>
+          <TrackListSkeleton />
         </div>
       </div>
     )
   }
+
+  // Error state
+  if (error || !genre) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
+        <div className="w-16 h-16 bg-red-50 dark:bg-red-950/30 rounded-2xl flex items-center justify-center mb-5">
+          <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Could not load station</h2>
+        <p className="text-sm text-[var(--text-muted)] mb-6">{error || "Station not found"}</p>
+        <a href="/stations" className="bg-[var(--accent)] hover:opacity-90 text-white font-medium px-5 py-2 rounded-lg text-sm transition-all">
+          Browse Stations
+        </a>
+      </div>
+    )
+  }
+
+  const gradient = getGradient(genre.name)
+  const icon = getGenreIcon(genre.name)
 
   return (
     <div className="pb-20">
       {/* Hero */}
-      <div className={`relative overflow-hidden bg-gradient-to-b ${getBg(genre.name)}`}>
-        <div className="px-6 pt-16 pb-10 md:pt-24 md:pb-14">
-          <Link href="/stations" className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-4">
-            <ChevronLeftIcon className="w-3.5 h-3.5" />
-            Stations
-          </Link>
+      <div className={`relative overflow-hidden bg-gradient-to-br ${gradient} px-6 pt-12 pb-8 md:pt-16 md:pb-10`}>
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 25% 50%, white 0.5px, transparent 0.5px)`,
+            backgroundSize: "24px 24px",
+          }} />
+        </div>
 
-          <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6">
-            {/* Genre icon/image */}
-            <div className="w-36 h-36 md:w-44 md:h-44 rounded-2xl overflow-hidden shadow-2xl flex-shrink-0 bg-gradient-to-br from-[var(--accent)] to-indigo-600 flex items-center justify-center">
-              {genre.picture ? (
-                <LazyImage src={genre.picture} alt={genre.name} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-6xl">{getGenreIcon(genre.name)}</span>
+        {/* Blurred genre image */}
+        {genre.picture && (
+          <div className="absolute inset-0 opacity-20">
+            <img src={genre.picture} alt="" className="w-full h-full object-cover blur-2xl scale-110" />
+          </div>
+        )}
+
+        <div className="relative z-10 flex flex-col md:flex-row items-center md:items-end gap-6">
+          {/* Genre icon/image */}
+          <div className="w-40 h-40 md:w-48 md:h-48 rounded-2xl overflow-hidden shadow-2xl ring-2 ring-white/20 flex-shrink-0 bg-black/20 flex items-center justify-center">
+            {genre.picture ? (
+              <img
+                src={genre.picture}
+                alt={genre.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-6xl">{icon}</span>
+            )}
+          </div>
+
+          <div className="text-center md:text-left flex-1">
+            <p className="text-xs font-semibold uppercase tracking-wider text-white/60 mb-2">Radio Station</p>
+            <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-2 drop-shadow-lg">{genre.name}</h1>
+            <p className="text-sm text-white/70">{tracks.length} tracks — endless radio</p>
+
+            {/* Play / Radio button */}
+            <div className="flex items-center gap-3 mt-5">
+              <button
+                onClick={startRadio}
+                className="flex items-center gap-2 px-6 py-3 bg-white text-black font-semibold rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl"
+              >
+                <PlayIcon className="w-5 h-5" />
+                <span>Start Radio</span>
+              </button>
+              {radioMode && (
+                <span className="flex items-center gap-1.5 text-xs text-white/60 animate-fade-in">
+                  <span className="flex gap-0.5">
+                    <span className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-1 h-1 bg-white rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </span>
+                  Playing now
+                </span>
               )}
-            </div>
-
-            <div className="text-center sm:text-left min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">Radio Station</p>
-              <h1 className="text-3xl md:text-5xl font-extrabold text-[var(--text-primary)] mb-2">
-                {genre.name}
-              </h1>
-              <p className="text-sm text-[var(--text-secondary)]">
-                {tracks.length} tracks • Curated by Deezer
-              </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="px-6 py-4 flex items-center gap-4">
-        <button
-          onClick={handlePlayAll}
-          disabled={playerTracks.length === 0}
-          className="w-14 h-14 bg-[var(--accent)] rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-          aria-label="Play all"
-        >
-          <PlayIcon className="w-6 h-6 text-white ml-0.5" />
-        </button>
-        <div>
-          <p className="text-sm font-semibold text-[var(--text-primary)]">{genre.name} Radio</p>
-          <p className="text-xs text-[var(--text-muted)]">{playerTracks.length} tracks</p>
-        </div>
-      </div>
-
-      {/* Track list */}
-      <div className="px-4 space-y-0.5">
-        <div className="grid grid-cols-[32px_1fr_64px] gap-3 px-4 py-1.5 text-[11px] text-[var(--text-muted)] font-medium border-b border-[var(--border)]/50">
-          <span className="text-center">#</span>
-          <span>Title</span>
-          <span className="text-right">
-            <svg className="w-3.5 h-3.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </span>
+      {/* Tracks */}
+      <div className="px-3 py-6">
+        <div className="flex items-center justify-between mb-4 px-4">
+          <h2 className="text-lg font-bold text-[var(--text-primary)]">Tracks</h2>
+          <span className="text-xs text-[var(--text-muted)]">{tracks.length} songs</span>
         </div>
 
-        {tracks.length > 0 ? tracks.map((track: any, index: number) => (
-          <div
-            key={track.id}
-            onClick={() => handlePlayTrack(index)}
-            className="grid grid-cols-[32px_1fr_64px] gap-3 px-4 py-2 rounded-xl group cursor-pointer transition-all hover:bg-[var(--bg-hover)]/70 text-[var(--text-secondary)]"
-          >
-            <div className="flex items-center justify-center">
-              <span className="group-hover:hidden text-xs tabular-nums text-[var(--text-muted)]">{index + 1}</span>
-              <PlayIcon className="hidden group-hover:block w-3.5 h-3.5 text-[var(--accent)]" />
-            </div>
-            <div className="flex items-center gap-2.5 min-w-0">
-              {track.album?.images && (
-                <div className="w-10 h-10 rounded bg-[var(--bg-hover)] flex-shrink-0 overflow-hidden hidden sm:block">
-                  <LazyImage src={getImage(track.album.images, "sm")} alt="" className="w-full h-full object-cover" />
-                </div>
-              )}
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-[var(--text-primary)] truncate">{track.name}</p>
-                <p className="text-xs text-[var(--text-muted)] truncate">{formatArtists(track.artists || [])}</p>
-              </div>
-            </div>
-            <div className="flex items-center justify-end">
-              <span className="text-xs tabular-nums">{formatDuration(track.duration_ms || 0)}</span>
-            </div>
-          </div>
-        )) : (
-          <div className="flex flex-col items-center py-16 text-[var(--text-muted)]">
+        {tracks.length > 0 ? (
+          <TrackList
+            tracks={tracks}
+            playerTracks={playerTracks}
+            showAlbum={true}
+            showImage={true}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 text-[var(--text-muted)]">
             <MusicNoteIcon className="w-12 h-12 mb-3 opacity-30" />
-            <p className="text-sm">No tracks available for this station</p>
+            <p className="text-sm">No tracks available for this genre</p>
           </div>
         )}
       </div>
+
+      {/* Loading more indicator */}
+      {loadingMore && (
+        <div className="flex items-center justify-center py-6 gap-2 text-xs text-[var(--text-muted)]">
+          <span className="flex gap-0.5">
+            <span className="w-1 h-1 bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+            <span className="w-1 h-1 bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+            <span className="w-1 h-1 bg-[var(--accent)] rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+          </span>
+          Loading more tracks...
+        </div>
+      )}
     </div>
   )
 }

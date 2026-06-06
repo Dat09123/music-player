@@ -11,7 +11,7 @@ import { useTheme, ACCENT_COLORS } from "@/lib/ThemeContext"
 import {
   HomeIcon, SearchIcon, ClockIcon, PersonIcon, MusicNoteIcon,
   ChartIcon, PlusIcon, MusicNoteStrokeIcon, CollapseIcon,
-  XIcon, MoonIcon, SunIcon, PlayCircleIcon, WarningIcon,
+  XIcon, MoonIcon, SunIcon, PlayCircleIcon, HeartIcon,
 } from "@/components/Icons"
 import { useConnectionQuality } from "@/hooks/useConnectionQuality"
 import { qualityLabel, qualityColor, qualityBars } from "@/lib/connection"
@@ -27,8 +27,7 @@ const navItems = [
   { href: "/me/artist-history", label: "Artist History", icon: PersonIcon },
   { href: "/me/album-history", label: "Album History", icon: MusicNoteIcon },
   { href: "/me/top", label: "Top Charts", icon: ChartIcon },
-  { href: "/me/liked", label: "Trending Now", icon: ChartIcon },
-  { href: "/debug/logs", label: "Error Logs", icon: WarningIcon },
+  { href: "/me/liked", label: "Liked Songs", icon: HeartIcon },
 ]
 
 const deezerPlaylists = [
@@ -78,31 +77,37 @@ function SidebarContent({
       {/* Playlists section */}
       {(!collapsed) && (
         <>
-          {localPlaylists.length > 0 && (
-            <>
-              <div className="px-5 py-2 border-t border-[var(--border)]" id="sidebar-your-playlists-heading">
-                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.12em]">Your Playlists</span>
-              </div>
-              <nav className="px-2 overflow-y-auto max-h-40" aria-label="Your playlists" aria-labelledby="sidebar-your-playlists-heading">
-                <ul className="space-y-0.5">
-                  {localPlaylists.map((pl) => (
-                    <li key={pl.id}>
-                      <Link href={`/playlist/local/${pl.id}`} onClick={onClose} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm truncate transition-all ${isLocalPlaylistActive(pl.id) ? "bg-[var(--accent-light)] text-[var(--accent)] font-medium" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"}`} aria-current={isLocalPlaylistActive(pl.id) ? "page" : undefined}>
-                        <MusicNoteStrokeIcon className="w-3.5 h-3.5 flex-shrink-0 opacity-60" aria-hidden="true" />
-                        <span className="truncate">{pl.name}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            </>
+          {/* ── Your Playlists ── */}
+          <div className="px-5 py-2 border-t border-[var(--border)]" id="sidebar-your-playlists-heading">
+            <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.12em]">Your Playlists</span>
+          </div>
+          {localPlaylists.length > 0 ? (
+            <nav className="px-2 overflow-y-auto max-h-32" aria-label="Your playlists" aria-labelledby="sidebar-your-playlists-heading">
+              <ul className="space-y-0.5">
+                {localPlaylists.slice(0, 8).map((pl) => (
+                  <li key={pl.id}>
+                    <Link href={`/playlist/local/${pl.id}`} onClick={onClose} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm truncate transition-all ${isLocalPlaylistActive(pl.id) ? "bg-[var(--accent-light)] text-[var(--accent)] font-medium" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"}`} aria-current={isLocalPlaylistActive(pl.id) ? "page" : undefined}>
+                      <MusicNoteStrokeIcon className="w-3.5 h-3.5 flex-shrink-0 opacity-60" aria-hidden="true" />
+                      <span className="truncate">{pl.name}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ) : (
+            <div className="px-5 py-3">
+              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                No playlists yet. Tap <span className="text-[var(--accent)]">+ New Playlist</span> below to create one.
+              </p>
+            </div>
           )}
 
+          {/* ── Deezer Charts ── */}
           <div className="px-5 py-2 border-t border-[var(--border)]" id="sidebar-deezer-charts-heading">
             <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.12em]">Deezer Charts</span>
           </div>
-          <nav className="flex-1 px-2 overflow-y-auto" aria-label="Deezer charts" aria-labelledby="sidebar-deezer-charts-heading">
-            <ul className="space-y-0.5">
+          <nav aria-label="Deezer charts" aria-labelledby="sidebar-deezer-charts-heading">
+            <ul className="space-y-0.5 px-2 pb-1">
               {deezerPlaylists.map((item) => (
                 <li key={item.href}>
                   <Link href={item.href} onClick={onClose} className={`block px-3 py-1.5 rounded-lg text-sm truncate transition-all ${pathname === item.href ? "bg-[var(--accent-light)] text-[var(--accent)] font-medium" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"}`} aria-current={pathname === item.href ? "page" : undefined}>{item.label}</Link>
@@ -139,6 +144,9 @@ export default function Sidebar() {
   // Close mobile sidebar on navigation
   useEffect(() => { setMobileOpen(false) }, [pathname, setMobileOpen])
 
+  // Hide sidebar on Now Playing page for immersive full-screen experience
+  if (pathname.startsWith('/now-playing')) return null
+
   return (
     <>
       {/* Mobile backdrop */}
@@ -148,7 +156,7 @@ export default function Sidebar() {
 
       {/* Desktop sidebar */}
       <aside className={`hidden md:flex ${collapsed ? "w-16" : "w-64"} glass-subtle text-[var(--text-primary)] flex-col transition-all duration-300 flex-shrink-0 h-full border-r border-[var(--border)]`}>
-        <div className="p-5 pb-3 flex items-center gap-3">
+        <div className="p-5 pb-3 flex items-center gap-3 flex-shrink-0">
           <Link href="/" className="w-8 h-8 bg-[var(--accent)] rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm hover:opacity-90 transition-all">
             <svg className="w-4 h-4 text-white" viewBox="0 0 20 20" fill="currentColor">
               <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
@@ -159,9 +167,11 @@ export default function Sidebar() {
             <CollapseIcon className={`w-4 h-4 transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`} />
           </button>
         </div>
-        <SidebarContent localPlaylists={localPlaylists} collapsed={collapsed} onCreatePlaylist={() => setShowCreateModal(true)} />
+        <div className="flex-1 overflow-y-auto scrollbar-none">
+          <SidebarContent localPlaylists={localPlaylists} collapsed={collapsed} onCreatePlaylist={() => setShowCreateModal(true)} />
+        </div>
         {!collapsed && (
-          <div className="px-2 pb-3 border-t border-[var(--border)] pt-2 mt-auto">
+          <div className="px-2 pb-3 border-t border-[var(--border)] pt-2 flex-shrink-0">
             <ConnectionIndicator />
             <ThemeToggle collapsed={collapsed} />
             <AccentPicker collapsed={collapsed} />

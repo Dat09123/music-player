@@ -16,8 +16,8 @@ function loadAll(): string[] {
 function saveAll(items: string[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-  } catch (e) {
-    console.error("[RecentSearches] Failed to save:", e)
+  } catch {
+    // localStorage full or unavailable — silently fail
   }
 }
 

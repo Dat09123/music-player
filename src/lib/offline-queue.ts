@@ -116,12 +116,11 @@ export async function processQueue(): Promise<number> {
         dequeue(item.path)
         notifyRetryComplete(item.path)
         successCount++
-        console.debug(`[OfflineQueue] ✅ Retry succeeded: ${item.path}`)
+        // Retry succeeded
       } else {
-        console.warn(`[OfflineQueue] ⚠ Retry failed (${res.status}): ${item.path}, will retry later`)
+        // Retry failed, will retry later
       }
-    } catch (err) {
-      console.warn(`[OfflineQueue] ⚠ Retry error: ${item.path}`, err)
+    } catch {
       // Keep in queue for next retry attempt
     }
   }
