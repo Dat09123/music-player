@@ -69,7 +69,18 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [queue, setQueue] = useState<PlayerTrack[]>([])
   const [queueIndex, setQueueIndex] = useState(-1)
-  const [volume, setVolumeState] = useState(() => typeof window !== 'undefined' ? parseFloat(localStorage.getItem('muse-volume') || '0.7') : 0.7)
+  const [volume, setVolumeState] = useState(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('muse-volume')
+        if (saved !== null) {
+          const parsed = parseFloat(saved)
+          if (!isNaN(parsed) && parsed >= 0 && parsed <= 1) return parsed
+        }
+      }
+    } catch { /* localStorage unavailable */ }
+    return 0.7
+  })
   const [progress, setProgress] = useState(0)
   const [duration, setDuration] = useState(0)
   const [repeatMode, setRepeatMode] = useState<RepeatMode>(() => typeof window !== 'undefined' ? (localStorage.getItem('muse-repeat') as RepeatMode) || 'off' : 'off')
@@ -161,7 +172,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     }
   }, [currentTrack])
 
-  useEffect(() => { if (audioRef.current) audioRef.current.volume = volume }, [volume])
   useEffect(() => { localStorage.setItem("muse-volume", String(volume)) }, [volume])
   useEffect(() => { localStorage.setItem("muse-repeat", repeatMode) }, [repeatMode])
   useEffect(() => { localStorage.setItem("muse-shuffle", String(shuffle)) }, [shuffle])
@@ -185,6 +195,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     }, 1000)
     return () => { if (sleepTimerRef.current) clearInterval(sleepTimerRef.current) }
   }, [sleepTimer])
+
+  // Sync audio volume whenever volume or currentTrack changes
+  // (audio element's volume may reset to default 1.0 on new source load)
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume
+  }, [volume, currentTrack])
 
   // Media Session API
   useEffect(() => {
