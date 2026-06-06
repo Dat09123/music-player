@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import dynamic from "next/dynamic"
 import { usePlayer } from "@/components/Player"
 import { useToast } from "@/components/Toast"
@@ -28,6 +28,7 @@ export default function TrackClient({ track }: Props) {
   const [lyricsError, setLyricsError] = useState<string | null>(null)
   const [lyricsOpen, setLyricsOpen] = useState(false)
   const [cinemaMode, setCinemaMode] = useState(false)
+  const closeCinema = useCallback(() => setCinemaMode(false), [])
 
   async function fetchLyrics() {
     if (lyrics !== null || lyricsLoading) return
@@ -42,22 +43,18 @@ export default function TrackClient({ track }: Props) {
       const res = await fetch(`/api/lyrics?artist=${encodeURIComponent(artistName)}&track=${encodeURIComponent(trackName)}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      if (data.results && data.results.length > 0) {
-        const result = data.results[0]
+      const result = data.result
+      if (result && (result.plainLyrics || result.syncedLyrics)) {
         setLyrics(result.plainLyrics)
         setSyncedLyrics(result.syncedLyrics)
-        // Auto-select synced mode if available
         if (result.syncedLyrics) setLyricsMode("synced")
-        if (!result.plainLyrics && !result.syncedLyrics) {
-          setLyricsError("No lyrics available for this track")
-        }
       } else {
         // Fallback: search by track name only
         const fallbackRes = await fetch(`/api/lyrics?track=${encodeURIComponent(trackName)}`)
         if (fallbackRes.ok) {
           const fallbackData = await fallbackRes.json()
-          if (fallbackData.results && fallbackData.results.length > 0) {
-            const fb = fallbackData.results[0]
+          const fb = fallbackData.result
+          if (fb && (fb.plainLyrics || fb.syncedLyrics)) {
             setLyrics(fb.plainLyrics)
             setSyncedLyrics(fb.syncedLyrics)
             if (fb.syncedLyrics) setLyricsMode("synced")
@@ -319,7 +316,7 @@ export default function TrackClient({ track }: Props) {
           syncedLyrics={syncedLyrics}
           lyrics={lyrics}
           lyricsMode={lyricsMode}
-          onClose={() => setCinemaMode(false)}
+          onClose={closeCinema}
         />
       )}
 

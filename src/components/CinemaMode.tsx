@@ -40,6 +40,7 @@ export default function CinemaMode({ track, syncedLyrics, lyrics, lyricsMode, on
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-4 z-10">
         <button
+          type="button"
           onClick={onClose}
           className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm"
         >
@@ -101,11 +102,11 @@ export default function CinemaMode({ track, syncedLyrics, lyrics, lyricsMode, on
       </div>
 
       {/* Bottom controls */}
-      <div className="flex items-center justify-center gap-6 px-6 py-4">
-        <button onClick={prevTrack} className="text-white/50 hover:text-white transition-colors">
+      <div className="flex items-center justify-center gap-6 px-6 py-4">          <button type="button" onClick={prevTrack} className="text-white/50 hover:text-white transition-colors">
           <SkipPrevIcon className="w-6 h-6" />
         </button>
         <button
+          type="button"
           onClick={togglePlay}
           className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
         >
@@ -115,7 +116,7 @@ export default function CinemaMode({ track, syncedLyrics, lyrics, lyricsMode, on
             <PlayIcon className="w-5 h-5 ml-0.5" />
           )}
         </button>
-        <button onClick={nextTrack} className="text-white/50 hover:text-white transition-colors">
+        <button type="button" onClick={nextTrack} className="text-white/50 hover:text-white transition-colors">
           <SkipNextIcon className="w-6 h-6" />
         </button>
       </div>

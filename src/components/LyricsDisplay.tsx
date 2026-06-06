@@ -88,30 +88,37 @@ function PlainLyricsView({ text }: { text: string }) {
 }
 
 export default function LyricsDisplay() {
-  const { currentTrack, progress, isPlaying } = usePlayer()
+  const { currentTrack, progress } = usePlayer()
   const [result, setResult] = useState<LyricsResult>({ synced: [], plain: null, source: null })
   const [loading, setLoading] = useState(false)
+  const fetchIdRef = useRef(0)
   const trackRef = useRef<string | null>(null)
 
   // Fetch lyrics when track changes
   useEffect(() => {
-    if (!currentTrack) {
+    if (!currentTrack || !currentTrack.name) {
       setResult({ synced: [], plain: null, source: null })
       return
     }
 
-    const key = `${currentTrack.id}-${currentTrack.name}`
+    const key = `${currentTrack.id || ""}-${currentTrack.name}`
     if (trackRef.current === key) return
     trackRef.current = key
 
+    const thisFetch = ++fetchIdRef.current
+
     setLoading(true)
-    fetchLyrics(currentTrack.artists, currentTrack.name).then((res) => {
+    setResult({ synced: [], plain: null, source: null })
+
+    fetchLyrics(currentTrack.artists || "", currentTrack.name).then((res) => {
+      // Only apply result if this is still the latest fetch
+      if (fetchIdRef.current !== thisFetch) return
       setResult(res)
       setLoading(false)
     })
   }, [currentTrack?.id, currentTrack?.name, currentTrack?.artists])
 
-  const currentIndex = result.source === "synced"
+  const currentIndex = result.source === "synced" && result.synced.length > 0
     ? getCurrentLineIndex(result.synced, progress)
     : -1
 

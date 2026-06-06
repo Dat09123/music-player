@@ -31,11 +31,11 @@ const navItems = [
 ]
 
 const deezerPlaylists = [
-  { href: "/playlist/3155776842", label: "Pop Hits" },
-  { href: "/playlist/3155776762", label: "Rock Classics" },
-  { href: "/playlist/1111149871", label: "Electronic" },
-  { href: "/playlist/1162338821", label: "Chill Zone" },
-  { href: "/playlist/1036511661", label: "Hip Hop" },
+  { href: "/playlist/1363560485", label: "Pop Hits" },
+  { href: "/playlist/1422391945", label: "Rock Classics" },
+  { href: "/playlist/1902101402", label: "Electronic" },
+  { href: "/playlist/1925105902", label: "Chill Vibes" },
+  { href: "/playlist/1677006641", label: "Hip Hop" },
 ]
 
 function SidebarContent({

@@ -33,30 +33,30 @@ export function parseLRC(lrc: string): LyricLine[] {
 /** Fetch lyrics for a track from the LRCLIB API */
 export async function fetchLyrics(artist: string, track: string): Promise<LyricsResult> {
   try {
-    const res = await fetch(
-      `/api/lyrics?artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(track)}`
-    )
+    const params = new URLSearchParams()
+    if (artist) params.set("artist", artist)
+    if (track) params.set("track", track)
+
+    const res = await fetch(`/api/lyrics?${params.toString()}`)
     if (!res.ok) return { synced: [], plain: null, source: null }
 
     const data = await res.json()
-    const results: any[] = data.results || []
+    const result: any = data.result
 
-    // Look for a result that has synced lyrics first
-    const syncedResult = results.find((r: any) => r.syncedLyrics)
-    if (syncedResult) {
+    if (!result) return { synced: [], plain: null, source: null }
+
+    if (result.syncedLyrics) {
       return {
-        synced: parseLRC(syncedResult.syncedLyrics),
-        plain: syncedResult.plainLyrics || null,
+        synced: parseLRC(result.syncedLyrics),
+        plain: result.plainLyrics || null,
         source: "synced",
       }
     }
 
-    // Fall back to plain lyrics
-    const plainResult = results.find((r: any) => r.plainLyrics)
-    if (plainResult) {
+    if (result.plainLyrics) {
       return {
         synced: [],
-        plain: plainResult.plainLyrics,
+        plain: result.plainLyrics,
         source: "plain",
       }
     }
@@ -67,14 +67,22 @@ export async function fetchLyrics(artist: string, track: string): Promise<Lyrics
   }
 }
 
-/** Get current line index for a given progress time */
+/** Get current line index for a given progress time (binary search for speed) */
 export function getCurrentLineIndex(lines: LyricLine[], time: number): number {
   if (lines.length === 0) return -1
-  // Find the last line whose time is <= current time
-  let idx = -1
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].time <= time) idx = i
-    else break
+  // The lineRef may be several lines behind/past, but binary search is fine
+  // since lines.length is small (< 200 for most songs)
+  let lo = 0
+  let hi = lines.length - 1
+  let ans = -1
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1
+    if (lines[mid].time <= time) {
+      ans = mid
+      lo = mid + 1
+    } else {
+      hi = mid - 1
+    }
   }
-  return idx
+  return ans
 }
